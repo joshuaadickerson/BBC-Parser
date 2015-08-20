@@ -38,7 +38,7 @@ function globalSettings()
 	error_reporting(E_ALL);
 	ini_set('display_errors', 1);
 
-	$scripturl = 'http://www.google.com';
+	$scripturl = 'http://localhost';
 
 	$txt = array(
 		'code' => 'code',
@@ -228,9 +228,13 @@ function benchmark($input)
 		}
 		$result['order'] = implode(',', $order);
 
-		$result['time_diff'] = max($result['old']['total_time'], $result['new']['total_time']) - min($result['old']['total_time'], $result['new']['total_time']);
+		$result['time_diff'] = $result['old']['total_time'] - $result['new']['total_time'];
 		$result['time_winner'] = $result['old']['total_time'] > $result['new']['total_time'] ? 'new' : 'old';
-		$result['time_diff_perc'] = round(($result['time_diff'] / max($result['new']['total_time'], $result['old']['total_time'])) * 100, 2);
+
+		if ($result['old']['total_time'] == 0)
+			$result['time_diff_percent'] = 0;
+		else
+			$result['time_diff_percent'] = round(($result['time_diff'] / $result['old']['total_time']) * 100, 2);
 
 		$result['mem_diff'] = max($result['old']['memory_usage'], $result['new']['memory_usage']) - min($result['old']['memory_usage'], $result['new']['memory_usage']);
 		$result['mem_winner'] = $result['old']['memory_usage'] > $result['new']['memory_usage'] ? 'new' : 'old';

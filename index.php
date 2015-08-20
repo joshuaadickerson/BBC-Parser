@@ -84,12 +84,13 @@ if (isset($test_types[$type]))
 	<style>
 		.code {
 			height: auto;
-			max-height: 200px;
+			max-height: 10em;
 			overflow: auto !important;
 			word-break: normal !important;
 			word-wrap: normal !important;
-
-		}?
+			width: 30em;
+			margin-bottom: .5em;
+		}
 	</style>
 
 </head>

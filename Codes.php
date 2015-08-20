@@ -365,7 +365,7 @@ class Codes
 				self::ATTR_BEFORE => '<a href="mailto:$1" class="bbc_email">',
 				self::ATTR_AFTER => '</a>',
 				//self::ATTR_DISALLOW_CHILDREN => array('email', 'ftp', 'url', 'iurl'),
-				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'url' => 'url', 'iurl' => 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'ftp' => 'ftp', 'url' => 'url', 'iurl' => 'iurl'),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
@@ -521,7 +521,7 @@ class Codes
 					}
 				},
 				//self::ATTR_DISALLOW_CHILDREN => array('email', 'ftp', 'url', 'iurl'),
-				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'url' => 'url', 'iurl' => 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'ftp' => 'ftp', 'url' => 'url', 'iurl' => 'iurl'),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
@@ -647,7 +647,8 @@ class Codes
 				self::ATTR_AFTER => '</blockquote>',
 				self::ATTR_QUOTED => 'optional',
 				// Don't allow everything to be embedded with the author name.
-				self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl', 'ftp'),
+				//self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl', 'ftp'),
+				self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl'),
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_AUTOLINK => true,
 				self::ATTR_LENGTH => 5,
@@ -854,7 +855,7 @@ class Codes
 					}
 				},
 				//self::ATTR_DISALLOW_CHILDREN => array('email', 'ftp', 'url', 'iurl'),
-				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'url' => 'url', 'iurl' => 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'ftp' => 'ftp', 'url' => 'url', 'iurl' => 'iurl'),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
