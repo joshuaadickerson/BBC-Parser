@@ -1,12 +1,12 @@
 <?php
 
-define('BR', '<br />');
-define('BR_LEN', strlen(BR));
-
 // @todo change to \StringParser\BBC
 namespace BBC;
 
 use \BBC\Codes;
+
+//define('BR', '<br />');
+//define('BR_LEN', strlen(BR));
 
 // Anywhere you see - 1 + 2 it's because you get rid of the ] and add 2 \n
 
