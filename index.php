@@ -25,11 +25,22 @@ else
 	$msgs = null;
 }
 
+$tests = array(
+	'parse_bbc',
+	'spuds_parse_bbc',
+	'parser',
+	'regexparser',
+);
+
 $input = array(
 	'type' => array(
 		'test' => $type === 'test' ? ' selected="selected"' : '',
 		'bench' => $type === 'bench' ? ' selected="selected"' : '',
 		'codes' => $type === 'codes' ? ' selected="selected"' : '',
+	),
+	'tests' => array(
+		'a' => isset($_GET['a']) && in_array($_GET['a'], $tests) ? $_GET['a'] : $tests[0],
+		'b' => isset($_GET['b']) && in_array($_GET['b'], $tests) ? $_GET['b'] : $tests[1],
 	),
 	'iterations' => isset($_GET['iterations']) ? min($_GET['iterations'], 10000) : 0,
 	'debug' => isset($_GET['debug']) && $_GET['debug'] ? 'checked="checked"' : '',
@@ -43,15 +54,15 @@ define('DEBUG', !empty($input['debug']));
 define('FAILED_TEST_IS_FATAL', !empty($input['fatal']));
 define('SAVE_TOP_RESULTS', true);
 
-// Include the test file
-require_once 'Tester.php';
-
 // Run the test (based on type)
 $test_types = array(
 	'test' => 'tests',
 	'bench' => 'benchmark',
-	'codes' => 'codes',
+	//'codes' => 'codes',
 );
+
+// Include the test file
+require_once 'Tester.php';
 
 if (isset($test_types[$type]))
 {
@@ -75,6 +86,7 @@ if (isset($test_types[$type]))
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
 	<script src="//cdn.datatables.net/1.10.8/js/jquery.dataTables.min.js"></script>
+	<script src="//cdn.datatables.net/plug-ins/1.10.8/sorting/natural.js"></script>
 
 	<!--
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
@@ -97,10 +109,12 @@ if (isset($test_types[$type]))
 <body>
 <div class="container-fluid">
 	<div id="top">
-		<button type="button" class="btn btn-primary btn-lg pull-right" data-toggle="modal" data-target="#controls">Controls</button>
+		<button type="button" class="btn btn-primary btn-lg pull-right" data-toggle="modal" data-target="#controls"><i class="glyphicon glyphicon-cog"></i> Controls</button>
 		<h1>BBC Parser Test</h1>
 	</div>
 	<?php
+
+	// No results to display
 	if (empty($results))
 	{
 		?><div>
@@ -108,14 +122,14 @@ if (isset($test_types[$type]))
 		<pre class="well"><?= htmlspecialchars('<html><body>something</body></html>'); ?></pre>
 		</div><?php
 	}
-	// RESULTS TO DISPLAY
+	// We have results
 	else
 	{
 		if (isset($test_types[$type]))
 		{
-			require_once ucfirst($type) . 'Output.php';
+			require ucfirst($type) . 'Output.php';
 		}
-	} // RESULTS TO DISPLAY
+	}
 	?>
 </div>
 <div class="modal" id="controls" tabindex="-1" role="dialog" aria-labelledby="controlsLabel">
@@ -125,27 +139,30 @@ if (isset($test_types[$type]))
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				<h4 class="modal-title">Controls</h4>
 			</div>
-			<div class="modal-body">
-				<div class="formgroup">
-					<label for="debug">Enable debug()?</label>
-					<input name="debug" type="checkbox" <?= $input['debug'] ?> class="form-control">
+			<div class="modal-body form-horizontal">
+				<div class="form-group">
+					<div class="col-sm-10">
+						<label for="type">Type of test to run
+							<select name="type" class="form-control">
+								<option value="test" <?= $input['type']['test'] ?>>Test</option>
+								<option value="bench" <?= $input['type']['bench'] ?>>Benchmark</option>
+								<!-- <option value="code" <?= $input['type']['codes'] ?>>Codes</option> -->
+							</select>
+						</label>
+					</div>
 				</div>
-				<div class="formgroup">
-					<label for="type">Type of test to run</label>
-					<select name="type" class="form-control">
-						<option value="test" <?= $input['type']['test'] ?>>Test</option>
-						<option value="bench" <?= $input['type']['bench'] ?>>Benchmark</option>
-						<option value="code" <?= $input['type']['codes'] ?>>Codes</option>
-					</select>
-				</div>
-				<div class="formgroup">
+				<div class="form-group">
 					<label for="fatal">End tests if one fails</label>
 					<input name="fatal" type="checkbox" <?= $input['fatal'] ?> class="form-control">
-				</div>
-				<div class="formgroup">
-					<label for="iterations">Number of iterations</label>
-					<input name="iterations" type="text" value="<?= $input['iterations'] ?>" class="form-control">
-				</div>
+			</div>
+			</div>
+			<div class="form-group">
+				<label for="iterations">Number of iterations</label>
+				<input name="iterations" type="text" value="<?= $input['iterations'] ?>" class="form-control">
+			</div>
+			<div class="form-group">
+				<label for="msg">Comma separated list of message ids to parse</label>
+				<input name="msg" type="text" value="<?= implode(',', $input['msg']) ?>" class="form-control">
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -156,7 +173,7 @@ if (isset($test_types[$type]))
 </div>
 <script>
 	$(document).ready(function(){
-		$('table').DataTable();
+	//	$('table').DataTable();
 	});</script>
 </body>
 </html>
