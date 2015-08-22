@@ -77,10 +77,10 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 		<th>Time Diff %</th>
 		<!-- <th>Old Mem</th>
 		<th>New Mem</th>
-		<th>Mem Diff</th> -->
+		<th>Mem Diff</th>
 		<th>Old Peak Mem</th>
 		<th>New Peak Mem</th>
-		<th>Mem Peak Diff</th>
+		<th>Mem Peak Diff</th> -->
 		<th>Message</th>
 	</tr>
 	</thead>
@@ -127,11 +127,11 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 			<td class="<?= $result['mem_winner'] === 'new' ? 'success' : ''?>">
 				<?= $result['new']['memory_usage'] ?>
 			</td>
-			<td><?= $result['mem_diff'] ?></td>-->
+			<td><?= $result['mem_diff'] ?></td>
 
 			<td class="<?= $result['peak_mem_winner'] === 'old' ? 'success' : ''?>"><?= $result['old']['memory_peak_after'] ?></td>
 			<td class="<?= $result['peak_mem_winner'] === 'new' ? 'success' : ''?>"><?= $result['new']['memory_peak_after'] ?></td>
-			<td><?= $result['peak_mem_diff'] ?></td>
+			<td><?= $result['peak_mem_diff'] ?></td> -->
 
 			<td>
 				<?php echo isset($result['message']) ? '<div class="code">' . htmlspecialchars($result['message']) . '</div>' : ''; ?>
