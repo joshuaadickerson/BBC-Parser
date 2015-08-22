@@ -173,7 +173,11 @@ if (isset($test_types[$type]))
 </div>
 <script>
 	$(document).ready(function(){
-	//	$('table').DataTable();
+		$('table').DataTable({
+			columnDefs: [
+				{ type: 'natural', targets: 0 }
+			]
+		});
 	});</script>
 </body>
 </html>
