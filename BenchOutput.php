@@ -53,7 +53,7 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 	Total Old Time: <?= round($total_old_time, 2) ?><br>
 	Total New Time: <?= round($total_new_time, 2) ?><br>
 	Diff Total Time: <?= round(abs($total_old_time - $total_new_time), 2) ?><br>
-	Diff Total Time %: <?= round((max($total_old_time, $total_new_time) - min($total_old_time, $total_new_time) / max($total_old_time, $total_new_time)), 2) ?><br>
+	Diff Total Time %: <?= round(($total_old_time - $total_new_time) / $total_old_time * 100, 2) ?><br>
 </div>
 
 <form>
