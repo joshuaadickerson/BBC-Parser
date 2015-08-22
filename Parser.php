@@ -849,7 +849,9 @@ class Parser
 					}
 				}
 				else
+				{
 					$quoted = false;
+				}
 
 				$this->pos2 = strpos($this->message, $quoted === false ? ']' : '&quot;]', $this->pos1);
 				if ($this->pos2 === false)
@@ -1013,7 +1015,6 @@ class Parser
 				// For parsed content, we must recurse to avoid security problems.
 				if ($tag[Codes::ATTR_TYPE] !== Codes::TYPE_UNPARSED_EQUALS)
 				{
-//var_dump($this->message, $tag, $data);
 					$this->recursiveParser($data, $tag);
 				}
 
@@ -1118,20 +1119,17 @@ class Parser
 	// @todo change to returning matches. If array() continue
 	protected function matchParameters(array &$possible, &$matches)
 	{
-		if (!isset($possible['preg_cache']))
+		if (!isset($possible['regex_cache']))
 		{
-			$possible['preg_cache'] = array();
+			$possible['regex_cache'] = array();
 			foreach ($possible[Codes::ATTR_PARAM] as $p => $info)
 			{
-				$possible['preg_cache'][] = '(\s+' . $p . '=' . (empty($info[Codes::PARAM_ATTR_QUOTED]) ? '' : '&quot;') . (isset($info[Codes::PARAM_ATTR_MATCH]) ? $info[Codes::PARAM_ATTR_MATCH] : '(.+?)') . (empty($info[Codes::PARAM_ATTR_QUOTED]) ? '' : '&quot;') . ')' . (empty($info[Codes::PARAM_ATTR_OPTIONAL]) ? '' : '?');
+				$quote = empty($info[Codes::PARAM_ATTR_QUOTED]) ? '' : '&quot;';
+				$possible['regex_cache'][] = '(\s+' . $p . '=' . $quote . (isset($info[Codes::PARAM_ATTR_MATCH]) ? $info[Codes::PARAM_ATTR_MATCH] : '(.+?)') . $quote. ')' . (empty($info[Codes::PARAM_ATTR_OPTIONAL]) ? '' : '?');
 			}
-			$possible['preg_size'] = count($possible['preg_cache']) - 1;
-			$possible['preg_keys'] = range(0, $possible['preg_size']);
+			$possible['regex_size'] = count($possible['regex_cache']) - 1;
+			$possible['regex_keys'] = range(0, $possible['regex_size']);
 		}
-
-		$preg = $possible['preg_cache'];
-		$param_size = $possible['preg_size'];
-		$preg_keys = $possible['preg_keys'];
 
 		// Okay, this may look ugly and it is, but it's not going to happen much and it is the best way
 		// of allowing any order of parameters but still parsing them right.
@@ -1146,16 +1144,15 @@ class Parser
 		// Step, one by one, through all possible permutations of the parameters until we have a match
 		do {
 			$match_preg = '~^';
-			foreach ($preg_keys as $key)
+			foreach ($possible['regex_keys'] as $key)
 			{
-				$match_preg .= $possible['preg_cache'][$key];
+				$match_preg .= $possible['regex_cache'][$key];
 			}
 			$match_preg .= '\]~i';
 
 			// Check if this combination of parameters matches the user input
 			$match = preg_match($match_preg, $message_stub, $matches) !== 0;
-
-		} while (!$match && --$max_iterations && ($preg_keys = pc_next_permutation($preg_keys, $param_size)));
+		} while (!$match && --$max_iterations && ($possible['regex_keys'] = pc_next_permutation($possible['regex_keys'], $possible['regex_size'])));
 
 		return $match;
 	}
@@ -1164,35 +1161,33 @@ class Parser
 	protected function recursiveParser(&$data, $tag)
 	{
 		// @todo if parsed tags allowed is empty, return?
-//var_dump('handleParsedEquals', $this->message);
-//$data = parse_bbc($data, !empty($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]) ? false : true, '', !empty($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]) ? $tag[Codes::ATTR_PARSED_TAGS_ALLOWED] : array());
-//$data = parse_bbc($data);
-//parse_bbc('dummy');
-//return $data;
-//var_dump($tag[Codes::ATTR_PARSED_TAGS_ALLOWED], $this->bbc->getTags());die;
-
 		$bbc = clone $this->bbc;
-		//$old_bbc = $this->bbc->getForParsing();
 
 		if (!empty($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]))
 		{
-			foreach ($this->bbc->getTags() as $code)
+			foreach ($bbc->getTags() as $code)
 			{
 				if (!in_array($code, $tag[Codes::ATTR_PARSED_TAGS_ALLOWED]))
 				{
-					$this->bbc->removeTag($code);
+					$bbc->remove($code);
+					$bbc->disable($code);
 				}
 			}
 		}
 
-		//$this->bbc_codes = $this->bbc->getForParsing();
-
 		$parser = new \BBC\Parser($bbc);
-		$data = $parser->parse($data);
-		//$data = $this->parse($data);
+		$data = $parser->enableSmileys(empty($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]))->parse($data);
+	}
 
-		// set it back
-		//$this->bbc_codes = $old_bbc;
+	public function getBBC()
+	{
+		return $this->bbc_codes;
+	}
+
+	public function enableSmileys($enable = true)
+	{
+		$this->do_smileys = (bool) $enable;
+		return $this;
 	}
 
 	protected function addOpenTag($tag)
@@ -1246,20 +1241,6 @@ class Parser
 
 	protected function trimWhiteSpace(&$message, $offset = null)
 	{
-		/*
-
-		OUTSIDE
-			if ($tag[Codes::ATTR_TRIM] != 'inside' && preg_match('~(<br />|&nbsp;|\s)*~', substr($message, $pos), $matches) != 0)
-				$message = substr($message, 0, $pos) . substr($message, $pos + strlen($matches[0]));
-			if ($tag[Codes::ATTR_TRIM] != 'inside' && preg_match('~(<br />|&nbsp;|\s)*~', substr($message, $pos), $matches) != 0)
-				$message = substr($message, 0, $pos) . substr($message, $pos + strlen($matches[0]));
-
-		INSIDE
-			if ($tag[Codes::ATTR_TRIM] != 'outsid' && preg_match('~(<br />|&nbsp;|\s)*~', substr($message, $pos), $matches) != 0)
-				$message = substr($message, 0, $pos) . substr($message, $pos + strlen($matches[0]));
-
-		*/
-
 		if (preg_match('~(<br />|&nbsp;|\s)*~', $this->message, $matches, null, $offset) !== 0 && isset($matches[0]))
 		{
 			//$this->message = substr($this->message, 0, $this->pos) . substr($this->message, $this->pos + strlen($matches[0]));
@@ -1407,47 +1388,47 @@ class Parser
 		return $string;
 	}
 
-	protected function tokenize($message)
+	// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
+	function fix_param_order($message, &$parameters, &$replace_str, &$tpos)
 	{
-		$split_string = $this->getTokenRegex();
-
-		$msg_parts = preg_split($split_string, $message, null, PREG_SPLIT_OFFSET_CAPTURE | PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-
-		var_dump(
-		//$this->bbc_codes,
-		//array_keys($this->bbc_codes),
-		//$this->bbc->getTags(),
-		//$split_chars,
-			$split_string,
-			$msg_parts
-		);
-
-		return $msg_parts;
+		$pos = 0;
+		$test = substr($message, 0, $tpos = strpos($message, ']'));
+		while (substr_count($test, '"') % 2 !== 0)
+		{
+			$tpos += ($pos1 = strpos(substr($message, $tpos), '"'));
+			if ($pos1 === false)
+				break;
+			$test = substr($message, 0, ($pos += strpos(substr($message, $tpos), ']')));
+		}
+		$params = explode(' ', $test);
+		unset($params[0]);
+		$order = array();
+		$replace_str = $old = '';
+		foreach ($params as $param)
+		{
+			if (strpos($param, '=') === false)
+				$order[$old] .= ' ' . $param;
+			else
+				$order[$old = substr($param, 0, strpos($param, '='))] = substr($param, strpos($param, '=') + 1);
+		}
+		foreach ($parameters as $key => $ignore)
+		{
+			$replace_str .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
+			unset($order[$key]);
+		}
+		return count($order) == 0;
 	}
 
-	protected function getTokenRegex()
+	function dougiefresh()
 	{
-		// @todo itemcodes should be ([\n \t;>][itemcode])
-		$split_chars = array('(' . preg_quote(']') . ')');
-
-		// Get a list of just tags
-		$tags = $this->bbc->getTags();
-
-		// Sort the tags by their length
-		usort($tags, function ($a, $b) {
-			// @todo micro-optimization but we could store the lengths of the tags as the val and make the tag the key. Then sort on the key
-			return strlen($b) - strlen($a);
-		});
-
-		foreach ($tags as $bbc)
-		{
-			$split_chars[] = '(' . preg_quote('[' . $bbc) . ')';
-			// Closing tags are easy. They must have [/.*]
-			$split_chars[] = '(' . preg_quote('[/' . $bbc) . '])';
-		}
-
-		var_dump($tags);
-
-		return '~' . implode('|', $split_chars) . '~';
+		// Reorganize the parameter list, then compare the result.  Continue if found:
+		if (!fix_param_order(($test = substr($this->message, $this->pos1 - 1)), $possible['parameters'], $replace_str, $tpos))
+			return true;
+		$preg = '';
+		foreach ($possible['parameters'] as $p => $info)
+			$preg .= '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
+		if (!preg_match('~^' . $preg . '\]~i', ($replace_str .= substr($test, $tpos)), $matches))
+			return true;
+		$message = substr($message, 0, $pos1 - 1) . $replace_str;
 	}
 }

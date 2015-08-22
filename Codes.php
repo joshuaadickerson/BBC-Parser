@@ -253,7 +253,7 @@ class Codes
 	{
 		foreach ($this->bbc as $k => $v)
 		{
-			if ($tag === $v[self::ATTR_TAG])
+			if ($code === $v[self::ATTR_TAG])
 			{
 				unset($this->bbc[$k]);
 			}
@@ -579,7 +579,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS,
 				self::ATTR_BEFORE => '<div class="meaction">&nbsp;$1 ',
 				self::ATTR_AFTER => '</div>',
-				self::ATTR_QUOTED => 'optional',
+				self::ATTR_QUOTED => self::OPTIONAL,
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_DISABLED_BEFORE => '/me ',
 				self::ATTR_DISABLED_AFTER => '<br />',
@@ -631,7 +631,7 @@ class Codes
 				self::ATTR_PARAM => array(
 					'author' => array(
 						self::PARAM_ATTR_MATCH => '(.{1,192}?)',
-						self::ATTR_QUOTED => true
+						self::PARAM_ATTR_QUOTED => true
 					),
 				),
 				self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': {author}</div><blockquote>',
@@ -645,7 +645,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_PARSED_EQUALS,
 				self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': $1</div><blockquote>',
 				self::ATTR_AFTER => '</blockquote>',
-				self::ATTR_QUOTED => 'optional',
+				self::ATTR_QUOTED => self::OPTIONAL,
 				// Don't allow everything to be embedded with the author name.
 				//self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl', 'ftp'),
 				self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl'),
@@ -1002,6 +1002,7 @@ class Codes
 
 	public function isDisabled($tag)
 	{
+//var_dump($tag, isset($this->disabled[$tag]));
 		return isset($this->disabled[$tag]);
 	}
 
@@ -1020,7 +1021,7 @@ class Codes
 
 		foreach ($this->bbc as &$bbc)
 		{
-			if ($bbc['tag'] === $tag)
+			if ($bbc[self::ATTR_TAG] === $tag)
 			{
 				$bbc[self::ATTR_DISABLED] = true;
 			}
