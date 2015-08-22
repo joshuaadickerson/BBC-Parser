@@ -33,7 +33,7 @@ globalSettings();
 
 function globalSettings()
 {
-	global $txt, $scripturl, $context, $modSettings, $user_info, $scripturl;
+	global $txt, $modSettings, $user_info, $scripturl;
 
 	error_reporting(E_ALL);
 	ini_set('display_errors', 1);
@@ -82,9 +82,14 @@ function globalSettings()
 	);
 
 	$user_info = array(
-		'smiley_set' => false,
+		//'smiley_set' => false,
+		'smiley_set' => 'none',
 	);
-	define('SUBSDIR', __DIR__);
+
+	if (!defined('SUBSDIR'))
+	{
+		define('SUBSDIR', __DIR__);
+	}
 }
 
 function tests($input)
@@ -176,10 +181,10 @@ function benchmark($input)
 	shuffle_assoc($methods);
 
 	// Now the messages
-	foreach ($methods as $name => $method)
+	/*foreach ($methods as $name => $method)
 	{
 		$results['all'][$name] = $method();
-	}
+	}*/
 
 	$methods = array(
 		'old' => function ($message) use($iterations) {
@@ -232,9 +237,13 @@ function benchmark($input)
 		$result['time_winner'] = $result['old']['total_time'] > $result['new']['total_time'] ? 'new' : 'old';
 
 		if ($result['old']['total_time'] == 0)
+		{
 			$result['time_diff_percent'] = 0;
+		}
 		else
+		{
 			$result['time_diff_percent'] = round(($result['time_diff'] / $result['old']['total_time']) * 100, 2);
+		}
 
 		$result['mem_diff'] = max($result['old']['memory_usage'], $result['new']['memory_usage']) - min($result['old']['memory_usage'], $result['new']['memory_usage']);
 		$result['mem_winner'] = $result['old']['memory_usage'] > $result['new']['memory_usage'] ? 'new' : 'old';

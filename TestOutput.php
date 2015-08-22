@@ -38,7 +38,7 @@ Fail: <?= $num_fail ?><br>
 			echo '<!-- TEST #', $test_num, ' -->';
 			echo $result['pass'] ? '<tr>' : '<tr class="danger">';
 			echo '
-		<th scope="row" class="form-group"><input type="checkbox" name="msg[]" value="', $test_num, '">&nbsp;<label for="msg">', $test_num, '</label></th>
+		<th scope="row" class="form-group"><label><input type="checkbox" name="msg[]" value="', $test_num, '">&nbsp;', $test_num, '</label></th>
 		<td>
 			<div class="code">', htmlspecialchars($result['message']), '</div>
 		</td>';
