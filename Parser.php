@@ -1013,7 +1013,7 @@ class Parser
 				}
 
 				// For parsed content, we must recurse to avoid security problems.
-				if ($tag[Codes::ATTR_TYPE] !== Codes::TYPE_UNPARSED_EQUALS)
+				if ($tag[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_EQUALS)
 				{
 					$this->recursiveParser($data, $tag);
 				}
@@ -1165,14 +1165,7 @@ class Parser
 
 		if (!empty($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]))
 		{
-			foreach ($bbc->getTags() as $code)
-			{
-				if (!in_array($code, $tag[Codes::ATTR_PARSED_TAGS_ALLOWED]))
-				{
-					$bbc->remove($code);
-					$bbc->disable($code);
-				}
-			}
+			$bbc->setParsedTags($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]);
 		}
 
 		$parser = new \BBC\Parser($bbc);

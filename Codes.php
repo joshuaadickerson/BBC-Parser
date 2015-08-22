@@ -1019,13 +1019,13 @@ class Codes
 			return true;
 		}
 
-		foreach ($this->bbc as &$bbc)
+		/*foreach ($this->bbc as &$bbc)
 		{
 			if ($bbc[self::ATTR_TAG] === $tag)
 			{
 				$bbc[self::ATTR_DISABLED] = true;
 			}
-		}
+		}*/
 
 		$this->disabled[$tag] = $tag;
 	}
@@ -1046,5 +1046,19 @@ class Codes
 		}
 
 		unset($this->disabled[$tag]);
+	}
+
+	public function setParsedTags($parse_tags)
+	{
+		foreach ($this->bbc as $k => $code)
+		{
+			if (!in_array($code[self::ATTR_TAG], $parse_tags))
+			{
+				//$this->remove($code);
+				unset($this->bbc[$k]);
+
+				$this->disabled[$code[self::ATTR_TAG]] = $code[self::ATTR_TAG];
+			}
+		}
 	}
 }
