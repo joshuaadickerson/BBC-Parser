@@ -30,7 +30,6 @@ class Parser
 	protected $open_bbc = array();
 	protected $do_autolink = true;
 	protected $inside_tag;
-	protected $lastAutoPos = 0;
 	protected $autolink_search;
 	protected $autolink_replace;
 
@@ -493,16 +492,6 @@ class Parser
 				}
 			}
 		}
-
-		// Don't go backwards.
-		// @todo Don't think is the real solution....
-		//$this->lastAutoPos = isset($this->lastAutoPos) ? $this->lastAutoPos : 0;
-		if ($this->pos < $this->lastAutoPos)
-		{
-			$autolink_area = false;
-		}
-
-		$this->lastAutoPos = $this->pos;
 
 		if (!$autolink_area)
 		{
