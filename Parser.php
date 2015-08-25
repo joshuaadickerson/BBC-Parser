@@ -30,7 +30,9 @@ class Parser
 	protected $open_bbc = array();
 	protected $do_autolink = true;
 	protected $inside_tag;
-	protected $lastAutoPos;
+	protected $lastAutoPos = 0;
+	protected $autolink_search;
+	protected $autolink_replace;
 
 	private $original_msg;
 
@@ -40,6 +42,7 @@ class Parser
 
 		$this->bbc_codes = $this->bbc->getForParsing();
 		$this->item_codes = $this->bbc->getItemCodes();
+		$this->loadAutolink();
 		//$this->tags = $this->bbc->getTags();
 	}
 
@@ -255,19 +258,8 @@ class Parser
 			}
 
 			$this->inside_tag = !$this->hasOpenTags() ? null : $this->getLastOpenedTag();
-			// @todo figure out if this is an itemcode first
-			$tag = $this->isItemCode($tags) ? null : $this->findTag($bbc_codes[$tags]);
 
-			//if (!empty($tag['itemcode'])
-			if ($tag === null
-				// Why does smilies being on/off affect item codes?
-				//	&& $this->do_smileys
-				&& isset($this->message[$this->pos + 2])
-				&& $this->message[$this->pos + 2] === ']'
-				&& $this->isItemCode($this->message[$this->pos + 1])
-				&& !$this->bbc->isDisabled('list')
-				&& !$this->bbc->isDisabled('li')
-			)
+			if ($this->isItemCode($tags) && isset($this->message[$this->pos + 2]) && $this->message[$this->pos + 2] === ']' && !$this->bbc->isDisabled('list') && !$this->bbc->isDisabled('li'))
 			{
 				// Itemcodes cannot be 0 and must be preceeded by a semi-colon, space, tab, new line, or greater than sign
 				if (!($this->message[$this->pos + 1] === '0' && !in_array($this->message[$this->pos - 1], array(';', ' ', "\t", "\n", '>'))))
@@ -276,7 +268,12 @@ class Parser
 					$this->handleItemCode();
 				}
 
+				// No matter what, we have to continue here.
 				continue;
+			}
+			else
+			{
+				$tag = $this->findTag($bbc_codes[$tags]);
 			}
 
 			// Implicitly close lists and tables if something other than what's required is in them. This is needed for itemcode.
@@ -478,7 +475,10 @@ class Parser
 
 	protected function autoLink(&$data)
 	{
-		static $search, $replacements;
+		if ($data === '' || $data === "\n")
+		{
+			return;
+		}
 
 		// Are we inside tags that should be auto linked?
 		$autolink_area = true;
@@ -489,63 +489,72 @@ class Parser
 				if (!$open_tag[Codes::ATTR_AUTOLINK])
 				{
 					$autolink_area = false;
+					break;
 				}
 			}
 		}
 
 		// Don't go backwards.
 		// @todo Don't think is the real solution....
-		$this->lastAutoPos = isset($this->lastAutoPos) ? $this->lastAutoPos : 0;
+		//$this->lastAutoPos = isset($this->lastAutoPos) ? $this->lastAutoPos : 0;
 		if ($this->pos < $this->lastAutoPos)
 		{
 			$autolink_area = false;
 		}
+
 		$this->lastAutoPos = $this->pos;
 
-		if ($autolink_area)
+		if (!$autolink_area)
 		{
-			// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-			if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false) && strpos($data, '[url') === false)
-			{
-				// Switch out quotes really quick because they can cause problems.
-				$data = strtr($data, array('&#039;' => '\'', '&nbsp;' => "\xC2\xA0", '&quot;' => '>">', '"' => '<"<', '&lt;' => '<lt<'));
-
-				if ($search === null)
-				{
-					// @todo get rid of the FTP, nobody uses it
-					$search = array(
-						'~(?<=[\s>\.(;\'"]|^)((?:http|https)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui',
-						//'~(?<=[\s>\.(;\'"]|^)((?:ftp|ftps)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\w\-_\~%\.@,\?&;=#(){}+:\'\\\\]*)*[/\w\-_\~%@\?;=#}\\\\])~i',
-						'~(?<=[\s>(\'<]|^)(www(?:\.[\w\-_]+)+(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui'
-					);
-					$replacements = array(
-						'[url]$1[/url]',
-						//'[ftp]$1[/ftp]',
-						'[url=http://$1]$1[/url]'
-					);
-
-					call_integration_hook('integrate_autolink', array(&$search, &$replacements, $this->bbc));
-				}
-
-				$result = preg_replace($search, $replacements, $data);
-
-				// Only do this if the preg survives.
-				if (is_string($result))
-				{
-					$data = $result;
-				}
-
-				// Switch those quotes back
-				$data = strtr($data, array('\'' => '&#039;', "\xC2\xA0" => '&nbsp;', '>">' => '&quot;', '<"<' => '"', '<lt<' => '&lt;'));
-			}
-
-			// Next, emails...
-			if (!$this->bbc->isDisabled('email') && strpos($data, '@') !== false && strpos($data, '[email') === false)
-			{
-				$data = preg_replace('~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u', '[email]$1[/email]', $data);
-				$data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u', '[email]$1[/email]', $data);
-			}
+			return;
 		}
+
+		// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
+		if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false) && strpos($data, '[url') === false)
+		{
+			// Switch out quotes really quick because they can cause problems.
+			//$data = strtr($data, array('&#039;' => '\'', '&nbsp;' => "\xC2\xA0", '&quot;' => '>">', '"' => '<"<', '&lt;' => '<lt<'));
+			$data = str_replace(array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), $data);
+
+			$result = preg_replace($this->autolink_search, $this->autolink_replace, $data);
+
+			// Only do this if the preg survives.
+			if (is_string($result))
+			{
+				$data = $result;
+			}
+
+			// Switch those quotes back
+			//$data = strtr($data, array('\'' => '&#039;', "\xC2\xA0" => '&nbsp;', '>">' => '&quot;', '<"<' => '"', '<lt<' => '&lt;'));
+			$data = str_replace(array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), $data);
+		}
+
+		// Next, emails...
+		if (!$this->bbc->isDisabled('email') && strpos($data, '@') !== false && strpos($data, '[email') === false)
+		{
+			$data = preg_replace('~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u', '[email]$1[/email]', $data);
+			$data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u', '[email]$1[/email]', $data);
+		}
+	}
+
+	protected function loadAutolink()
+	{
+		// @todo get rid of the FTP, nobody uses it
+		$search = array(
+			'~(?<=[\s>\.(;\'"]|^)((?:http|https)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui',
+			//'~(?<=[\s>\.(;\'"]|^)((?:ftp|ftps)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\w\-_\~%\.@,\?&;=#(){}+:\'\\\\]*)*[/\w\-_\~%@\?;=#}\\\\])~i',
+			'~(?<=[\s>(\'<]|^)(www(?:\.[\w\-_]+)+(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui'
+		);
+		$replace = array(
+			'[url]$1[/url]',
+			//'[ftp]$1[/ftp]',
+			'[url=http://$1]$1[/url]'
+		);
+
+		call_integration_hook('integrate_autolink', array(&$search, &$replace, $this->bbc));
+
+		$this->autolink_search = $search;
+		$this->autolink_replace = $replace;
 	}
 
 	protected function findTag(array $possible_codes)
@@ -699,6 +708,10 @@ class Parser
 			break;
 		}
 
+		// @todo remove this. This is only for testing
+		//$GLOBALS['codes_used'][$GLOBALS['current_message']][] = $tag;
+		//$GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] = isset($GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)]) ? $GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] + 1 : 1;
+
 		return $tag;
 	}
 
@@ -779,257 +792,299 @@ class Parser
 		}
 	}
 
+	protected function handleTypeParsedContext($tag)
+	{
+		// @todo Check for end tag first, so people can say "I like that [i] tag"?
+		$this->addOpenTag($tag);
+		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $tag[Codes::ATTR_BEFORE] . "\n" . substr($this->message, $this->pos1);
+		//$this->message = substr_replace($this->message, "\n" . $tag[Codes::ATTR_BEFORE] . "\n", $this->pos, $this->pos1 - $this->pos);
+		$tmp = $this->noSmileys($tag[Codes::ATTR_BEFORE]);
+		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos1 - $this->pos);
+		//$this->pos += strlen($tag[Codes::ATTR_BEFORE]) + 1;
+		$this->pos += strlen($tmp) - 1;
+
+		return false;
+	}
+
+	protected function handleTypeUnparsedContext($tag)
+	{
+		// Find the next closer
+		$this->pos2 = stripos($this->message, '[/' . $tag[Codes::ATTR_TAG] . ']', $this->pos1);
+
+		// No closer
+		if ($this->pos2 === false)
+		{
+			return true;
+		}
+
+		// @todo figure out how to make this move to the validate part
+		$data = substr($this->message, $this->pos1, $this->pos2 - $this->pos1);
+
+		//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
+		//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr($data, 0, 6) === '<br />')
+		if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && isset($data[0]) && substr_compare($data, '<br />', 0, 6) === 0)
+		{
+			$data = substr($data, 6);
+			//$this->message = substr_replace($this->message, '', $this->pos, 6);
+		}
+
+		if (isset($tag[Codes::ATTR_VALIDATE]))
+		{
+			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+		}
+
+		$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data));
+		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH]);
+		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
+		$tmp = $this->noSmileys($code);
+		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
+
+		//$this->pos += strlen($code) - 1 + 2;
+		$this->pos += strlen($tmp) - 1;
+		$this->last_pos = $this->pos + 1;
+
+		return false;
+	}
+
+	protected function handleUnparsedEqualsContext($tag)
+	{
+		// The value may be quoted for some tags - check.
+		if (isset($tag[Codes::ATTR_QUOTED]))
+		{
+			$quoted = substr_compare($this->message, '&quot;', $this->pos1, 6) === 0;
+			if ($tag[Codes::ATTR_QUOTED] !== Codes::OPTIONAL && !$quoted)
+			{
+				return true;
+			}
+
+			if ($quoted)
+			{
+				$this->pos1 += 6;
+			}
+		}
+		else
+		{
+			$quoted = false;
+		}
+
+		$this->pos2 = strpos($this->message, $quoted === false ? ']' : '&quot;]', $this->pos1);
+		if ($this->pos2 === false)
+		{
+			return true;
+		}
+
+		$this->pos3 = stripos($this->message, '[/' . $tag[Codes::ATTR_TAG] . ']', $this->pos2);
+		if ($this->pos3 === false)
+		{
+			return true;
+		}
+
+		$data = array(
+			substr($this->message, $this->pos2 + ($quoted === false ? 1 : 7), $this->pos3 - ($this->pos2 + ($quoted === false ? 1 : 7))),
+			substr($this->message, $this->pos1, $this->pos2 - $this->pos1)
+		);
+
+		if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr_compare($data[0], '<br />', 0, 6) === 0)
+		{
+			$data[0] = substr($data[0], 6);
+		}
+
+		// Validation for my parking, please!
+		if (isset($tag[Codes::ATTR_VALIDATE]))
+		{
+			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+		}
+
+		$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data[0], '$2' => $data[1]));
+		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH]);
+		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
+		$tmp = $this->noSmileys($code);
+		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
+		//$this->pos += strlen($code) - 1 + 2;
+		$this->pos += strlen($tmp) - 1;
+
+		return false;
+	}
+
+	protected function handleTypeClosed($tag)
+	{
+		$this->pos2 = strpos($this->message, ']', $this->pos);
+		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $tag[Codes::ATTR_CONTENT] . "\n" . substr($this->message, $this->pos2 + 1);
+		//$this->message = substr_replace($this->message, "\n" . $tag[Codes::ATTR_CONTENT] . "\n", $this->pos, $this->pos2 + 1 - $this->pos);
+		$tmp = $this->noSmileys($tag[Codes::ATTR_CONTENT]);
+		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
+		//$this->pos += strlen($tag[Codes::ATTR_CONTENT]) - 1 + 2;
+		$this->pos += strlen($tmp) - 1;
+
+		return false;
+	}
+
+	protected function handleUnparsedCommasContext($tag)
+	{
+		$this->pos2 = strpos($this->message, ']', $this->pos1);
+		if ($this->pos2 === false)
+		{
+			return true;
+		}
+
+		$this->pos3 = stripos($this->message, '[/' . $tag[Codes::ATTR_TAG] . ']', $this->pos2);
+		if ($this->pos3 === false)
+		{
+			return true;
+		}
+
+		// We want $1 to be the content, and the rest to be csv.
+		$data = explode(',', ',' . substr($this->message, $this->pos1, $this->pos2 - $this->pos1));
+		$data[0] = substr($this->message, $this->pos2 + 1, $this->pos3 - $this->pos2 - 1);
+
+		if (isset($tag[Codes::ATTR_VALIDATE]))
+		{
+			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+		}
+
+		$code = $tag[Codes::ATTR_CONTENT];
+		foreach ($data as $k => $d)
+		{
+			$code = strtr($code, array('$' . ($k + 1) => trim($d)));
+		}
+
+		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH]);
+		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
+		$tmp = $this->noSmileys($code);
+		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
+		//$this->pos += strlen($code) - 1 + 2;
+		$this->pos += strlen($tmp) - 1;
+
+		return false;
+	}
+
+	protected function handleUnparsedCommas($tag)
+	{
+		$this->pos2 = strpos($this->message, ']', $this->pos1);
+		if ($this->pos2 === false)
+		{
+			return true;
+		}
+
+		$data = explode(',', substr($this->message, $this->pos1, $this->pos2 - $this->pos1));
+
+		if (isset($tag[Codes::ATTR_VALIDATE]))
+		{
+			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+		}
+
+		// Fix after, for disabled code mainly.
+		foreach ($data as $k => $d)
+		{
+			$tag[Codes::ATTR_AFTER] = strtr($tag[Codes::ATTR_AFTER], array('$' . ($k + 1) => trim($d)));
+		}
+
+		$this->addOpenTag($tag);
+
+		// Replace them out, $1, $2, $3, $4, etc.
+		$code = $tag[Codes::ATTR_BEFORE];
+		foreach ($data as $k => $d)
+		{
+			$code = strtr($code, array('$' . ($k + 1) => trim($d)));
+		}
+		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + 1);
+		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + 1 - $this->pos);
+		$tmp = $this->noSmileys($code);
+		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
+		//$this->pos += strlen($code) - 1 + 2;
+		$this->pos += strlen($tmp) - 1;
+
+		return false;
+	}
+
+	protected function handleEquals($tag)
+	{
+		// The value may be quoted for some tags - check.
+		if (isset($tag[Codes::ATTR_QUOTED]))
+		{
+			//$quoted = substr($this->message, $this->pos1, 6) === '&quot;';
+			$quoted = substr_compare($this->message, '&quot;', $this->pos1, 6) === 0;
+			if ($tag[Codes::ATTR_QUOTED] !== Codes::OPTIONAL && !$quoted)
+			{
+				return true;
+			}
+
+			if ($quoted)
+			{
+				$this->pos1 += 6;
+			}
+		}
+		else
+		{
+			$quoted = false;
+		}
+
+		$this->pos2 = strpos($this->message, $quoted === false ? ']' : '&quot;]', $this->pos1);
+		if ($this->pos2 === false)
+		{
+			return true;
+		}
+
+		$data = substr($this->message, $this->pos1, $this->pos2 - $this->pos1);
+
+		// Validation for my parking, please!
+		if (isset($tag[Codes::ATTR_VALIDATE]))
+		{
+			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+		}
+
+		// For parsed content, we must recurse to avoid security problems.
+		if ($tag[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_EQUALS)
+		{
+			$this->recursiveParser($data, $tag);
+		}
+
+		$tag[Codes::ATTR_AFTER] = strtr($tag[Codes::ATTR_AFTER], array('$1' => $data));
+
+		$this->addOpenTag($tag);
+
+		$code = strtr($tag[Codes::ATTR_BEFORE], array('$1' => $data));
+		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + ($quoted === false ? 1 : 7));
+		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + ($quoted === false ? 1 : 7) - $this->pos);
+		$tmp = $this->noSmileys($code);
+		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + ($quoted === false ? 1 : 7) - $this->pos);
+		//$this->pos += strlen($code) - 1 + 2;
+		$this->pos += strlen($tmp) - 1;
+
+		return false;
+	}
+
 	protected function handleTag($tag)
 	{
 		switch ($tag[Codes::ATTR_TYPE])
 		{
 			case Codes::TYPE_PARSED_CONTENT:
-				// @todo Check for end tag first, so people can say "I like that [i] tag"?
-				$this->addOpenTag($tag);
-				//$this->message = substr($this->message, 0, $this->pos) . "\n" . $tag[Codes::ATTR_BEFORE] . "\n" . substr($this->message, $this->pos1);
-				//$this->message = substr_replace($this->message, "\n" . $tag[Codes::ATTR_BEFORE] . "\n", $this->pos, $this->pos1 - $this->pos);
-				$tmp = $this->noSmileys($tag[Codes::ATTR_BEFORE]);
-				$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos1 - $this->pos);
-				//$this->pos += strlen($tag[Codes::ATTR_BEFORE]) + 1;
-				$this->pos += strlen($tmp) - 1;
-				break;
+				return $this->handleTypeParsedContext($tag);
 
 			// Don't parse the content, just skip it.
 			case Codes::TYPE_UNPARSED_CONTENT:
-				// Find the next closer
-				$this->pos2 = stripos($this->message, '[/' . $tag[Codes::ATTR_TAG] . ']', $this->pos1);
-
-				// No closer
-				if ($this->pos2 === false)
-				{
-					return true;
-				}
-
-				// @todo figure out how to make this move to the validate part
-				$data = substr($this->message, $this->pos1, $this->pos2 - $this->pos1);
-
-				//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
-				//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr($data, 0, 6) === '<br />')
-				if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && isset($data[0]) && substr_compare($data, '<br />', 0, 6) === 0)
-				{
-					$data = substr($data, 6);
-					//$this->message = substr_replace($this->message, '', $this->pos, 6);
-				}
-
-				if (isset($tag[Codes::ATTR_VALIDATE]))
-				{
-					$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
-				}
-
-				$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data));
-				//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH]);
-				//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-				$tmp = $this->noSmileys($code);
-				$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-
-				//$this->pos += strlen($code) - 1 + 2;
-				$this->pos += strlen($tmp) - 1;
-				$this->last_pos = $this->pos + 1;
-				break;
+				return $this->handleTypeUnparsedContext($tag);
 
 			// Don't parse the content, just skip it.
 			case Codes::TYPE_UNPARSED_EQUALS_CONTENT:
-				// The value may be quoted for some tags - check.
-				if (isset($tag[Codes::ATTR_QUOTED]))
-				{
-					$quoted = substr_compare($this->message, '&quot;', $this->pos1, 6) === 0;
-					if ($tag[Codes::ATTR_QUOTED] !== Codes::OPTIONAL && !$quoted)
-					{
-						return true;
-					}
-
-					if ($quoted)
-					{
-						$this->pos1 += 6;
-					}
-				}
-				else
-				{
-					$quoted = false;
-				}
-
-				$this->pos2 = strpos($this->message, $quoted === false ? ']' : '&quot;]', $this->pos1);
-				if ($this->pos2 === false)
-				{
-					return true;
-				}
-
-				$this->pos3 = stripos($this->message, '[/' . $tag[Codes::ATTR_TAG] . ']', $this->pos2);
-				if ($this->pos3 === false)
-				{
-					return true;
-				}
-
-				$data = array(
-					substr($this->message, $this->pos2 + ($quoted === false ? 1 : 7), $this->pos3 - ($this->pos2 + ($quoted === false ? 1 : 7))),
-					substr($this->message, $this->pos1, $this->pos2 - $this->pos1)
-				);
-
-				if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr_compare($data[0], '<br />', 0, 6) === 0)
-				{
-					$data[0] = substr($data[0], 6);
-				}
-
-				// Validation for my parking, please!
-				if (isset($tag[Codes::ATTR_VALIDATE]))
-				{
-					$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
-				}
-
-				$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data[0], '$2' => $data[1]));
-				//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH]);
-				//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-				$tmp = $this->noSmileys($code);
-				$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-				//$this->pos += strlen($code) - 1 + 2;
-				$this->pos += strlen($tmp) - 1;
-				break;
+				return $this->handleUnparsedEqualsContext($tag);
 
 			// A closed tag, with no content or value.
 			case Codes::TYPE_CLOSED:
-				$this->pos2 = strpos($this->message, ']', $this->pos);
-				//$this->message = substr($this->message, 0, $this->pos) . "\n" . $tag[Codes::ATTR_CONTENT] . "\n" . substr($this->message, $this->pos2 + 1);
-				//$this->message = substr_replace($this->message, "\n" . $tag[Codes::ATTR_CONTENT] . "\n", $this->pos, $this->pos2 + 1 - $this->pos);
-				$tmp = $this->noSmileys($tag[Codes::ATTR_CONTENT]);
-				$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
-				//$this->pos += strlen($tag[Codes::ATTR_CONTENT]) - 1 + 2;
-				$this->pos += strlen($tmp) - 1;
-				break;
+				return $this->handleTypeClosed($tag);
 
 			// This one is sorta ugly... :/
 			case Codes::TYPE_UNPARSED_COMMAS_CONTENT:
-				$this->pos2 = strpos($this->message, ']', $this->pos1);
-				if ($this->pos2 === false)
-				{
-					return true;
-				}
-
-				$this->pos3 = stripos($this->message, '[/' . $tag[Codes::ATTR_TAG] . ']', $this->pos2);
-				if ($this->pos3 === false)
-				{
-					return true;
-				}
-
-				// We want $1 to be the content, and the rest to be csv.
-				$data = explode(',', ',' . substr($this->message, $this->pos1, $this->pos2 - $this->pos1));
-				$data[0] = substr($this->message, $this->pos2 + 1, $this->pos3 - $this->pos2 - 1);
-
-				if (isset($tag[Codes::ATTR_VALIDATE]))
-				{
-					$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
-				}
-
-				$code = $tag[Codes::ATTR_CONTENT];
-				foreach ($data as $k => $d)
-				{
-					$code = strtr($code, array('$' . ($k + 1) => trim($d)));
-				}
-
-				//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH]);
-				//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-				$tmp = $this->noSmileys($code);
-				$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-				//$this->pos += strlen($code) - 1 + 2;
-				$this->pos += strlen($tmp) - 1;
-				break;
+				return $this->handleUnparsedCommasContext($tag);
 
 			// This has parsed content, and a csv value which is unparsed.
 			case Codes::TYPE_UNPARSED_COMMAS:
-				$this->pos2 = strpos($this->message, ']', $this->pos1);
-				if ($this->pos2 === false)
-				{
-					return true;
-				}
-
-				$data = explode(',', substr($this->message, $this->pos1, $this->pos2 - $this->pos1));
-
-				if (isset($tag[Codes::ATTR_VALIDATE]))
-				{
-					$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
-				}
-
-				// Fix after, for disabled code mainly.
-				foreach ($data as $k => $d)
-				{
-					$tag[Codes::ATTR_AFTER] = strtr($tag[Codes::ATTR_AFTER], array('$' . ($k + 1) => trim($d)));
-				}
-
-				$this->addOpenTag($tag);
-
-				// Replace them out, $1, $2, $3, $4, etc.
-				$code = $tag[Codes::ATTR_BEFORE];
-				foreach ($data as $k => $d)
-				{
-					$code = strtr($code, array('$' . ($k + 1) => trim($d)));
-				}
-				//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + 1);
-				//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + 1 - $this->pos);
-				$tmp = $this->noSmileys($code);
-				$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
-				//$this->pos += strlen($code) - 1 + 2;
-				$this->pos += strlen($tmp) - 1;
-				break;
+				return $this->handleUnparsedCommas($tag);
 
 			// A tag set to a value, parsed or not.
 			case Codes::TYPE_PARSED_EQUALS:
 			case Codes::TYPE_UNPARSED_EQUALS:
-				// The value may be quoted for some tags - check.
-				if (isset($tag[Codes::ATTR_QUOTED]))
-				{
-					//$quoted = substr($this->message, $this->pos1, 6) === '&quot;';
-					$quoted = substr_compare($this->message, '&quot;', $this->pos1, 6) === 0;
-					if ($tag[Codes::ATTR_QUOTED] !== Codes::OPTIONAL && !$quoted)
-					{
-						return true;
-					}
-
-					if ($quoted)
-					{
-						$this->pos1 += 6;
-					}
-				}
-				else
-				{
-					$quoted = false;
-				}
-
-				$this->pos2 = strpos($this->message, $quoted === false ? ']' : '&quot;]', $this->pos1);
-				if ($this->pos2 === false)
-				{
-					return true;
-				}
-
-				$data = substr($this->message, $this->pos1, $this->pos2 - $this->pos1);
-
-				// Validation for my parking, please!
-				if (isset($tag[Codes::ATTR_VALIDATE]))
-				{
-					$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
-				}
-
-				// For parsed content, we must recurse to avoid security problems.
-				if ($tag[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_EQUALS)
-				{
-					$this->recursiveParser($data, $tag);
-				}
-
-				$tag[Codes::ATTR_AFTER] = strtr($tag[Codes::ATTR_AFTER], array('$1' => $data));
-
-				$this->addOpenTag($tag);
-
-				$code = strtr($tag[Codes::ATTR_BEFORE], array('$1' => $data));
-				//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + ($quoted === false ? 1 : 7));
-				//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + ($quoted === false ? 1 : 7) - $this->pos);
-				$tmp = $this->noSmileys($code);
-				$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + ($quoted === false ? 1 : 7) - $this->pos);
-				//$this->pos += strlen($code) - 1 + 2;
-				$this->pos += strlen($tmp) - 1;
-				break;
+				return $this->handleEquals($tag);
 		}
 
 		return false;
@@ -1043,6 +1098,7 @@ class Parser
 
 		// Pick a block of data to do some raw fixing on.
 		$data = substr($this->message, $this->last_pos, $this->pos - $this->last_pos);
+		//$old_data = $data;
 
 		// Take care of some HTML!
 		if (!empty($GLOBALS['modSettings']['enablePostHTML']) && strpos($data, '&lt;') !== false)
@@ -1063,7 +1119,9 @@ class Parser
 		// If it wasn't changed, no copying or other boring stuff has to happen!
 		//if ($data !== substr($this->message, $this->last_pos, $this->pos - $this->last_pos))
 		if (substr_compare($this->message, $data, $this->last_pos, $this->pos - $this->last_pos))
+		//if ($old_data !== $data)
 		{
+			//var_dump($data);
 			//$this->message = substr($this->message, 0, $this->last_pos) . $data . substr($this->message, $this->pos);
 			$this->message = substr_replace($this->message, $data, $this->last_pos, $this->pos - $this->last_pos);
 
