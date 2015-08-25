@@ -480,26 +480,20 @@ class Parser
 		}
 
 		// Are we inside tags that should be auto linked?
-		$autolink_area = true;
 		if ($this->hasOpenTags())
 		{
-			foreach ($this->open_tags as $open_tag)
+			foreach ($this->getOpenedTags() as $open_tag)
 			{
 				if (!$open_tag[Codes::ATTR_AUTOLINK])
 				{
-					$autolink_area = false;
-					break;
+					return;
 				}
 			}
 		}
 
-		if (!$autolink_area)
-		{
-			return;
-		}
-
 		// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-		if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false) && strpos($data, '[url') === false)
+		//if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false) && strpos($data, '[url') === false)
+		if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
 		{
 			// Switch out quotes really quick because they can cause problems.
 			//$data = strtr($data, array('&#039;' => '\'', '&nbsp;' => "\xC2\xA0", '&quot;' => '>">', '"' => '<"<', '&lt;' => '<lt<'));
@@ -519,7 +513,7 @@ class Parser
 		}
 
 		// Next, emails...
-		if (!$this->bbc->isDisabled('email') && strpos($data, '@') !== false && strpos($data, '[email') === false)
+		if (!$this->bbc->isDisabled('email') && strpos($data, '@') !== false)
 		{
 			$data = preg_replace('~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u', '[email]$1[/email]', $data);
 			$data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u', '[email]$1[/email]', $data);
