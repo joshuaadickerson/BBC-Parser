@@ -37,6 +37,7 @@ $input = array(
 		'test' => $type === 'test' ? ' selected="selected"' : '',
 		'bench' => $type === 'bench' ? ' selected="selected"' : '',
 		'codes' => $type === 'codes' ? ' selected="selected"' : '',
+		'individual' => $type === 'individual' ? ' selected="selected"' : '',
 	),
 	'tests' => array(
 		'a' => isset($_GET['a']) && in_array($_GET['a'], $tests) ? $_GET['a'] : $tests[0],
@@ -58,6 +59,7 @@ define('SAVE_TOP_RESULTS', true);
 $test_types = array(
 	'test' => 'tests',
 	'bench' => 'benchmark',
+	'individual' => 'individual',
 	//'codes' => 'codes',
 );
 

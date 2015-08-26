@@ -106,9 +106,14 @@ function tests($input)
 
 	$messages = getMessages(isset($input['msg']) ? $input['msg'] : null);
 
+	$GLOBALS['codes_used'] = array();
 	$results = array();
 	foreach ($messages as $k => $message)
 	{
+		$GLOBALS['current_message'] = $message;
+		$GLOBALS['codes_used'][$message] = array();
+		$GLOBALS['codes_used_count'][$message] = array();
+
 		$old_result = $old_method($message);
 		$new_result = $new_method($message);
 
@@ -126,6 +131,39 @@ function tests($input)
 		{
 			return $results;
 		}
+	}
+
+	return $results;
+}
+
+function individual($input)
+{
+	return newTest($input);
+}
+
+function newTest($input)
+{
+	$bbc = new Codes;
+	$parser = new Parser($bbc);
+
+	$new_method = getNewMethod($parser);
+
+	$messages = getMessages(isset($input['msg']) ? $input['msg'] : null);
+
+	$GLOBALS['codes_used'] = array();
+	$results = array();
+	foreach ($messages as $k => $message)
+	{
+		$GLOBALS['current_message'] = $message;
+		$GLOBALS['codes_used'][$message] = array();
+		$GLOBALS['codes_used_count'][$message] = array();
+
+		$new_result = $new_method($message);
+
+		$results[$k] = array(
+			'message' => $message,
+			'return' => $new_result,
+		);
 	}
 
 	return $results;
@@ -150,10 +188,10 @@ function benchmark($input)
 	$results['codes'] = array(
 		'old' => runBenchmark(function (){
 			parse_bbc(false);
-		}, $iterations),
+		}, $iterations, false),
 		'new' => runBenchmark(function (){
-			new Codes;
-		}, $iterations),
+			$fake = new Codes;
+		}, $iterations, false),
 	);
 
 	// Setup the BBC for the new method
@@ -326,7 +364,7 @@ function runVSBenchmark($name, callable $old, callable $new)
 	);
 }
 
-function runBenchmark($callback, $iterations = ITERATIONS, $save_result = false)
+function runBenchmark($closure, $iterations = ITERATIONS, $save_result = false)
 {
 	$diagnostics = array(
 		'iterations' => $iterations,
@@ -346,16 +384,16 @@ function runBenchmark($callback, $iterations = ITERATIONS, $save_result = false)
 		{
 			if (!isset($result))
 			{
-				$result = $callback();
+				$result = $closure();
 			}
 			else
 			{
-				$callback();
+				$closure();
 			}
 		}
 		else
 		{
-			$callback();
+			$closure();
 		}
 	}
 
