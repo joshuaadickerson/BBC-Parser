@@ -169,14 +169,15 @@ class Codes
 	 * ATTR_TAG and ATTR_TYPE are required for every tag.
 	 * The rest of the attributes depend on the type and other options.
 	 */
-	protected $bbc;
-	protected $itemcodes;
-	protected $additional_bbc;
-	protected $disabled;
+	protected $bbc = array();
+	protected $itemcodes = array();
+	protected $additional_bbc = array();
+	protected $disabled = array();
 
 	public function __construct(array $tags = array(), array $disabled = array())
 	{
 		$this->bbc = $this->getDefault();
+		//$this->getDefault();
 		$this->additional_bbc = $tags;
 		$this->disabled = $disabled;
 
@@ -564,7 +565,9 @@ class Codes
 				self::ATTR_TAG => 'list',
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_PARAM => array(
-					'type' => array(self::PARAM_ATTR_MATCH => '(none|disc|circle|square|decimal|decimal-leading-zero|lower-roman|upper-roman|lower-alpha|upper-alpha|lower-greek|lower-latin|upper-latin|hebrew|armenian|georgian|cjk-ideographic|hiragana|katakana|hiragana-iroha|katakana-iroha)'),
+					'type' => array(
+						self::PARAM_ATTR_MATCH => '(none|disc|circle|square|decimal|decimal-leading-zero|lower-roman|upper-roman|lower-alpha|upper-alpha|lower-greek|lower-latin|upper-latin|hebrew|armenian|georgian|cjk-ideographic|hiragana|katakana|hiragana-iroha|katakana-iroha)'
+					),
 				),
 				self::ATTR_BEFORE => '<ul class="bbc_list" style="list-style-type: {type};">',
 				self::ATTR_AFTER => '</ul>',
