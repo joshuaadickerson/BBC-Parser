@@ -42,8 +42,8 @@ $input = array(
 		'individual' => $type === 'individual' ? ' selected="selected"' : '',
 	),
 	'tests' => array(
-		'a' => isset($_GET['a']) && isset($tests[$_GET['a']]) ? $_GET['a'] : 'Old parse_bbc',
-		'b' => isset($_GET['b']) && isset($tests[$_GET['b']]) ? $_GET['b'] : 'Parser',
+		'a' => isset($_GET['a']) && isset($tests[$_GET['a']]) ? $tests[$_GET['a']] : 'Old parse_bbc',
+		'b' => isset($_GET['b']) && isset($tests[$_GET['b']]) ? $tests[$_GET['b']] : 'Parser',
 	),
 	'iterations' => isset($_GET['iterations']) ? min($_GET['iterations'], 10000) : 0,
 	'debug' => isset($_GET['debug']) && $_GET['debug'] ? 'checked="checked"' : '',

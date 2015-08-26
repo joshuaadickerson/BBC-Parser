@@ -767,8 +767,12 @@ function parse_bbc($message, $smileys = true, $cache_id = '', $parse_tags = arra
 				if (!empty($open_tags))
 				{
 					foreach ($open_tags as $open_tag)
+					{
 						if (in_array($open_tag['tag'], $no_autolink_tags))
+						{
 							$no_autolink_area = true;
+						}
+					}
 				}
 
 				// Don't go backwards.

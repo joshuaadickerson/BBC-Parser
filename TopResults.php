@@ -1,6 +1,6 @@
 <?php
 
-$lines = file('top_time_diff_perc.csv');
+$lines = file('top_time_diff.csv');
 
 $tests = array();
 foreach ($lines as $line)

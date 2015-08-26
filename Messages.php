@@ -209,6 +209,7 @@ return array(
 	'[quote this=should not=work but=maybe it=will]only a test will tell[/quote]',
 	'[list][li]quick[li]no[li]time[li]for[li]closing[li]tags[/list]',
 	'[size=6.2]itty bitty (does not pass test)[/size]',
+	'Nothing should [table',
 
 	// Some non-english characters?
 	'[url]www.ñchan.org[/url]',

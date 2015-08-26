@@ -12,6 +12,8 @@ use \BBC\Codes;
 
 class Parser
 {
+	const MAX_PERMUTE_ITERATIONS = 5040;
+
 	protected $message;
 	protected $bbc;
 	protected $bbc_codes;
@@ -86,9 +88,6 @@ class Parser
 
 		$this->resetParser();
 
-		// Get the BBC
-		$bbc_codes = $this->bbc_codes;
-
 		// @todo change this to <br> (it will break tests)
 		$this->message = str_replace("\n", '<br />', $this->message);
 
@@ -160,9 +159,9 @@ class Parser
 							}
 
 							// The idea is, if we are LOOKING for a block level tag, we can close them on the way.
-							if (isset($look_for[1]) && isset($bbc_codes[$look_for[0]]))
+							if (isset($look_for[1]) && isset($this->bbc_codes[$look_for[0]]))
 							{
-								foreach ($bbc_codes[$look_for[0]] as $temp)
+								foreach ($this->bbc_codes[$look_for[0]] as $temp)
 								{
 									if ($temp[Codes::ATTR_TAG] === $look_for)
 									{
@@ -191,9 +190,9 @@ class Parser
 					}
 					elseif (!empty($to_close) && $tag[Codes::ATTR_TAG] !== $look_for)
 					{
-						if ($block_level === null && isset($look_for[0], $bbc_codes[$look_for[0]]))
+						if ($block_level === null && isset($look_for[0], $this->bbc_codes[$look_for[0]]))
 						{
-							foreach ($bbc_codes[$look_for[0]] as $temp)
+							foreach ($this->bbc_codes[$look_for[0]] as $temp)
 							{
 								if ($temp[Codes::ATTR_TAG] === $look_for)
 								{
@@ -252,7 +251,7 @@ class Parser
 			}
 
 			// No tags for this character, so just keep going (fastest possible course.)
-			if (!isset($bbc_codes[$tags]))
+			if (!isset($this->bbc_codes[$tags]))
 			{
 				continue;
 			}
@@ -273,7 +272,7 @@ class Parser
 			}
 			else
 			{
-				$tag = $this->findTag($bbc_codes[$tags]);
+				$tag = $this->findTag($this->bbc_codes[$tags]);
 			}
 
 			// Implicitly close lists and tables if something other than what's required is in them. This is needed for itemcode.
@@ -340,24 +339,7 @@ class Parser
 			$this->message .= $this->noSmileys($tag[Codes::ATTR_AFTER]);
 		}
 
-		// Parse the smileys within the parts where it can be done safely.
-		if ($this->do_smileys === true)
-		{
-			$message_parts = explode("\n", $this->message);
-
-			for ($i = 0, $n = count($message_parts); $i < $n; $i += 2)
-			{
-				parsesmileys($message_parts[$i]);
-				//parsesmileys($this->message);
-			}
-
-			$this->message = implode('', $message_parts);
-		}
-		// No smileys, just get rid of the markers.
-		else
-		{
-			$this->message = str_replace("\n", '', $this->message);
-		}
+		$this->parseSmileys();
 
 		if (isset($this->message[0]) && $this->message[0] === ' ')
 		{
@@ -548,7 +530,6 @@ class Parser
 
 		foreach ($possible_codes as $possible)
 		{
-			//var_dump($possible, $this->message);
 			// Skip tags that didn't match the next X characters
 			if ($possible[Codes::ATTR_TAG] === $last_check)
 			{
@@ -564,27 +545,40 @@ class Parser
 			}
 
 			// The character after the possible tag or nothing
-			// @todo shouldn't this return if empty since there needs to be a ]?
 			$next_c = isset($this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]]) ? $this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]] : '';
+
+			// This only happens if the tag is the last character of the string
+			if ($next_c === '')
+			{
+				$last_check = $possible[Codes::ATTR_TAG];
+				continue;
+			}
 
 			// A test validation?
 			// @todo figure out if the regex need can use offset
 			// this creates a copy of the entire message starting from this point!
 			// @todo where do we know if the next char is ]?
 			//if (isset($possible[Codes::ATTR_TEST]) && preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 1 + $possible[Codes::ATTR_LENGTH] + 1)) === 0)
-			if (isset($possible[Codes::ATTR_TEST]) && preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 2 + $possible[Codes::ATTR_LENGTH], strpos($this->message, ']', $this->pos) - ($this->pos + 2 + $possible[Codes::ATTR_LENGTH]))) === 0)
-			{
-				continue;
-			}
+
 			// Do we want parameters?
-			elseif (!empty($possible[Codes::ATTR_PARAM]))
+			if (!empty($possible[Codes::ATTR_PARAM]))
 			{
+				//var_dump('has param');
 				if ($next_c !== ' ')
+				{
+					//var_dump('but doesn\'t have a space');
+					continue;
+				}
+			}
+			// parsed_content demands an immediate ] without parameters!
+			elseif ($possible[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_CONTENT)
+			{
+				if ($next_c !== ']')
 				{
 					continue;
 				}
 			}
-			elseif ($possible[Codes::ATTR_TYPE] !== Codes::TYPE_PARSED_CONTENT)
+			else
 			{
 				// Do we need an equal sign?
 				if ($next_c !== '=' && in_array($possible[Codes::ATTR_TYPE], array(Codes::TYPE_UNPARSED_EQUALS, Codes::TYPE_UNPARSED_COMMAS, Codes::TYPE_UNPARSED_COMMAS_CONTENT, Codes::TYPE_UNPARSED_EQUALS_CONTENT, Codes::TYPE_PARSED_EQUALS)))
@@ -606,13 +600,10 @@ class Parser
 					}
 				}
 			}
-			// parsed_content demands an immediate ] without parameters!
-			elseif ($possible[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_CONTENT)
+
+			if (isset($possible[Codes::ATTR_TEST]) && preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 2 + $possible[Codes::ATTR_LENGTH], strpos($this->message, ']', $this->pos) - ($this->pos + 2 + $possible[Codes::ATTR_LENGTH]))) === 0)
 			{
-				if ($next_c !== ']')
-				{
-					continue;
-				}
+				continue;
 			}
 
 			// Check allowed tree?
@@ -1114,7 +1105,6 @@ class Parser
 		if (substr_compare($this->message, $data, $this->last_pos, $this->pos - $this->last_pos))
 		//if ($old_data !== $data)
 		{
-			//var_dump($data);
 			//$this->message = substr($this->message, 0, $this->last_pos) . $data . substr($this->message, $this->pos);
 			$this->message = substr_replace($this->message, $data, $this->last_pos, $this->pos - $this->last_pos);
 
@@ -1190,7 +1180,7 @@ class Parser
 
 		// If an addon adds many parameters we can exceed max_execution time, lets prevent that
 		// 5040 = 7, 40,320 = 8, (N!) etc
-		$max_iterations = 5040;
+		$max_iterations = self::MAX_PERMUTE_ITERATIONS;
 
 		// Step, one by one, through all possible permutations of the parameters until we have a match
 		do {
@@ -1417,10 +1407,28 @@ class Parser
 		return "\n" . $string . "\n";
 	}
 
-	protected function parseSmileys($string)
+	protected function parseSmileys()
 	{
-
+		// Parse the smileys within the parts where it can be done safely.
 		if ($this->do_smileys === true)
+		{
+			$message_parts = explode("\n", $this->message);
+
+			for ($i = 0, $n = count($message_parts); $i < $n; $i += 2)
+			{
+				parsesmileys($message_parts[$i]);
+				//parsesmileys($this->message);
+			}
+
+			$this->message = implode('', $message_parts);
+		}
+		// No smileys, just get rid of the markers.
+		else
+		{
+			$this->message = str_replace("\n", '', $this->message);
+		}
+
+		/*if ($this->do_smileys === true)
 		{
 			$old_string = $string;
 			parseSmileys($string);
@@ -1430,7 +1438,7 @@ class Parser
 
 		//$string = "\n" . $string . "\n";
 
-		return $string;
+		return $string;*/
 	}
 
 	// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
