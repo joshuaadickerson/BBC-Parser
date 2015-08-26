@@ -48,7 +48,7 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 	Total Time (A): <?= round($total_a_time, 2) ?><br>
 	Total Time (B): <?= round($total_b_time, 2) ?><br>
 	Diff Total Time: <?= round(abs($total_a_time - $total_b_time), 2) ?><br>
-	Diff Total Time %: <?= round(($total_b_time - $total_b_time) / $total_a_time * 100, 2) ?><br>
+	Diff Total Time %: <?= round(($total_a_time - $total_b_time) / $total_a_time * 100, 2) ?><br>
 </div>
 
 <form>
