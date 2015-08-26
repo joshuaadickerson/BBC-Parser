@@ -1,37 +1,32 @@
 <?php
-$total_old_time = 0;
-$total_new_time = 0;
+$total_a_time = 0;
+$total_b_time = 0;
 
 $stack = array();
 $stack_max_len = 5;
 $stack_len = 0;
 
-foreach ($results as $i => $result)
+foreach ($results['tests'] as $i => $result)
 {
-	if (!is_array($result))
-	{
-		continue;
-	}
-
-	$total_old_time += $result['old']['total_time'];
-	$total_new_time += $result['new']['total_time'];
+	$total_a_time += $result['a']['total_time'];
+	$total_b_time += $result['b']['total_time'];
 
 	if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 	{
 		if (count($stack) < $stack_max_len + 1)
 		{
 			$stack_len++;
-			$stack[$i] = $result['time_diff_percent'];
+			$stack[$i] = $result['time_diff'];
 		}
 		else
 		{
 			foreach ($stack as $k => $v)
 			{
-				if ($v < $result['time_diff_percent'])
+				if ($v > $result['time_diff'])
 				{
 					unset($stack[$k]);
-					$stack[$i] = $result['time_diff_percent'];
-					asort($stack);
+					$stack[$i] = $result['time_diff'];
+					arsort($stack);
 					break;
 				}
 			}
@@ -42,18 +37,18 @@ foreach ($results as $i => $result)
 if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 {
 	asort($stack);
-	file_put_contents('top_time_diff_percent.csv', implode(array_keys($stack), ',') . "\n", FILE_APPEND);
+	file_put_contents('top_time_diff.csv', implode(array_keys($stack), ',') . "\n", FILE_APPEND);
 }
 ?>
 
 <div>
 	Messages: <?= $results['num_messages'] ?><br>
 	Iterations: <?= $results['iterations'] ?><br>
-	Total Time In Tests: <?= round($total_old_time + $total_new_time, 2) ?><br>
-	Total Old Time: <?= round($total_old_time, 2) ?><br>
-	Total New Time: <?= round($total_new_time, 2) ?><br>
-	Diff Total Time: <?= round(abs($total_old_time - $total_new_time), 2) ?><br>
-	Diff Total Time %: <?= round(($total_old_time - $total_new_time) / $total_old_time * 100, 2) ?><br>
+	Total Time In Tests: <?= round($total_a_time + $total_b_time, 2) ?><br>
+	Total Time (A): <?= round($total_a_time, 2) ?><br>
+	Total Time (B): <?= round($total_b_time, 2) ?><br>
+	Diff Total Time: <?= round(abs($total_a_time - $total_b_time), 2) ?><br>
+	Diff Total Time %: <?= round(($total_b_time - $total_b_time) / $total_a_time * 100, 2) ?><br>
 </div>
 
 <form>
@@ -71,23 +66,17 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 		<th>Test</th>
 		<th>Order</th>
 		<th>Pass</th>
-		<th>Old Time</th>
-		<th>New Time</th>
+		<th>Time (A)</th>
+		<th>Time (B)</th>
 		<th>Time Diff</th>
 		<th>Time Diff %</th>
-		<!-- <th>Old Mem</th>
-		<th>New Mem</th>
-		<th>Mem Diff</th>
-		<th>Old Peak Mem</th>
-		<th>New Peak Mem</th>
-		<th>Mem Peak Diff</th> -->
 		<th>Message</th>
 	</tr>
 	</thead>
 
 	<tbody>
 	<?php
-	foreach ($results as $test => $result)
+	foreach ($results['tests'] as $test => $result)
 	{
 		if (!is_array($result))
 		{
@@ -112,27 +101,14 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 			}
 			?>
 
-			<td class="<?= $result['time_winner'] === 'old' ? 'success' : ''?>">
-				<?= $result['old']['total_time'] ?>
+			<td class="<?= $result['time_winner'] === 'a' ? 'success' : ''?>">
+				<?= $result['a']['total_time'] ?>
 			</td>
-			<td class="<?= $result['time_winner'] === 'new' ? 'success' : ''?>">
-				<?= $result['new']['total_time'] ?>
+			<td class="<?= $result['time_winner'] === 'b' ? 'success' : ''?>">
+				<?= $result['b']['total_time'] ?>
 			</td>
 			<td><?= round($result['time_diff'], 4) ?></td>
-			<td><?= round(($result['time_diff'] / max($result['new']['total_time'], $result['old']['total_time'])) * 100, 2) ?></td>
-
-			<!--<td class="<?= $result['mem_winner'] === 'old' ? 'success' : ''?>">
-				<?= $result['old']['memory_usage'] ?>
-			</td>
-			<td class="<?= $result['mem_winner'] === 'new' ? 'success' : ''?>">
-				<?= $result['new']['memory_usage'] ?>
-			</td>
-			<td><?= $result['mem_diff'] ?></td>
-
-			<td class="<?= $result['peak_mem_winner'] === 'old' ? 'success' : ''?>"><?= $result['old']['memory_peak_after'] ?></td>
-			<td class="<?= $result['peak_mem_winner'] === 'new' ? 'success' : ''?>"><?= $result['new']['memory_peak_after'] ?></td>
-			<td><?= $result['peak_mem_diff'] ?></td> -->
-
+			<td><?= round(($result['time_diff'] / max($result['b']['total_time'], $result['a']['total_time'])) * 100, 2) ?></td>
 			<td>
 				<?php echo isset($result['message']) ? '<div class="code">' . htmlspecialchars($result['message']) . '</div>' : ''; ?>
 			</td>
