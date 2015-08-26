@@ -1,32 +1,45 @@
 <?php
-$num_tests = count($results);
-
+$num_tests = count($results['tests']);
+$num_pass = 0;
+foreach ($results['tests'] as $result)
+{
+	if ($result['pass'])
+	{
+		$num_pass++;
+	}
+}
+$num_fail = $num_tests - $num_pass;
 ?>
 Tests: <?= $num_tests ?><br>
-<form method="get">
-	<input type="hidden" name="type" value="individual">
+Pass: <?= $num_pass ?><br>
+Fail: <?= $num_fail ?><br>
+<form method="get" action="../index.php?type=test">
+	<input type="hidden" name="type" value="test">
 	<table class="table table-striped table-bordered table-condensed" data-page-length="1000">
 		<colgroup>
 			<col class="col-md-1">
 			<col class="col-md-2">
-			<col class="col-md-4">
+			<col class="col-md-2">
+			<col class="col-md-2">
 			<col class="col-md-5">
 		</colgroup>
 		<thead>
 		<tr>
 			<th>#</th>
 			<th>Message</th>
-			<th>Result</th>
+			<th>Old Result</th>
+			<th>New Result</th>
 			<th>Codes Used</th>
 		</tr>
 		</thead>
 
 		<tbody>
 		<?php
-		foreach ($results as $test_num => $result)
+		foreach ($results['tests'] as $test_num => $result)
 		{
-			echo '<!-- TEST #', $test_num, ' -->
- 		<tr>
+			echo '<!-- TEST #', $test_num, ' -->';
+			echo $result['pass'] ? '<tr>' : '<tr class="danger">';
+			echo '
 		<th scope="row" class="form-group"><label><input type="checkbox" name="msg[]" value="', $test_num, '">&nbsp;', $test_num, '</label></th>
 		<td>
 			<div class="code">', htmlspecialchars($result['message']), '</div>
@@ -52,7 +65,11 @@ Tests: <?= $num_tests ?><br>
 			*/
 			echo '
 		<td>
-			<pre class="code">', htmlspecialchars($result['return']), '</pre>
+			<div class="code">', htmlspecialchars($result['a']['result']), '</div>
+		</td>
+
+		<td>
+			<div class="code">', htmlspecialchars($result['b']['result']), '</div>
 		</td>
 
 		<td>

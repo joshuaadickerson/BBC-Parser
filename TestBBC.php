@@ -137,7 +137,31 @@ class TestBBC
 
 	public function individual()
 	{
+		$this->results = array(
+			'messages' => $this->messages,
+			'num_messages' => count($this->messages),
+			'tests' => array(),
+		);
 
+		$object = $this->methods['a'];
+		foreach ($this->messages as $i => $message)
+		{
+
+			if (is_callable($object, 'beforeMessage'))
+			{
+				$object->beforeMessage();
+			}
+
+			$this->results['tests'][$i] = array(
+				'message' => $message,
+				'result' => $object->parseMessage($message),
+			);
+
+			if (is_callable($object, 'afterMessage'))
+			{
+				$object->afterMessage();
+			}
+		}
 	}
 
 	public function benchmark()

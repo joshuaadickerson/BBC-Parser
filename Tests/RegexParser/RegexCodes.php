@@ -5,7 +5,7 @@ namespace BBC;
 // @todo add attribute for TEST_PARAM_STRING and TEST_CONTENT so people can test the content
 // @todo change ATTR_TEST to be able to test the entire message with the current offset
 
-class PregCodes extends Codes
+class RegexCodes extends Codes
 {
 	protected $codes;
 	protected $tags;
@@ -31,7 +31,7 @@ class PregCodes extends Codes
 		}
 		elseif ($code[self::ATTR_DISABLED])
 		{
-			$this->disable($code[self::ATTR_DISABLED]]);
+			$this->disable($code[self::ATTR_DISABLED]);
 		}
 
 		// Add a new opening tag
@@ -98,7 +98,7 @@ class PregCodes extends Codes
 
 	protected function addTag($tag)
 	{
-		$this->tags['[' . $tag;] = '[/' . $tag . ']';
+		$this->tags['[' . $tag] = '[/' . $tag . ']';
 		$this->closing_tags['[/' . $tag . ']'] = '[' . $tag;;
 	}
 
@@ -117,11 +117,6 @@ class PregCodes extends Codes
 		{
 			$tags[$tag] = '[/' . $tag . ']';
 		}
-	}
-
-	public function getCodes()
-	{
-		return $this->codes;
 	}
 
 	public function getTags()

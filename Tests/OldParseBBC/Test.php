@@ -6,7 +6,7 @@ class Test implements \BBC\Tests\BBCTest
 {
 	public function __construct()
 	{
-		require_once 'ParseBBC.php';
+		require_once __DIR__ . '/ParseBBC.php';
 	}
 
 	public function getName()

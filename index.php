@@ -1,4 +1,7 @@
 <?php
+
+// This will be renamed to index.php as soon as I am ready.
+
 namespace BBC;
 
 // Sanitize inputs
@@ -26,22 +29,21 @@ else
 }
 
 $tests = array(
-	'parse_bbc',
-	'spuds_parse_bbc',
-	'parser',
-	'regexparser',
+	'parse_bbc' => 'Old parse_bbc',
+	'spuds_parse_bbc' => 'Spuds parse_bbc',
+	'parser' => 'Parser',
+	'regexparser' => 'Regex Parser',
 );
 
 $input = array(
 	'type' => array(
 		'test' => $type === 'test' ? ' selected="selected"' : '',
 		'bench' => $type === 'bench' ? ' selected="selected"' : '',
-		'codes' => $type === 'codes' ? ' selected="selected"' : '',
 		'individual' => $type === 'individual' ? ' selected="selected"' : '',
 	),
 	'tests' => array(
-		'a' => isset($_GET['a']) && in_array($_GET['a'], $tests) ? $_GET['a'] : $tests[0],
-		'b' => isset($_GET['b']) && in_array($_GET['b'], $tests) ? $_GET['b'] : $tests[1],
+		'a' => isset($_GET['a']) && isset($tests[$_GET['a']]) ? $tests[$_GET['a']] : 'Old parse_bbc',
+		'b' => isset($_GET['b']) && isset($tests[$_GET['b']]) ? $tests[$_GET['b']] : 'Parser',
 	),
 	'iterations' => isset($_GET['iterations']) ? min($_GET['iterations'], 10000) : 0,
 	'debug' => isset($_GET['debug']) && $_GET['debug'] ? 'checked="checked"' : '',
@@ -60,16 +62,19 @@ $test_types = array(
 	'test' => 'tests',
 	'bench' => 'benchmark',
 	'individual' => 'individual',
-	//'codes' => 'codes',
 );
 
+require_once 'BBCHelpers.php';
+
 // Include the test file
-require_once 'Tester.php';
+require_once 'TestBBC.php';
+$test = new TestBBC($input);
 
 if (isset($test_types[$type]))
 {
 	define('TEST_TYPE', $type);
-	$results = call_user_func('\BBC\\' . $test_types[$type], $input);
+	call_user_func(array($test, $test_types[$type]), $input);
+	$results = $test->getResults();
 }
 
 ?><!DOCTYPE html>
@@ -129,7 +134,7 @@ if (isset($test_types[$type]))
 	{
 		if (isset($test_types[$type]))
 		{
-			require ucfirst($type) . 'Output.php';
+			require 'Templates/' . ucfirst($type) . 'Output.php';
 		}
 	}
 	?>
@@ -148,7 +153,7 @@ if (isset($test_types[$type]))
 							<select name="type" class="form-control">
 								<option value="test" <?= $input['type']['test'] ?>>Test</option>
 								<option value="bench" <?= $input['type']['bench'] ?>>Benchmark</option>
-								<!-- <option value="code" <?= $input['type']['codes'] ?>>Codes</option> -->
+								<option value="individual" <?= $input['type']['individual'] ?>>Benchmark</option>
 							</select>
 						</label>
 					</div>
@@ -156,7 +161,7 @@ if (isset($test_types[$type]))
 				<div class="form-group">
 					<label for="fatal">End tests if one fails</label>
 					<input name="fatal" type="checkbox" <?= $input['fatal'] ?> class="form-control">
-			</div>
+				</div>
 			</div>
 			<div class="form-group">
 				<label for="iterations">Number of iterations</label>
@@ -164,7 +169,7 @@ if (isset($test_types[$type]))
 			</div>
 			<div class="form-group">
 				<label for="msg">Comma separated list of message ids to parse</label>
-				<input name="msg" type="text" value="<?= implode(',', $input['msg']) ?>" class="form-control">
+				<input name="msg" type="text" value="<?= isset($input['msg']) && is_array($input['msg']) ? implode(',', $input['msg']) : '' ?>" class="form-control">
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

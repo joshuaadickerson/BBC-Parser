@@ -8,7 +8,8 @@ class Test implements \BBC\Tests\BBCTest
 {
 	public function __construct()
 	{
-		require_once 'RegexParser.php';
+		require_once __DIR__ . '/RegexParser.php';
+		require_once __DIR__ . '/RegexCodes.php';
 	}
 
 	public function getName()
