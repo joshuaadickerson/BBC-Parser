@@ -55,7 +55,7 @@ return array(
 	"Everyone\n[code]\ngets a line\n[/code]\nbreak",
 	"You\n[code=me]\nget 1\n[/code]and [code]\nyou get one[/code]",
 	'[code]I [b]am[/b] a robot [quote]bee boo bee boop[/quote][/code]',
-	"[code]	this 	has 	tabs\n\n\n	tab\n tab\n[/code]\neven\tsome\toutside\t	THE code",
+	"[code]	this \t	has 	tabs\n\n\n	tab\n tab\n[/code]\neven\tsome\toutside\t	THE code",
 	'[nobbc][b]please do not parse this[/b][/nobbc]',
 	'[br][hr][br /][hr /]',
 	"[code][/code]\ne",
@@ -119,6 +119,7 @@ return array(
 	// Links inside links:
 	'[url=http://www.google.com/]this url has [email=someone@someplace.org]an email[/email][/url]',
 	'[url=http://www.yahoo.com]another URL[/url] in it![/url]',
+	'Testing autolink then a url: www.google.com [url=this no worky] [b]a tag to close it [/b] [/url] just to make sure',
 
 	// BBC with smilies and autolinks? Let's try
 	"[quote]Economics is [b]everywhere[/b] :)\nand understanding economics can help you make better www.decisio.ns and lead a happier life.[/quote]",

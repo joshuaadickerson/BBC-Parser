@@ -91,6 +91,7 @@ class Parser
 
 		// @todo change this to <br> (it will break tests)
 		$this->message = str_replace("\n", '<br />', $this->message);
+
 //$this->tokenize($this->message);
 
 		$this->pos = -1;
@@ -547,6 +548,7 @@ class Parser
 
 		foreach ($possible_codes as $possible)
 		{
+			//var_dump($possible, $this->message);
 			// Skip tags that didn't match the next X characters
 			if ($possible[Codes::ATTR_TAG] === $last_check)
 			{
@@ -614,12 +616,13 @@ class Parser
 			}
 
 			// Check allowed tree?
-			if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !in_array($this->inside_tag[Codes::ATTR_TAG], $possible[Codes::ATTR_REQUIRE_PARENTS])))
+			//if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !in_array($this->inside_tag[Codes::ATTR_TAG], $possible[Codes::ATTR_REQUIRE_PARENTS])))
+			if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !isset($possible[Codes::ATTR_REQUIRE_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
 			{
 				continue;
 			}
 
-			if (isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]) && !in_array($possible[Codes::ATTR_TAG], $this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]))
+			if (isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]) && !isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN][$possible[Codes::ATTR_TAG]]))
 			{
 				continue;
 			}
@@ -631,7 +634,7 @@ class Parser
 			}
 
 			// Not allowed in this parent, replace the tags or show it like regular text
-			if (isset($possible[Codes::ATTR_DISALLOW_PARENTS]) && ($this->inside_tag !== null && in_array($this->inside_tag[Codes::ATTR_TAG], $possible[Codes::ATTR_DISALLOW_PARENTS])))
+			if (isset($possible[Codes::ATTR_DISALLOW_PARENTS]) && ($this->inside_tag !== null && isset($possible[Codes::ATTR_DISALLOW_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
 			{
 				if (!isset($possible[Codes::ATTR_DISALLOW_BEFORE], $possible[Codes::ATTR_DISALLOW_AFTER]))
 				{
@@ -1083,6 +1086,12 @@ class Parser
 		$data = substr($this->message, $this->last_pos, $this->pos - $this->last_pos);
 		//$old_data = $data;
 
+		// @todo $data seems to be \n a lot. Why? It got called 62 times in a test
+		if ($data === "\n")
+		{
+			return;
+		}
+
 		// Take care of some HTML!
 		if (!empty($GLOBALS['modSettings']['enablePostHTML']) && strpos($data, '&lt;') !== false)
 		{
@@ -1097,6 +1106,7 @@ class Parser
 		}
 
 		// @todo can this be moved much earlier?
+		// This cannot be moved earlier. It breaks tests
 		$data = str_replace("\t", '&nbsp;&nbsp;&nbsp;', $data);
 
 		// If it wasn't changed, no copying or other boring stuff has to happen!
@@ -1273,9 +1283,10 @@ class Parser
 		return $tags;
 	}
 
+	// There's not 1 test that the substr_replace() gets called here.
 	protected function trimWhiteSpace(&$message, $offset = null)
 	{
-		if (preg_match('~(<br />|&nbsp;|\s)*~', $this->message, $matches, null, $offset) !== 0 && isset($matches[0]))
+		if (preg_match('~(<br />|&nbsp;|\s)*~', $this->message, $matches, null, $offset) !== 0 && isset($matches[0]) && $matches[0] !== '')
 		{
 			//$this->message = substr($this->message, 0, $this->pos) . substr($this->message, $this->pos + strlen($matches[0]));
 			$this->message = substr_replace($this->message, '', $this->pos, strlen($matches[0]));

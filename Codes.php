@@ -319,7 +319,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<div class="codeheader">' . $txt['code'] . ': <a href="javascript:void(0);" onclick="return elkSelectText(this);" class="codeoperation">' . $txt['code_select'] . '</a></div><pre class="bbc_code prettyprint">$1</pre>',
 				self::ATTR_VALIDATE => $this->isDisabled('code') ? null : function(&$tag, &$data, $disabled) {
-					$data = str_replace("\t", "<span class=\"tab\">\t</span>", $data);
+					$data = tabToHtmlTab($data);
 				},
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_AUTOLINK => false,
@@ -330,7 +330,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS_CONTENT,
 				self::ATTR_CONTENT => '<div class="codeheader">' . $txt['code'] . ': ($2) <a href="#" onclick="return elkSelectText(this);" class="codeoperation">' . $txt['code_select'] . '</a></div><pre class="bbc_code prettyprint">$1</pre>',
 				self::ATTR_VALIDATE => $this->isDisabled('code') ? null : function(&$tag, &$data, $disabled) {
-					$data[0] = str_replace("\t", "<span class=\"tab\">\t</span>", $data[0]);
+					$data[0] = tabToHtmlTab($data[0]);
 				},
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_AUTOLINK => false,
@@ -463,7 +463,7 @@ class Codes
 				),
 				self::ATTR_CONTENT => '<img src="$1" alt="{alt}" style="{width}{height}" class="bbc_img resized" />',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = strtr($data, array('<br />' => ''));
+					$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -479,7 +479,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<img src="$1" alt="" class="bbc_img" />',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = strtr($data, array('<br />' => ''));
+					$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -495,7 +495,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<a href="$1" class="bbc_link">$1</a>',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = strtr($data, array('<br />' => ''));
+					$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -542,7 +542,7 @@ class Codes
 				self::ATTR_BEFORE => '<li>',
 				self::ATTR_AFTER => '</li>',
 				self::ATTR_TRIM => self::TRIM_OUTSIDE,
-				self::ATTR_REQUIRE_PARENTS => array('list'),
+				self::ATTR_REQUIRE_PARENTS => array('list' => 'list'),
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_DISABLED_BEFORE => '',
 				self::ATTR_DISABLED_AFTER => '<br />',
@@ -555,7 +555,7 @@ class Codes
 				self::ATTR_BEFORE => '<ul class="bbc_list">',
 				self::ATTR_AFTER => '</ul>',
 				self::ATTR_TRIM => self::TRIM_INSIDE,
-				self::ATTR_REQUIRE_CHILDREN => array('li', 'list'),
+				self::ATTR_REQUIRE_CHILDREN => array('li' => 'li', 'list' => 'list'),
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_AUTOLINK => true,
 				self::ATTR_LENGTH => 4,
@@ -569,7 +569,7 @@ class Codes
 				self::ATTR_BEFORE => '<ul class="bbc_list" style="list-style-type: {type};">',
 				self::ATTR_AFTER => '</ul>',
 				self::ATTR_TRIM => self::TRIM_INSIDE,
-				self::ATTR_REQUIRE_CHILDREN => array('li'),
+				self::ATTR_REQUIRE_CHILDREN => array('li' => 'li'),
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_AUTOLINK => true,
 				self::ATTR_LENGTH => 4,
@@ -765,7 +765,7 @@ class Codes
 				self::ATTR_BEFORE => '<div class="bbc_table_container"><table class="bbc_table">',
 				self::ATTR_AFTER => '</table></div>',
 				self::ATTR_TRIM => self::TRIM_INSIDE,
-				self::ATTR_REQUIRE_CHILDREN => array('tr'),
+				self::ATTR_REQUIRE_CHILDREN => array('tr' => 'tr'),
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_AUTOLINK => true,
 				self::ATTR_LENGTH => 5,
@@ -775,7 +775,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_BEFORE => '<td>',
 				self::ATTR_AFTER => '</td>',
-				self::ATTR_REQUIRE_PARENTS => array('tr'),
+				self::ATTR_REQUIRE_PARENTS => array('tr' => 'tr'),
 				self::ATTR_TRIM => self::TRIM_OUTSIDE,
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_DISABLED_BEFORE => '',
@@ -788,7 +788,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_BEFORE => '<th>',
 				self::ATTR_AFTER => '</th>',
-				self::ATTR_REQUIRE_PARENTS => array('tr'),
+				self::ATTR_REQUIRE_PARENTS => array('tr' => 'tr'),
 				self::ATTR_TRIM => self::TRIM_OUTSIDE,
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_DISABLED_BEFORE => '',
@@ -801,8 +801,8 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_BEFORE => '<tr>',
 				self::ATTR_AFTER => '</tr>',
-				self::ATTR_REQUIRE_PARENTS => array('table'),
-				self::ATTR_REQUIRE_CHILDREN => array('td', 'th'),
+				self::ATTR_REQUIRE_PARENTS => array('table' => 'table'),
+				self::ATTR_REQUIRE_CHILDREN => array('td' => 'td', 'th' => 'th'),
 				self::ATTR_TRIM => self::TRIM_BOTH,
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_DISABLED_BEFORE => '',
@@ -833,7 +833,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<a href="$1" class="bbc_link" target="_blank">$1</a>',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = strtr($data, array('<br />' => ''));
+					$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -935,9 +935,13 @@ class Codes
 
 		$return = array();
 		// Find the first letter of the tag faster
-		foreach ($bbc as $code)
+		foreach ($bbc as &$code)
 		{
 			$return[$code[self::ATTR_TAG][0]][] = $code;
+
+			// Add the markers around the string for BEFORE/AFTER
+			//$code[Codes::ATTR_BEFORE] = "\n" . $code[Codes::ATTR_BEFORE] . "\n";
+			//$code[Codes::ATTR_AFTER] = "\n" . $code[Codes::ATTR_AFTER] . "\n";
 		}
 
 		return $return;
@@ -947,6 +951,7 @@ class Codes
 	{
 		$bbc = array();
 
+		// Get the default codes
 		foreach ($this->bbc as $code)
 		{
 			$char = $code[0];
@@ -959,11 +964,17 @@ class Codes
 
 			if (!isset($return[$char][$tag]))
 			{
-				$bbc[$char][$tag] = array();
+				$bbc[$char][$tag] = array(
+					'length' => $code[self::ATTR_LENGTH],
+					'tag' => $tag,
+					'codes' => array(),
+				);
 			}
 
-			$bbc[$char][$tag][] = $code;
+			$bbc[$char][$tag]['codes'][] = $code;
 		}
+
+		return $bbc;
 	}
 
 	protected function getItemCodeTag($code)

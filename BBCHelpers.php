@@ -217,6 +217,57 @@ function pc_next_permutation($p, $size)
 	return $p;
 }
 
+
+function footnote_callback($matches)
+{
+	global $fn_num, $fn_content, $fn_count;
+
+	$fn_num++;
+	$fn_content[] = '<div class="target" id="fn' . $fn_num . '_' . $fn_count . '"><sup>' . $fn_num . '&nbsp;</sup>' . $matches[2] . '<a class="footnote_return" href="#ref' . $fn_num . '_' . $fn_count . '">&crarr;</a></div>';
+
+	return '<a class="target" href="#fn' . $fn_num . '_' . $fn_count . '" id="ref' . $fn_num . '_' . $fn_count . '">[' . $fn_num . ']</a>';
+}
+
+/**
+ * Cut down version just so we can run test cases
+ */
+function htmlTime($timestamp)
+{
+	if (empty($timestamp))
+		return '';
+
+	$timestamp = forum_time(true, $timestamp);
+	$time = date('Y-m-d H:i', $timestamp);
+	$stdtime = standardTime($timestamp, true, true);
+
+	// @todo maybe htmlspecialchars on the title attribute?
+	return '<time title="' . $stdtime . '" datetime="' . $time . '" data-timestamp="' . $timestamp . '">' . $stdtime . '</time>';
+}
+
+/**
+ * Cut down version just so we can run test cases
+ */
+function forum_time($use_user_offset = true, $timestamp = null)
+{
+	if ($timestamp === null)
+		$timestamp = time();
+	elseif ($timestamp == 0)
+		return 0;
+
+	return $timestamp;
+}
+
+/**
+ * Cut down version just so we can run test cases
+ */
+function standardTime($log_time, $show_today = true, $offset_type = false)
+{
+	$time = $log_time;
+
+	// Format any other characters..
+	return strftime('%B %d, %Y, %I:%M:%S %p', $time);
+}
+
 // This is just a mock so we don't break anything
 function call_integration_hook($hook, $parameters = array())
 {
@@ -231,4 +282,31 @@ function cache_put_data($key, $value, $ttl = 120)
 function cache_get_data($key, $ttl = 120)
 {
 	return;
+}
+
+// because shuffle doesn't have a shuffle_assoc()
+function shuffle_assoc(&$array)
+{
+	$keys = array_keys($array);
+
+	shuffle($keys);
+
+	foreach($keys as $key)
+	{
+		$new[$key] = $array[$key];
+	}
+
+	$array = $new;
+
+	return true;
+}
+
+function tabToHtmlTab($string)
+{
+	return str_replace("\t", "<span class=\"tab\">\t</span>", $string);
+}
+
+function removeBr($string)
+{
+	return str_replace('<br />', '', $string);
 }
