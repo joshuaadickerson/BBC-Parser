@@ -44,18 +44,15 @@ class Parser
 		$this->bbc_codes = $this->bbc->getForParsing();
 		$this->item_codes = $this->bbc->getItemCodes();
 		$this->loadAutolink();
-		//$this->tags = $this->bbc->getTags();
 	}
 
 	public function resetParser()
 	{
-		//$this->tags = null;
 		$this->pos = null;
 		$this->pos1 = null;
 		$this->pos2 = null;
 		$this->last_pos = null;
 		$this->open_tags = array();
-		//$this->open_bbc = new \SplStack;
 		$this->do_autolink = true;
 		$this->inside_tag = null;
 		$this->lastAutoPos = 0;
@@ -90,8 +87,6 @@ class Parser
 
 		// @todo change this to <br> (it will break tests)
 		$this->message = str_replace("\n", '<br />', $this->message);
-
-//$this->tokenize($this->message);
 
 		$this->pos = -1;
 		while ($this->pos !== false)
@@ -216,19 +211,14 @@ class Parser
 
 					foreach ($to_close as $tag)
 					{
-						//$this->message = substr($this->message, 0, $this->pos) . "\n" . $tag[Codes::ATTR_AFTER] . "\n" . substr($this->message, $this->pos2 + 1);
-						//$this->message = substr_replace($this->message, "\n" . $tag[Codes::ATTR_AFTER] . "\n", $this->pos, $this->pos2 + 1 - $this->pos);
 						$tmp = $this->noSmileys($tag[Codes::ATTR_AFTER]);
 						$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
-						//$this->pos += strlen($tag[Codes::ATTR_AFTER]) + 2;
 						$this->pos += strlen($tmp);
 						$this->pos2 = $this->pos - 1;
 
 						// See the comment at the end of the big loop - just eating whitespace ;).
 						if ($tag[Codes::ATTR_BLOCK_LEVEL] && isset($this->message[$this->pos]) && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
-							//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr($this->message, $this->pos, 6) === '<br />')
 						{
-							// $this->message = substr($this->message, 0, $this->pos) . substr($this->message, $this->pos + 6);
 							$this->message = substr_replace($this->message, '', $this->pos, 6);
 						}
 
@@ -241,7 +231,6 @@ class Parser
 
 					if (!empty($to_close))
 					{
-						$to_close = array();
 						$this->pos--;
 					}
 				}
@@ -279,10 +268,8 @@ class Parser
 			if ($tag === null && $this->inside_tag !== null && !empty($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]))
 			{
 				$this->closeOpenedTag();
-				//$this->message = substr_replace($this->message, "\n" . $this->inside_tag[Codes::ATTR_AFTER] . "\n", $this->pos, 0);
 				$tmp = $this->noSmileys($this->inside_tag[Codes::ATTR_AFTER]);
 				$this->message = substr_replace($this->message, $tmp, $this->pos, 0);
-				//$this->pos += strlen($this->inside_tag[Codes::ATTR_AFTER]) - 1 + 2;
 				$this->pos += strlen($tmp) - 1;
 			}
 
@@ -295,7 +282,6 @@ class Parser
 			// Propagate the list to the child (so wrapping the disallowed tag won't work either.)
 			if (isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]))
 			{
-				//$tag[Codes::ATTR_DISALLOW_CHILDREN] = isset($tag[Codes::ATTR_DISALLOW_CHILDREN]) ? array_unique(array_merge($tag[Codes::ATTR_DISALLOW_CHILDREN], $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN])) : $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN];
 				$tag[Codes::ATTR_DISALLOW_CHILDREN] = isset($tag[Codes::ATTR_DISALLOW_CHILDREN]) ? $tag[Codes::ATTR_DISALLOW_CHILDREN] + $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN] : $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN];
 			}
 
@@ -384,7 +370,6 @@ class Parser
 	{
 		global $modSettings;
 
-		//$data = preg_replace('~&lt;a\s+href=((?:&quot;)?)((?:https?://|ftps?://|mailto:)\S+?)\\1&gt;~i', '[url=$2]', $data);
 		$data = preg_replace('~&lt;a\s+href=((?:&quot;)?)((?:https?://|mailto:)\S+?)\\1&gt;~i', '[url=$2]', $data);
 		$data = preg_replace('~&lt;/a&gt;~i', '[/url]', $data);
 
@@ -409,7 +394,6 @@ class Parser
 		}
 
 		// Do <img ... /> - with security... action= -> action-.
-		//preg_match_all('~&lt;img\s+src=((?:&quot;)?)((?:https?://|ftps?://)\S+?)\\1(?:\s+alt=(&quot;.*?&quot;|\S*?))?(?:\s?/)?&gt;~i', $data, $matches, PREG_PATTERN_ORDER);
 		preg_match_all('~&lt;img\s+src=((?:&quot;)?)((?:https?://)\S+?)\\1(?:\s+alt=(&quot;.*?&quot;|\S*?))?(?:\s?/)?&gt;~i', $data, $matches, PREG_PATTERN_ORDER);
 		if (!empty($matches[0]))
 		{
@@ -475,11 +459,9 @@ class Parser
 		}
 
 		// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-		//if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false) && strpos($data, '[url') === false)
 		if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
 		{
 			// Switch out quotes really quick because they can cause problems.
-			//$data = strtr($data, array('&#039;' => '\'', '&nbsp;' => "\xC2\xA0", '&quot;' => '>">', '"' => '<"<', '&lt;' => '<lt<'));
 			$data = str_replace(array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), $data);
 
 			$result = preg_replace($this->autolink_search, $this->autolink_replace, $data);
@@ -491,7 +473,6 @@ class Parser
 			}
 
 			// Switch those quotes back
-			//$data = strtr($data, array('\'' => '&#039;', "\xC2\xA0" => '&nbsp;', '>">' => '&quot;', '<"<' => '"', '<lt<' => '&lt;'));
 			$data = str_replace(array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), $data);
 		}
 
@@ -508,12 +489,10 @@ class Parser
 		// @todo get rid of the FTP, nobody uses it
 		$search = array(
 			'~(?<=[\s>\.(;\'"]|^)((?:http|https)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui',
-			//'~(?<=[\s>\.(;\'"]|^)((?:ftp|ftps)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\w\-_\~%\.@,\?&;=#(){}+:\'\\\\]*)*[/\w\-_\~%@\?;=#}\\\\])~i',
 			'~(?<=[\s>(\'<]|^)(www(?:\.[\w\-_]+)+(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui'
 		);
 		$replace = array(
 			'[url]$1[/url]',
-			//'[ftp]$1[/ftp]',
 			'[url=http://$1]$1[/url]'
 		);
 
@@ -558,15 +537,12 @@ class Parser
 			// @todo figure out if the regex need can use offset
 			// this creates a copy of the entire message starting from this point!
 			// @todo where do we know if the next char is ]?
-			//if (isset($possible[Codes::ATTR_TEST]) && preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 1 + $possible[Codes::ATTR_LENGTH] + 1)) === 0)
 
 			// Do we want parameters?
 			if (!empty($possible[Codes::ATTR_PARAM]))
 			{
-				//var_dump('has param');
 				if ($next_c !== ' ')
 				{
-					//var_dump('but doesn\'t have a space');
 					continue;
 				}
 			}
@@ -607,7 +583,6 @@ class Parser
 			}
 
 			// Check allowed tree?
-			//if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !in_array($this->inside_tag[Codes::ATTR_TAG], $possible[Codes::ATTR_REQUIRE_PARENTS])))
 			if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !isset($possible[Codes::ATTR_REQUIRE_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
 			{
 				continue;
@@ -618,7 +593,6 @@ class Parser
 				continue;
 			}
 			// If this is in the list of disallowed child tags, don't parse it.
-			//elseif (isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) && in_array($possible[Codes::ATTR_TAG], $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]))
 			if (isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) && isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN][$possible[Codes::ATTR_TAG]]))
 			{
 				continue;
@@ -685,9 +659,9 @@ class Parser
 			break;
 		}
 
-		// @todo remove this. This is only for testing
-		//$GLOBALS['codes_used'][$GLOBALS['current_message']][] = $tag;
-		//$GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] = isset($GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)]) ? $GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] + 1 : 1;
+// @todo remove this. This is only for testing
+//$GLOBALS['codes_used'][$GLOBALS['current_message']][] = $tag;
+//$GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] = isset($GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)]) ? $GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] + 1 : 1;
 
 		return $tag;
 	}
@@ -737,11 +711,8 @@ class Parser
 		// First, open the tag...
 		$code .= '<li>';
 
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos + 3);
-		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, 3);
 		$tmp = $this->noSmileys($code);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, 3);
-		//$this->pos += strlen($code) + 1;
 		$this->pos += strlen($tmp) - 1;
 
 		// Next, find the next break (if any.)  If there's more itemcode after it, keep it going - otherwise close!
@@ -756,7 +727,6 @@ class Parser
 
 			// Keep the list open if the next character after the break is a [. Otherwise, close it.
 			$replacement = (!empty($matches[0]) && substr_compare($matches[0], '[', -1, 1) === 0 ? '[/li]' : '[/li][/list]');
-			//$this->message = substr($this->message, 0, $this->pos2)	. $replacement . substr($this->message, $this->pos2);
 			$this->message = substr_replace($this->message, $replacement, $this->pos2, 0);
 			$this->open_tags[$num_open_tags - 2][Codes::ATTR_AFTER] = '</ul>';
 		}
@@ -773,11 +743,8 @@ class Parser
 	{
 		// @todo Check for end tag first, so people can say "I like that [i] tag"?
 		$this->addOpenTag($tag);
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $tag[Codes::ATTR_BEFORE] . "\n" . substr($this->message, $this->pos1);
-		//$this->message = substr_replace($this->message, "\n" . $tag[Codes::ATTR_BEFORE] . "\n", $this->pos, $this->pos1 - $this->pos);
 		$tmp = $this->noSmileys($tag[Codes::ATTR_BEFORE]);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos1 - $this->pos);
-		//$this->pos += strlen($tag[Codes::ATTR_BEFORE]) + 1;
 		$this->pos += strlen($tmp) - 1;
 
 		return false;
@@ -797,12 +764,9 @@ class Parser
 		// @todo figure out how to make this move to the validate part
 		$data = substr($this->message, $this->pos1, $this->pos2 - $this->pos1);
 
-		//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
-		//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr($data, 0, 6) === '<br />')
 		if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && isset($data[0]) && substr_compare($data, '<br />', 0, 6) === 0)
 		{
 			$data = substr($data, 6);
-			//$this->message = substr_replace($this->message, '', $this->pos, 6);
 		}
 
 		if (isset($tag[Codes::ATTR_VALIDATE]))
@@ -811,12 +775,8 @@ class Parser
 		}
 
 		$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data));
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH]);
-		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
 		$tmp = $this->noSmileys($code);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-
-		//$this->pos += strlen($code) - 1 + 2;
 		$this->pos += strlen($tmp) - 1;
 		$this->last_pos = $this->pos + 1;
 
@@ -873,11 +833,8 @@ class Parser
 		}
 
 		$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data[0], '$2' => $data[1]));
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH]);
-		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
 		$tmp = $this->noSmileys($code);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-		//$this->pos += strlen($code) - 1 + 2;
 		$this->pos += strlen($tmp) - 1;
 
 		return false;
@@ -886,11 +843,8 @@ class Parser
 	protected function handleTypeClosed($tag)
 	{
 		$this->pos2 = strpos($this->message, ']', $this->pos);
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $tag[Codes::ATTR_CONTENT] . "\n" . substr($this->message, $this->pos2 + 1);
-		//$this->message = substr_replace($this->message, "\n" . $tag[Codes::ATTR_CONTENT] . "\n", $this->pos, $this->pos2 + 1 - $this->pos);
 		$tmp = $this->noSmileys($tag[Codes::ATTR_CONTENT]);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
-		//$this->pos += strlen($tag[Codes::ATTR_CONTENT]) - 1 + 2;
 		$this->pos += strlen($tmp) - 1;
 
 		return false;
@@ -925,11 +879,8 @@ class Parser
 			$code = strtr($code, array('$' . ($k + 1) => trim($d)));
 		}
 
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH]);
-		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
 		$tmp = $this->noSmileys($code);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos3 + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-		//$this->pos += strlen($code) - 1 + 2;
 		$this->pos += strlen($tmp) - 1;
 
 		return false;
@@ -964,11 +915,9 @@ class Parser
 		{
 			$code = strtr($code, array('$' . ($k + 1) => trim($d)));
 		}
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + 1);
-		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + 1 - $this->pos);
+
 		$tmp = $this->noSmileys($code);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
-		//$this->pos += strlen($code) - 1 + 2;
 		$this->pos += strlen($tmp) - 1;
 
 		return false;
@@ -979,7 +928,6 @@ class Parser
 		// The value may be quoted for some tags - check.
 		if (isset($tag[Codes::ATTR_QUOTED]))
 		{
-			//$quoted = substr($this->message, $this->pos1, 6) === '&quot;';
 			$quoted = substr_compare($this->message, '&quot;', $this->pos1, 6) === 0;
 			if ($tag[Codes::ATTR_QUOTED] !== Codes::OPTIONAL && !$quoted)
 			{
@@ -1021,11 +969,8 @@ class Parser
 		$this->addOpenTag($tag);
 
 		$code = strtr($tag[Codes::ATTR_BEFORE], array('$1' => $data));
-		//$this->message = substr($this->message, 0, $this->pos) . "\n" . $code . "\n" . substr($this->message, $this->pos2 + ($quoted === false ? 1 : 7));
-		//$this->message = substr_replace($this->message, "\n" . $code . "\n", $this->pos, $this->pos2 + ($quoted === false ? 1 : 7) - $this->pos);
 		$tmp = $this->noSmileys($code);
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + ($quoted === false ? 1 : 7) - $this->pos);
-		//$this->pos += strlen($code) - 1 + 2;
 		$this->pos += strlen($tmp) - 1;
 
 		return false;
@@ -1075,7 +1020,6 @@ class Parser
 
 		// Pick a block of data to do some raw fixing on.
 		$data = substr($this->message, $this->last_pos, $this->pos - $this->last_pos);
-		//$old_data = $data;
 
 		// @todo $data seems to be \n a lot. Why? It got called 62 times in a test
 		if ($data === "\n")
@@ -1101,11 +1045,8 @@ class Parser
 		$data = str_replace("\t", '&nbsp;&nbsp;&nbsp;', $data);
 
 		// If it wasn't changed, no copying or other boring stuff has to happen!
-		//if ($data !== substr($this->message, $this->last_pos, $this->pos - $this->last_pos))
 		if (substr_compare($this->message, $data, $this->last_pos, $this->pos - $this->last_pos))
-		//if ($old_data !== $data)
 		{
-			//$this->message = substr($this->message, 0, $this->last_pos) . $data . substr($this->message, $this->pos);
 			$this->message = substr_replace($this->message, $data, $this->last_pos, $this->pos - $this->last_pos);
 
 			// Since we changed it, look again in case we added or removed a tag.  But we don't want to skip any.
@@ -1174,8 +1115,6 @@ class Parser
 
 		// Okay, this may look ugly and it is, but it's not going to happen much and it is the best way
 		// of allowing any order of parameters but still parsing them right.
-		//$param_size = count($possible['preg_cache']) - 1;
-		//$preg_keys = range(0, $param_size);
 		$message_stub = substr($this->message, $this->pos1 - 1);
 
 		// If an addon adds many parameters we can exceed max_execution time, lets prevent that
@@ -1234,10 +1173,6 @@ class Parser
 	{
 		if ($tag === false)
 		{
-			//$return = end($this->open_tags);
-			//unset($this->open_tags[key($this->open_tags)]);
-			//return $return;
-
 			return array_pop($this->open_tags);
 		}
 		elseif (isset($this->open_tags[$tag]))
@@ -1278,7 +1213,6 @@ class Parser
 	{
 		if (preg_match('~(<br />|&nbsp;|\s)*~', $this->message, $matches, null, $offset) !== 0 && isset($matches[0]) && $matches[0] !== '')
 		{
-			//$this->message = substr($this->message, 0, $this->pos) . substr($this->message, $this->pos + strlen($matches[0]));
 			$this->message = substr_replace($this->message, '', $this->pos, strlen($matches[0]));
 		}
 	}
@@ -1377,14 +1311,10 @@ class Parser
 		// Close all the non block level tags so this tag isn't surrounded by them.
 		for ($i = count($this->open_tags) - 1; $i > $n; $i--)
 		{
-			//$this->message = substr_replace($this->message, "\n" . $this->open_tags[$i][Codes::ATTR_AFTER] . "\n", $this->pos, 0);
 			$tmp = $this->noSmileys($this->open_tags[$i][Codes::ATTR_AFTER]);
 			$this->message = substr_replace($this->message, $tmp, $this->pos, 0);
-			//$ot_strlen = strlen($this->open_tags[$i][Codes::ATTR_AFTER]);
 			$ot_strlen = strlen($tmp);
-			//$this->pos += $ot_strlen + 2;
 			$this->pos += $ot_strlen;
-			//$this->pos1 += $ot_strlen + 2;
 			$this->pos1 += $ot_strlen;
 
 			// Trim or eat trailing stuff... see comment at the end of the big loop.
@@ -1427,18 +1357,6 @@ class Parser
 		{
 			$this->message = str_replace("\n", '', $this->message);
 		}
-
-		/*if ($this->do_smileys === true)
-		{
-			$old_string = $string;
-			parseSmileys($string);
-			if ($string != $old_string)
-				var_dump($this->message);
-		}
-
-		//$string = "\n" . $string . "\n";
-
-		return $string;*/
 	}
 
 	// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
