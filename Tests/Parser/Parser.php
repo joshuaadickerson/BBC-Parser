@@ -35,8 +35,9 @@ class Parser
 	protected $autolink_search;
 	protected $autolink_replace;
 
-	private $original_msg;
-
+	/**
+	 * @param \BBC\Codes $bbc
+	 */
 	public function __construct(Codes $bbc)
 	{
 		$this->bbc = $bbc;
@@ -46,6 +47,9 @@ class Parser
 		$this->loadAutolink();
 	}
 
+	/**
+	 * Reset the parser's properties for a new message
+	 */
 	public function resetParser()
 	{
 		$this->pos = null;
@@ -58,6 +62,13 @@ class Parser
 		$this->lastAutoPos = 0;
 	}
 
+	/**
+	 * Parse the BBC in a string/message
+	 *
+	 * @param string $message
+	 *
+	 * @return string
+	 */
 	public function parse($message)
 	{
 		$this->message = $message;
@@ -112,127 +123,14 @@ class Parser
 				break;
 			}
 
-			$tags = strtolower($this->message[$this->pos + 1]);
+			$next_char = strtolower($this->message[$this->pos + 1]);
 
 			// Possibly a closer?
-			if ($tags === '/')
+			if ($next_char === '/')
 			{
 				if($this->hasOpenTags())
 				{
-					// Next closing bracket after the first character
-					$this->pos2 = strpos($this->message, ']', $this->pos + 1);
-
-					// Playing games? string = [/]
-					if ($this->pos2 === $this->pos + 2)
-					{
-						continue;
-					}
-
-					// Get everything between [/ and ]
-					$look_for = strtolower(substr($this->message, $this->pos + 2, $this->pos2 - $this->pos - 2));
-					$to_close = array();
-					$block_level = null;
-
-					do
-					{
-						// Get the last opened tag
-						$tag = $this->closeOpenedTag(false);
-
-						// No open tags
-						if (!$tag)
-						{
-							break;
-						}
-
-						if ($tag[Codes::ATTR_BLOCK_LEVEL])
-						{
-							// Only find out if we need to.
-							if ($block_level === false)
-							{
-								$this->addOpenTag($tag);
-								break;
-							}
-
-							// The idea is, if we are LOOKING for a block level tag, we can close them on the way.
-							if (isset($look_for[1]) && isset($this->bbc_codes[$look_for[0]]))
-							{
-								foreach ($this->bbc_codes[$look_for[0]] as $temp)
-								{
-									if ($temp[Codes::ATTR_TAG] === $look_for)
-									{
-										$block_level = $temp[Codes::ATTR_BLOCK_LEVEL];
-										break;
-									}
-								}
-							}
-
-							if ($block_level !== true)
-							{
-								$block_level = false;
-								$this->addOpenTag($tag);
-								break;
-							}
-						}
-
-						$to_close[] = $tag;
-					} while ($tag[Codes::ATTR_TAG] !== $look_for);
-
-					// Did we just eat through everything and not find it?
-					if (!$this->hasOpenTags() && (empty($tag) || $tag[Codes::ATTR_TAG] !== $look_for))
-					{
-						$this->open_tags = $to_close;
-						continue;
-					}
-					elseif (!empty($to_close) && $tag[Codes::ATTR_TAG] !== $look_for)
-					{
-						if ($block_level === null && isset($look_for[0], $this->bbc_codes[$look_for[0]]))
-						{
-							foreach ($this->bbc_codes[$look_for[0]] as $temp)
-							{
-								if ($temp[Codes::ATTR_TAG] === $look_for)
-								{
-									$block_level = !empty($temp[Codes::ATTR_BLOCK_LEVEL]);
-									break;
-								}
-							}
-						}
-
-						// We're not looking for a block level tag (or maybe even a tag that exists...)
-						if (!$block_level)
-						{
-							foreach ($to_close as $tag)
-							{
-								$this->addOpenTag($tag);
-							}
-
-							continue;
-						}
-					}
-
-					foreach ($to_close as $tag)
-					{
-						$tmp = $this->noSmileys($tag[Codes::ATTR_AFTER]);
-						$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
-						$this->pos += strlen($tmp);
-						$this->pos2 = $this->pos - 1;
-
-						// See the comment at the end of the big loop - just eating whitespace ;).
-						if ($tag[Codes::ATTR_BLOCK_LEVEL] && isset($this->message[$this->pos]) && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
-						{
-							$this->message = substr_replace($this->message, '', $this->pos, 6);
-						}
-
-						// Trim inside whitespace
-						if (!empty($tag[Codes::ATTR_TRIM]) && $tag[Codes::ATTR_TRIM] !== Codes::TRIM_INSIDE)
-						{
-							$this->trimWhiteSpace($this->message, $this->pos + 1);
-						}
-					}
-
-					if (!empty($to_close))
-					{
-						$this->pos--;
-					}
+					$this->handleOpenTags();
 				}
 
 				// We don't allow / to be used for anything but the closing character, so this can't be a tag
@@ -240,14 +138,14 @@ class Parser
 			}
 
 			// No tags for this character, so just keep going (fastest possible course.)
-			if (!isset($this->bbc_codes[$tags]))
+			if (!isset($this->bbc_codes[$next_char]))
 			{
 				continue;
 			}
 
 			$this->inside_tag = !$this->hasOpenTags() ? null : $this->getLastOpenedTag();
 
-			if ($this->isItemCode($tags) && isset($this->message[$this->pos + 2]) && $this->message[$this->pos + 2] === ']' && !$this->bbc->isDisabled('list') && !$this->bbc->isDisabled('li'))
+			if ($this->isItemCode($next_char) && isset($this->message[$this->pos + 2]) && $this->message[$this->pos + 2] === ']' && !$this->bbc->isDisabled('list') && !$this->bbc->isDisabled('li'))
 			{
 				// Itemcodes cannot be 0 and must be preceeded by a semi-colon, space, tab, new line, or greater than sign
 				if (!($this->message[$this->pos + 1] === '0' && !in_array($this->message[$this->pos - 1], array(';', ' ', "\t", "\n", '>'))))
@@ -261,7 +159,7 @@ class Parser
 			}
 			else
 			{
-				$tag = $this->findTag($this->bbc_codes[$tags]);
+				$tag = $this->findTag($this->bbc_codes[$next_char]);
 			}
 
 			// Implicitly close lists and tables if something other than what's required is in them. This is needed for itemcode.
@@ -305,10 +203,8 @@ class Parser
 
 			// If this is block level, eat any breaks after it.
 			if ($tag[Codes::ATTR_BLOCK_LEVEL] && isset($this->message[$this->pos + 1]) && substr_compare($this->message, '<br />', $this->pos + 1, 6) === 0)
-				//if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr($this->message, $this->pos + 1, 6) === '<br />')
 			{
 				$this->message = substr_replace($this->message, '', $this->pos + 1, 6);
-				//$this->message = substr($this->message, 0, $this->pos + 1) . substr($this->message, $this->pos + 7);
 			}
 
 			// Are we trimming outside this tag?
@@ -321,12 +217,12 @@ class Parser
 		// Close any remaining tags.
 		while ($tag = $this->closeOpenedTag())
 		{
-			//$this->message .= "\n" . $tag[Codes::ATTR_AFTER] . "\n";
 			$this->message .= $this->noSmileys($tag[Codes::ATTR_AFTER]);
 		}
 
 		$this->parseSmileys();
 
+		// @todo substr_replace
 		if (isset($this->message[0]) && $this->message[0] === ' ')
 		{
 			$this->message = '&nbsp;' . substr($this->message, 1);
@@ -334,7 +230,7 @@ class Parser
 
 		// Cleanup whitespace.
 		// @todo remove \n because it should never happen after the explode/str_replace. Replace with str_replace
-		$this->message = strtr($this->message, array('  ' => '&nbsp; ', "\r" => '', "\n" => '<br />', '<br /> ' => '<br />&nbsp;', '&#13;' => "\n"));
+		$this->message = strtr($this->message, array('  ' => '&nbsp; ',  '<br /> ' => '<br />&nbsp;', '&#13;' => "\n"));
 
 		// Finish footnotes if we have any.
 		if (strpos($this->message, '<sup class="bbc_footnotes">') !== false)
@@ -350,6 +246,124 @@ class Parser
 		return $this->message;
 	}
 
+	protected function handleOpenTags()
+	{
+		// Next closing bracket after the first character
+		$this->pos2 = strpos($this->message, ']', $this->pos + 1);
+
+		// Playing games? string = [/]
+		if ($this->pos2 === $this->pos + 2)
+		{
+			return;
+		}
+
+		// Get everything between [/ and ]
+		$look_for = strtolower(substr($this->message, $this->pos + 2, $this->pos2 - $this->pos - 2));
+		$to_close = array();
+		$block_level = null;
+
+		do
+		{
+			// Get the last opened tag
+			$tag = $this->closeOpenedTag(false);
+
+			// No open tags
+			if (!$tag)
+			{
+				break;
+			}
+
+			if ($tag[Codes::ATTR_BLOCK_LEVEL])
+			{
+				// Only find out if we need to.
+				if ($block_level === false)
+				{
+					$this->addOpenTag($tag);
+					break;
+				}
+
+				// The idea is, if we are LOOKING for a block level tag, we can close them on the way.
+				if (isset($look_for[1]) && isset($this->bbc_codes[$look_for[0]]))
+				{
+					foreach ($this->bbc_codes[$look_for[0]] as $temp)
+					{
+						if ($temp[Codes::ATTR_TAG] === $look_for)
+						{
+							$block_level = $temp[Codes::ATTR_BLOCK_LEVEL];
+							break;
+						}
+					}
+				}
+
+				if ($block_level !== true)
+				{
+					$block_level = false;
+					$this->addOpenTag($tag);
+					break;
+				}
+			}
+
+			$to_close[] = $tag;
+		} while ($tag[Codes::ATTR_TAG] !== $look_for);
+
+		// Did we just eat through everything and not find it?
+		if (!$this->hasOpenTags() && (empty($tag) || $tag[Codes::ATTR_TAG] !== $look_for))
+		{
+			$this->open_tags = $to_close;
+			return;
+		}
+		elseif (!empty($to_close) && $tag[Codes::ATTR_TAG] !== $look_for)
+		{
+			if ($block_level === null && isset($look_for[0], $this->bbc_codes[$look_for[0]]))
+			{
+				foreach ($this->bbc_codes[$look_for[0]] as $temp)
+				{
+					if ($temp[Codes::ATTR_TAG] === $look_for)
+					{
+						$block_level = !empty($temp[Codes::ATTR_BLOCK_LEVEL]);
+						break;
+					}
+				}
+			}
+
+			// We're not looking for a block level tag (or maybe even a tag that exists...)
+			if (!$block_level)
+			{
+				foreach ($to_close as $tag)
+				{
+					$this->addOpenTag($tag);
+				}
+
+				return;
+			}
+		}
+
+		foreach ($to_close as $tag)
+		{
+			$tmp = $this->noSmileys($tag[Codes::ATTR_AFTER]);
+			$this->message = substr_replace($this->message, $tmp, $this->pos, $this->pos2 + 1 - $this->pos);
+			$this->pos += strlen($tmp);
+			$this->pos2 = $this->pos - 1;
+
+			// See the comment at the end of the big loop - just eating whitespace ;).
+			if ($tag[Codes::ATTR_BLOCK_LEVEL] && isset($this->message[$this->pos]) && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
+			{
+				$this->message = substr_replace($this->message, '', $this->pos, 6);
+			}
+
+			// Trim inside whitespace
+			if (!empty($tag[Codes::ATTR_TRIM]) && $tag[Codes::ATTR_TRIM] !== Codes::TRIM_INSIDE)
+			{
+				$this->trimWhiteSpace($this->message, $this->pos + 1);
+			}
+		}
+
+		if (!empty($to_close))
+		{
+			$this->pos--;
+		}
+	}
+
 	/**
 	 * Turn smiley parsing on/off
 	 * @param bool $toggle
@@ -361,11 +375,21 @@ class Parser
 		return $this;
 	}
 
+	/**
+	 * Check if parsing is enabled
+	 *
+	 * @return bool
+	 */
 	public function parsingEnabled()
 	{
 		return !empty($GLOBALS['modSettings']['enableBBC']);
 	}
 
+	/**
+	 * Parse the HTML in a string
+	 *
+	 * @param string &$data
+	 */
 	protected function parseHTML(&$data)
 	{
 		global $modSettings;
@@ -439,6 +463,11 @@ class Parser
 		}
 	}
 
+	/**
+	 * Parse URIs and email addresses in a string to url and email BBC tags to be parsed by the BBC parser
+	 *
+	 * @param string &$data
+	 */
 	protected function autoLink(&$data)
 	{
 		if ($data === '' || $data === "\n")
@@ -484,6 +513,9 @@ class Parser
 		}
 	}
 
+	/**
+	 * Load the autolink regular expression to be used in autoLink()
+	 */
 	protected function loadAutolink()
 	{
 		// @todo get rid of the FTP, nobody uses it
@@ -502,6 +534,13 @@ class Parser
 		$this->autolink_replace = $replace;
 	}
 
+	/**
+	 * Find if the current character is the start of a tag and get it
+	 *
+	 * @param array $possible_codes
+	 *
+	 * @return null|array the tag that was found or null if no tag found
+	 */
 	protected function findTag(array $possible_codes)
 	{
 		$tag = null;
@@ -678,7 +717,7 @@ class Parser
 				Codes::ATTR_TYPE => Codes::TYPE_PARSED_CONTENT,
 				Codes::ATTR_AFTER => '</ul>',
 				Codes::ATTR_BLOCK_LEVEL => true,
-				Codes::ATTR_REQUIRE_CHILDREN => array('li'),
+				Codes::ATTR_REQUIRE_CHILDREN => array('li' => 'li'),
 				Codes::ATTR_DISALLOW_CHILDREN => isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) ? $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN] : null,
 				Codes::ATTR_LENGTH => 4,
 				Codes::ATTR_AUTOLINK => true,
@@ -739,7 +778,13 @@ class Parser
 		}
 	}
 
-	protected function handleTypeParsedContext($tag)
+	/**
+	 * Handle codes that are of the parsed context type
+	 * @param array $tag
+	 *
+	 * @return bool
+	 */
+	protected function handleTypeParsedContext(array $tag)
 	{
 		// @todo Check for end tag first, so people can say "I like that [i] tag"?
 		$this->addOpenTag($tag);
@@ -750,7 +795,13 @@ class Parser
 		return false;
 	}
 
-	protected function handleTypeUnparsedContext($tag)
+	/**
+	 * Handle codes that are of the unparsed context type
+	 * @param array $tag
+	 *
+	 * @return bool
+	 */
+	protected function handleTypeUnparsedContext(array $tag)
 	{
 		// Find the next closer
 		$this->pos2 = stripos($this->message, '[/' . $tag[Codes::ATTR_TAG] . ']', $this->pos1);
@@ -783,7 +834,13 @@ class Parser
 		return false;
 	}
 
-	protected function handleUnparsedEqualsContext($tag)
+	/**
+	 * Handle codes that are of the unparsed equals context type
+	 * @param array $tag
+	 *
+	 * @return bool
+	 */
+	protected function handleUnparsedEqualsContext(array $tag)
 	{
 		// The value may be quoted for some tags - check.
 		if (isset($tag[Codes::ATTR_QUOTED]))
@@ -840,7 +897,13 @@ class Parser
 		return false;
 	}
 
-	protected function handleTypeClosed($tag)
+	/**
+	 * Handle codes that are of the closed type
+	 * @param array $tag
+	 *
+	 * @return bool
+	 */
+	protected function handleTypeClosed(array $tag)
 	{
 		$this->pos2 = strpos($this->message, ']', $this->pos);
 		$tmp = $this->noSmileys($tag[Codes::ATTR_CONTENT]);
@@ -850,7 +913,13 @@ class Parser
 		return false;
 	}
 
-	protected function handleUnparsedCommasContext($tag)
+	/**
+	 * Handle codes that are of the unparsed commas context type
+	 * @param array $tag
+	 *
+	 * @return bool
+	 */
+	protected function handleUnparsedCommasContext(array $tag)
 	{
 		$this->pos2 = strpos($this->message, ']', $this->pos1);
 		if ($this->pos2 === false)
@@ -886,7 +955,13 @@ class Parser
 		return false;
 	}
 
-	protected function handleUnparsedCommas($tag)
+	/**
+	 * Handle codes that are of the unparsed commas type
+	 * @param array $tag
+	 *
+	 * @return bool
+	 */
+	protected function handleUnparsedCommas(array $tag)
 	{
 		$this->pos2 = strpos($this->message, ']', $this->pos1);
 		if ($this->pos2 === false)
@@ -923,7 +998,13 @@ class Parser
 		return false;
 	}
 
-	protected function handleEquals($tag)
+	/**
+	 * Handle codes that are of the equals type
+	 * @param array $tag
+	 *
+	 * @return bool
+	 */
+	protected function handleEquals(array $tag)
 	{
 		// The value may be quoted for some tags - check.
 		if (isset($tag[Codes::ATTR_QUOTED]))
@@ -976,7 +1057,13 @@ class Parser
 		return false;
 	}
 
-	protected function handleTag($tag)
+	/**
+	 * Handles a tag by its type. Offloads the actual handling to handle*() method
+	 * @param array $tag
+	 *
+	 * @return bool true if there was something wrong and the parser should advance
+	 */
+	protected function handleTag(array $tag)
 	{
 		switch ($tag[Codes::ATTR_TYPE])
 		{
@@ -1079,7 +1166,11 @@ class Parser
 		}
 	}
 
-	protected function handleDisabled(&$tag)
+	/**
+	 * Parse a tag that is disabled
+	 * @param array $tag
+	 */
+	protected function handleDisabled(array &$tag)
 	{
 		if (!isset($tag[Codes::ATTR_DISABLED_BEFORE]) && !isset($tag[Codes::ATTR_DISABLED_AFTER]) && !isset($tag[Codes::ATTR_DISABLED_CONTENT]))
 		{
@@ -1137,8 +1228,14 @@ class Parser
 		return $match;
 	}
 
-	// This allows to parse BBC in parameters like [quote author="[url]www.quotes.com[/quote]"]Something famous.[/quote]
-	protected function recursiveParser(&$data, $tag)
+	/**
+	 * Recursively call the parser with a new Codes object
+	 * This allows to parse BBC in parameters like [quote author="[url]www.quotes.com[/quote]"]Something famous.[/quote]
+	 *
+	 * @param string $data
+	 * @param array $tag
+	 */
+	protected function recursiveParser(&$data, array $tag)
 	{
 		// @todo if parsed tags allowed is empty, return?
 		$bbc = clone $this->bbc;
@@ -1157,18 +1254,32 @@ class Parser
 		return $this->bbc_codes;
 	}
 
+	/**
+	 * Enable the parsing of smileys
+	 * @param bool|true $enable
+	 *
+	 * @return $this
+	 */
 	public function enableSmileys($enable = true)
 	{
 		$this->do_smileys = (bool) $enable;
 		return $this;
 	}
 
-	protected function addOpenTag($tag)
+	/**
+	 * Open a tag
+	 * @param array $tag
+	 */
+	protected function addOpenTag(array $tag)
 	{
 		$this->open_tags[] = $tag;
 	}
 
-	// if false, close the last one
+	/**
+	 * @param string|false $tag False closes the last open tag. Anything else finds that tag LIFO
+	 *
+	 * @return mixed
+	 */
 	protected function closeOpenedTag($tag = false)
 	{
 		if ($tag === false)
@@ -1183,16 +1294,30 @@ class Parser
 		}
 	}
 
+	/**
+	 * Check if there are any tags that are open
+	 * @return bool
+	 */
 	protected function hasOpenTags()
 	{
 		return !empty($this->open_tags);
 	}
 
+	/**
+	 * Get the last opened tag
+	 * @return array
+	 */
 	protected function getLastOpenedTag()
 	{
 		return end($this->open_tags);
 	}
 
+	/**
+	 * Get the currently opened tags
+	 * @param bool|false $tags_only True if you want just the tag or false for the whole code
+	 *
+	 * @return array
+	 */
 	protected function getOpenedTags($tags_only = false)
 	{
 		if (!$tags_only)
@@ -1217,17 +1342,13 @@ class Parser
 		}
 	}
 
-	protected function insertAtCursor($string, $offset)
-	{
-		$this->message = substr_replace($this->message, $string, $offset, 0);
-	}
-
-	protected function removeChars($offset, $length)
-	{
-		$this->message = substr_replace($this->message, '', $offset, $length);
-	}
-
-	protected function setupTagParameters($possible, $matches)
+	/**
+	 * @param array $possible
+	 * @param array $matches
+	 *
+	 * @return array
+	 */
+	protected function setupTagParameters(array $possible, array $matches)
 	{
 		$params = array();
 		for ($i = 1, $n = count($matches); $i < $n; $i += 2)
@@ -1282,6 +1403,12 @@ class Parser
 		return $tag;
 	}
 
+	/**
+	 * Check if a tag (not a code) is open
+	 * @param string $tag
+	 *
+	 * @return bool
+	 */
 	protected function isOpen($tag)
 	{
 		foreach ($this->open_tags as $open)
@@ -1295,11 +1422,21 @@ class Parser
 		return false;
 	}
 
+	/**
+	 * Check if a character is an item code
+	 * @param string $char
+	 *
+	 * @return bool
+	 */
 	protected function isItemCode($char)
 	{
 		return isset($this->item_codes[$char]);
 	}
 
+	/**
+	 * Close any open codes that aren't block level.
+	 * Used before opening a code that *is* block level
+	 */
 	protected function closeNonBlockLevel()
 	{
 		$n = count($this->open_tags) - 1;
@@ -1332,6 +1469,13 @@ class Parser
 		}
 	}
 
+	/**
+	 * Add markers around a string to denote that smileys should not be parsed
+	 *
+	 * @param string $string
+	 *
+	 * @return string
+	 */
 	protected function noSmileys($string)
 	{
 		return "\n" . $string . "\n";
@@ -1387,7 +1531,7 @@ class Parser
 			$replace_str .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
 			unset($order[$key]);
 		}
-		return count($order) == 0;
+		return count($order) === 0;
 	}
 
 	function dougiefresh()

@@ -987,7 +987,6 @@ class Codes
 			self::ATTR_TYPE => self::TYPE_ITEMCODE,
 			self::ATTR_BLOCK_LEVEL => true,
 			self::ATTR_LENGTH => 1,
-			'itemcode' => true,
 		);
 	}
 
@@ -1032,33 +1031,7 @@ class Codes
 			return true;
 		}
 
-		/*foreach ($this->bbc as &$bbc)
-		{
-			if ($bbc[self::ATTR_TAG] === $tag)
-			{
-				$bbc[self::ATTR_DISABLED] = true;
-			}
-		}*/
-
 		$this->disabled[$tag] = $tag;
-	}
-
-	public function enable($tag)
-	{
-		if (!isset($this->disabled[$tag]))
-		{
-			return true;
-		}
-
-		foreach ($this->bbc as &$bbc)
-		{
-			if ($bbc['tag'] === $tag)
-			{
-				$bbc[self::ATTR_DISABLED] = false;
-			}
-		}
-
-		unset($this->disabled[$tag]);
 	}
 
 	public function setParsedTags($parse_tags)

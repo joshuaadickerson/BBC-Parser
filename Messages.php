@@ -169,9 +169,9 @@ return array(
 	'[code=php]
 	<?php
 	/**
-	 * This controller is the most important and probably most accessed of all.
-	 * It controls topic display, with all related.
-	 */
+     * This controller is the most important and probably most accessed of all.
+     * It controls topic display, with all related.
+     */
 	class Display_Controller
 	{
 		/**
