@@ -24,6 +24,7 @@ class TestBBC
 
 	public function setInput($input)
 	{
+		$this->globalSettings();
 		$this->input = $input;
 
 		$this->tests = $this->getPossibleTests();
@@ -144,6 +145,12 @@ class TestBBC
 		);
 
 		$object = $this->methods['a'];
+
+		if (is_callable(array($object, 'setup')))
+		{
+			$object->setup();
+		}
+
 		foreach ($this->messages as $i => $message)
 		{
 

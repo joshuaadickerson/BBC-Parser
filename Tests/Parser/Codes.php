@@ -1016,7 +1016,6 @@ class Codes
 
 	public function isDisabled($tag)
 	{
-//var_dump($tag, isset($this->disabled[$tag]));
 		return isset($this->disabled[$tag]);
 	}
 

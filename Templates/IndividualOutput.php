@@ -5,6 +5,7 @@ $num_tests = count($results['tests']);
 Tests: <?= $num_tests ?><br>
 <form method="get">
 	<input type="hidden" name="type" value="individual">
+	<input type="hidden" name="a" value="<?= $input['tests']['a'] ?>">
 	<table class="table table-striped table-bordered table-condensed" data-page-length="1000">
 		<colgroup>
 			<col class="col-md-1">
