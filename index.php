@@ -178,9 +178,14 @@ if (isset($test_types[$type]))
 		</div><!-- /.modal-content -->
 	</form><!-- /.modal-dialog -->
 </div>
+
+<div id="request_time" class="pull-right">
+	Total request time: <?= round(microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'], 4) ?>
+</div>
+
 <script>
 	$(document).ready(function(){
-		$('table').DataTable({
+		$('.table').DataTable({
 			columnDefs: [
 				{ type: 'natural', targets: 0 }
 			]
