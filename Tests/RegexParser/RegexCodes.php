@@ -9,6 +9,7 @@ class RegexCodes extends Codes
 {
 	protected $codes;
 	protected $tags;
+	protected $opening_tags;
 	protected $closing_tags;
 	protected $itemcodes;
 	protected $disabled;
@@ -29,7 +30,7 @@ class RegexCodes extends Codes
 		{
 			$code[self::ATTR_DISABLED] = true;
 		}
-		elseif ($code[self::ATTR_DISABLED])
+		elseif (!empty($code[self::ATTR_DISABLED]))
 		{
 			$this->disable($code[self::ATTR_DISABLED]);
 		}
@@ -49,19 +50,20 @@ class RegexCodes extends Codes
 		// Finally, add it to the codes array
 		if (!isset($this->codes[$tag]))
 		{
-			$this->codes[$tag] = array();
+			$this->codes[$opening_tag] = array();
 		}
 
-		$this->codes[$tag] = $code;
+		$this->codes[$opening_tag][] = $code;
 	}
 
 	public function getTokenRegex()
 	{
 		// @todo itemcodes should be ([\n \t;>][itemcode])
-		$split_chars = array('(\])');
+		// Capture ] and &quot; as well
+		$split_chars = array('(\])', '(&quot;)');
 
 		// Get a list of just tags
-		$tags = $this->bbc->getTags();
+		$tags = $this->getTags();
 
 		// Sort the tags by their length
 		usort($tags, function ($a, $b) {
@@ -76,12 +78,10 @@ class RegexCodes extends Codes
 		}
 
 		// Now add the itemcodes
-		foreach ($this->itemcodes as $code => $dummy)
+		foreach ($this->getItemCodes() as $code => $dummy)
 		{
 			$split_cars[] = '[\n\s;>](\[' . preg_quote($code) . '\])';
 		}
-
-		var_dump($tags);
 
 		return '~' . implode('|', $split_chars) . '~';
 	}
@@ -119,9 +119,9 @@ class RegexCodes extends Codes
 		}
 	}
 
-	public function getTags()
+	public function getOpeningTags()
 	{
-		return $this->tags;
+		return $this->opening_tags;
 	}
 
 	public function getClosingTags()

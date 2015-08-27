@@ -6,6 +6,9 @@ use \BBC\Codes;
 
 class Test implements \BBC\Tests\BBCTest
 {
+	/** @var  \BBC\RegexParser */
+	protected $parser;
+
 	public function __construct()
 	{
 		require_once __DIR__ . '/RegexParser.php';
@@ -19,7 +22,7 @@ class Test implements \BBC\Tests\BBCTest
 
 	public function setup()
 	{
-		$this->parser = new \BBC\RegexParser(new Codes);
+		$this->parser = new \BBC\RegexParser(new \BBC\RegexCodes);
 	}
 
 	public function parseMessage($message)
