@@ -39,12 +39,13 @@ class SmileyParser
 			return;
 		}
 
-		$replace = $this->replace;
-
 		// Replace away!
-		$message = preg_replace_callback($this->search, function ($matches) use ($replace) {
-			return $replace[$matches[0]];
-		}, $message);
+		$message = preg_replace_callback($this->search, array($this, 'parser_callback'), $message);
+	}
+
+	protected function parser_callback(array $matches)
+	{
+		return $this->replace[$matches[0]];
 	}
 
 	protected function getDefault()
