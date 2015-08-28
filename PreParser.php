@@ -1,5 +1,6 @@
 <?php
 
+// @todo change the methods called on each part so that it creates an array of search/replace and do a single preg_replace(). Obviously callbacks are different
 class PreParser
 {
 	protected $message;
@@ -42,6 +43,7 @@ class PreParser
 			'code' => strpos($this->message, '[code') !== false,
 			'html' => strpos($this->message, '[html') !== false,
 			'list' => strpos($this->message, '[list') !== false,
+			'table' => strpos($this->message, '[table') !== false,
 			'color' => strpos($this->message, '[color') !== false,
 			'me' => strpos($this->message, '/me') !== false,
 		);
@@ -62,6 +64,7 @@ class PreParser
 			$this->fixCode();
 		}
 
+		// @todo only split if we have code tag?
 		// Now that we've fixed all the code tags, let's fix the img and url tags...
 		$parts = preg_split('~(\[/code\]|\[code(?:=[^\]]+)?\])~i', $this->message, -1, PREG_SPLIT_DELIM_CAPTURE);
 
@@ -79,11 +82,16 @@ class PreParser
 					$this->doMe($parts[$i]);
 				}
 
+				// @todo this doesn't really make a difference with the parser since it lowercases the tags anyway. Maybe get rid of it?
 				// Make sure all tags are lowercase.
 				$this->lowercaseTags($parts[$i]);
 
-				$this->fixList($parts[$i]);
+				if ($has['list'])
+				{
+					$this->fixLists($parts[$i]);
+				}
 
+				// @todo why 3?
 				// Fix up some use of tables without [tr]s, etc. (it has to be done more than once to catch it all.)
 				for ($j = 0; $j < 3; $j++)
 				{
@@ -115,7 +123,10 @@ class PreParser
 		}
 
 		// Now we're going to do full scale table checking...
-		$this->table();
+		if ($has['table'])
+		{
+			$this->table();
+		}
 
 		// @todo can this be moved earlier? Like to the first str_replace()?
 		// Now let's quickly clean up things that will slow our parser (which are common in posted code.)
@@ -136,11 +147,6 @@ class PreParser
 
 		// Change breaks back to \n's and &nsbp; back to spaces.
 		return preg_replace('~<br( /)?' . '>~', "\n", str_replace('&nbsp;', ' ', implode('', $parts)));
-	}
-
-	public function resetParser()
-	{
-
 	}
 
 	protected function setFixes()
@@ -168,6 +174,7 @@ class PreParser
 			'~\[/t([dh])\]([\s\x{A0}]*)\[/tr\]~su' => '[/t$1]$2[_/tr_]',
 			// Any remaining [/tr]s should have a [/td].
 			'~\[/tr\]~s' => '[/td][/tr]',
+
 			// Look for properly opened [li]s which aren't closed.
 			'~\[li\]([^\[\]]+?)\[li\]~s' => '[li]$1[_/li_][_li_]',
 			'~\[li\]([^\[\]]+?)\[/list\]~s' => '[_li_]$1[_/li_][/list]',
@@ -187,8 +194,10 @@ class PreParser
 			'~\[/li\]~' => '[/li][/list]',
 			// Put the correct ones back how we found them.
 			'~\[_(li|/li|td|tr|/tr)_\]~' => '[$1]',
+
 			// Images with no real url.
 			'~\[img\]https?://.{0,7}\[/img\]~' => '',
+
 			// Font tags with multiple fonts (copy&paste in the WYSIWYG by some browsers).
 			'~\[font=\\\'?(.*?)\\\'?(?=\,[ \'\"A-Za-z]*\]).*?\](.*?(?:\[/font\]))~s'  => '[font=$1]$2'
 		);
@@ -199,6 +208,7 @@ class PreParser
 		$this->fix_replace = $mistake_fixes;
 	}
 
+	// Fix color tags of many forms so they parse properly
 	protected function fixColors(&$part)
 	{
 		$part = preg_replace('~\[color=(?:#[\da-fA-F]{3}|#[\da-fA-F]{6}|[A-Za-z]{1,20}|rgb\(\d{1,3}, ?\d{1,3}, ?\d{1,3}\))\]\s*\[/color\]~', '', $part);
@@ -230,11 +240,7 @@ class PreParser
 
 	protected function fixNoBBC()
 	{
-		$this->message = preg_replace_callback('~\[nobbc\](.+?)\[/nobbc\]~is', function ($a)
-		{
-			// @todo change to str_replace
-			return '[nobbc]' . strtr($a[1], array('[' => '&#91;', ']' => '&#93;', ':' => '&#58;', '@' => '&#64;')) . '[/nobbc]';
-		}, $this->message);
+		$this->message = preg_replace_callback('~\[nobbc\](.+?)\[/nobbc\]~is', array($this, 'nobbc_callback'), $this->message);
 	}
 
 	// @todo change to substr_compare()
@@ -272,6 +278,7 @@ class PreParser
 		}
 	}
 
+	// @todo move the search array to the constructor and add a hook to add more
 	protected function removeEmpty(&$part)
 	{
 		// Remove empty bbc from the sections outside the code tags
@@ -279,8 +286,6 @@ class PreParser
 			array(
 				'~\[[bisu]\]\s*\[/[bisu]\]~',
 				'~\[quote\]\s*\[/quote\]~',
-				// Fix color tags of many forms so they parse properly
-				'~\[color=(?:#[\da-fA-F]{3}|#[\da-fA-F]{6}|[A-Za-z]{1,20}|rgb\(\d{1,3}, ?\d{1,3}, ?\d{1,3}\))\]\s*\[/color\]~'
 			),
 			'',
 			$part
@@ -340,6 +345,7 @@ class PreParser
 	 */
 	protected function nobbc_callback(array $matches)
 	{
+		// @todo str_replace
 		return '[nobbc]' . strtr($matches[1], array('[' => '&#91;', ']' => '&#93;', ':' => '&#58;', '@' => '&#64;')) . '[/nobbc]';
 	}
 
@@ -440,12 +446,12 @@ class PreParser
 	 *
 	 * @param string $message
 	 * @param string $myTag - the tag
-	 * @param string $protocols - http or ftp
+	 * @param array $protocols - http or ftp
 	 * @param bool $embeddedUrl = false - whether it *can* be set to something
 	 * @param bool $hasEqualSign = false, whether it *is* set to something
 	 * @param bool $hasExtra = false - whether it can have extra cruft after the begin tag.
 	 */
-	protected function fixTag(&$message, $myTag, $protocols, $embeddedUrl = false, $hasEqualSign = false, $hasExtra = false)
+	protected function fixTag(&$message, $myTag, array $protocols, $embeddedUrl = false, $hasEqualSign = false, $hasExtra = false)
 	{
 		global $boardurl, $scripturl;
 
@@ -457,7 +463,9 @@ class PreParser
 		{
 			$domain_url = $boardurl . '/';
 		}
+
 		$replaces = array();
+
 		if ($hasEqualSign)
 		{
 			preg_match_all('~\[(' . $myTag . ')=([^\]]*?)\](?:(.+?)\[/(' . $myTag . ')\])?~is', $message, $matches);
@@ -466,6 +474,7 @@ class PreParser
 		{
 			preg_match_all('~\[(' . $myTag . ($hasExtra ? '(?:[^\]]*?)' : '') . ')\](.+?)\[/(' . $myTag . ')\]~is', $message, $matches);
 		}
+
 		foreach ($matches[0] as $k => $dummy)
 		{
 			// Remove all leading and trailing whitespace.
@@ -473,6 +482,7 @@ class PreParser
 			$this_tag = $matches[1][$k];
 			$this_close = $hasEqualSign ? (empty($matches[4][$k]) ? '' : $matches[4][$k]) : $matches[3][$k];
 			$found = false;
+
 			foreach ($protocols as $protocol)
 			{
 				$found = strncasecmp($replace, $protocol . '://', strlen($protocol) + 3) === 0;
@@ -481,6 +491,7 @@ class PreParser
 					break;
 				}
 			}
+
 			if (!$found && $protocols[0] === 'http')
 			{
 				if ($replace[0] === '/')
@@ -502,6 +513,7 @@ class PreParser
 					$replace = $protocols[0] . '://' . $replace;
 				}
 			}
+			// @todo remove ftp
 			elseif (!$found && $protocols[0] === 'ftp')
 			{
 				$replace = $protocols[0] . '://' . preg_replace('~^(?!ftps?)[^:]+://~', '', $replace);
@@ -510,6 +522,7 @@ class PreParser
 			{
 				$replace = $protocols[0] . '://' . $replace;
 			}
+
 			if ($hasEqualSign && $embeddedUrl)
 			{
 				$replaces[$matches[0][$k]] = '[' . $this_tag . '=' . $replace . ']' . (empty($matches[4][$k]) ? '' : $matches[3][$k] . '[/' . $this_close . ']');
@@ -527,6 +540,7 @@ class PreParser
 				$replaces['[' . $matches[1][$k] . ']' . $matches[2][$k] . '[/' . $matches[3][$k] . ']'] = '[' . $this_tag . ']' . $replace . '[/' . $this_close . ']';
 			}
 		}
+
 		foreach ($replaces as $k => $v)
 		{
 			if ($k == $v)
@@ -534,6 +548,7 @@ class PreParser
 				unset($replaces[$k]);
 			}
 		}
+
 		if (!empty($replaces))
 		{
 			$message = strtr($message, $replaces);
@@ -608,6 +623,7 @@ class PreParser
 				// We've lost some data.
 				$table_offset -= strlen($matches[0]);
 			}
+
 			// Remove everything up to here.
 			$table_offset += $offset + strlen($matches[0]);
 			$table_check = substr($table_check, $offset + strlen($matches[0]));

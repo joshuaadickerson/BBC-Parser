@@ -123,6 +123,7 @@ class TestBBC
 
 		$user_info = array(
 			'smiley_set' => false,
+			'name' => 'what\'s in',
 		);
 
 		if (!defined('SUBSDIR'))
