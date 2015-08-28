@@ -10,6 +10,7 @@ class Test implements \BBC\Tests\BBCTest
 	{
 		require_once __DIR__ . '/Parser.php';
 		require_once __DIR__ . '/Codes.php';
+		require_once __DIR__ . '/SmileyParser.php';
 	}
 
 	public function getName()

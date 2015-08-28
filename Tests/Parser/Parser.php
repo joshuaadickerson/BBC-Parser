@@ -44,6 +44,7 @@ class Parser
 
 		$this->bbc_codes = $this->bbc->getForParsing();
 		$this->item_codes = $this->bbc->getItemCodes();
+
 		$this->loadAutolink();
 	}
 
@@ -229,8 +230,7 @@ class Parser
 		}
 
 		// Cleanup whitespace.
-		// @todo remove \n because it should never happen after the explode/str_replace. Replace with str_replace
-		$this->message = strtr($this->message, array('  ' => '&nbsp; ',  '<br /> ' => '<br />&nbsp;', '&#13;' => "\n"));
+		$this->message = str_replace(array('  ', '<br /> ', '&#13;'), array('&nbsp; ', '<br />&nbsp;', "\n"), $this->message);
 
 		// Finish footnotes if we have any.
 		if (strpos($this->message, '<sup class="bbc_footnotes">') !== false)
@@ -265,7 +265,7 @@ class Parser
 		do
 		{
 			// Get the last opened tag
-			$tag = $this->closeOpenedTag(false);
+			$tag = $this->closeOpenedTag();
 
 			// No open tags
 			if (!$tag)
@@ -508,8 +508,19 @@ class Parser
 		// Next, emails...
 		if (!$this->bbc->isDisabled('email') && strpos($data, '@') !== false)
 		{
-			$data = preg_replace('~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u', '[email]$1[/email]', $data);
-			$data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u', '[email]$1[/email]', $data);
+			$data = preg_replace(
+				array(
+					'~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u',
+					'~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u',
+				),
+				array(
+					'[email]$1[/email]',
+					'[email]$1[/email]',
+				), $data
+			);
+			//$data = preg_replace('~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u', '[email]$1[/email]', $data);
+			//$data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u', '[email]$1[/email]', $data);
+
 		}
 	}
 
@@ -1491,7 +1502,6 @@ class Parser
 			for ($i = 0, $n = count($message_parts); $i < $n; $i += 2)
 			{
 				parsesmileys($message_parts[$i]);
-				//parsesmileys($this->message);
 			}
 
 			$this->message = implode('', $message_parts);

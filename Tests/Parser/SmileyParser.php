@@ -34,12 +34,13 @@ class SmileyParser
 	function parse(&$message)
 	{
 		// No smiley set at all?!
-		if (!$this->has_smileys && trim($message) == '')
+		if (!$this->has_smileys || trim($message) == '')
 		{
 			return;
 		}
 
 		$replace = $this->replace;
+
 		// Replace away!
 		$message = preg_replace_callback($this->search, function ($matches) use ($replace) {
 			return $replace[$matches[0]];
@@ -48,7 +49,7 @@ class SmileyParser
 
 	protected function getDefault()
 	{
-		global $modSettings, $txt;
+		global $modSettings, $txt, $user_info;
 
 // Use the default smileys if it is disabled. (better for "portability" of smileys.)
 		if (empty($modSettings['smiley_enable']))
