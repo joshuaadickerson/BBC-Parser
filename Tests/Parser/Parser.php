@@ -32,6 +32,8 @@ class Parser
 	protected $open_bbc = array();
 	protected $do_autolink = true;
 	protected $inside_tag;
+	protected $possible_link;
+	protected $possible_email;
 	protected $autolink_search;
 	protected $autolink_replace;
 
@@ -99,6 +101,10 @@ class Parser
 
 		// @todo change this to <br> (it will break tests)
 		$this->message = str_replace("\n", '<br />', $this->message);
+
+		// Check if the message might have a link or email to save a bunch of parsing in autolink()
+		$this->possible_link = !$this->bbc->isDisabled('url') && (strpos($this->message, '://') !== false || strpos($this->message, 'www.') !== false);
+		$this->possible_email = !$this->bbc->isDisabled('email') && strpos($this->message, '@') !== false;
 
 		$this->pos = -1;
 		while ($this->pos !== false)
@@ -488,7 +494,7 @@ class Parser
 		}
 
 		// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-		if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
+		if ($this->possible_link && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
 		{
 			// Switch out quotes really quick because they can cause problems.
 			$data = str_replace(array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), $data);
@@ -506,7 +512,7 @@ class Parser
 		}
 
 		// Next, emails...
-		if (!$this->bbc->isDisabled('email') && strpos($data, '@') !== false)
+		if ($this->possible_email && strpos($data, '@') !== false)
 		{
 			$data = preg_replace(
 				array(
@@ -1133,7 +1139,7 @@ class Parser
 		}
 
 		// @todo is this sending tags like [/b] here?
-		if (!empty($GLOBALS['modSettings']['autoLinkUrls']))
+		if (!empty($GLOBALS['modSettings']['autoLinkUrls']) && ($this->possible_link || $this->possible_email))
 		{
 			$this->autoLink($data);
 		}
