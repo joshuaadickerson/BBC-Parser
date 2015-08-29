@@ -39,6 +39,9 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 	asort($stack);
 	file_put_contents('top_time_diff.csv', implode(array_keys($stack), ',') . "\n", FILE_APPEND);
 }
+
+$total_diff = abs($total_a_time - $total_b_time);
+$total_percent = $total_diff > 0 ? round(($total_a_time - $total_b_time) / $total_a_time * 100, 2) : 0;
 ?>
 
 <div>
@@ -47,8 +50,8 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 	Total Time In Tests: <?= round($total_a_time + $total_b_time, 2) ?><br>
 	Total Time (A): <?= round($total_a_time, 2) ?><br>
 	Total Time (B): <?= round($total_b_time, 2) ?><br>
-	Diff Total Time: <?= round(abs($total_a_time - $total_b_time), 2) ?><br>
-	Diff Total Time %: <?= round(($total_a_time - $total_b_time) / $total_a_time * 100, 2) ?><br>
+	Diff Total Time: <?= $total_diff ?><br>
+	Diff Total Time %: <?= $total_percent ?><br>
 </div>
 
 <form>
@@ -108,9 +111,10 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 				<?= $result['b']['total_time'] ?>
 			</td>
 			<td><?= round($result['time_diff'], 4) ?></td>
-			<td><?= round(($result['time_diff'] / max($result['b']['total_time'], $result['a']['total_time'])) * 100, 2) ?></td>
+			<td><?= $result['time_diff_percent'] ?></td>
 			<td>
 				<?php echo isset($result['message']) ? '<div class="code">' . htmlspecialchars($result['message']) . '</div>' : ''; ?>
+				<?php echo isset($result['result']) ? '<div class="code">' . $result['result'] . '</div>' : ''; ?>
 			</td>
 		</tr>
 		<?php
