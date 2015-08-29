@@ -7,25 +7,19 @@ namespace BBC;
 // Sanitize inputs
 $type = isset($_GET['type']) ? $_GET['type'] : false;
 
-if (isset($_GET['msg']))
+$msgs = null;
+if (isset($_GET['msg']) && $_GET['msg'] !== '')
 {
 	if (is_array($_GET['msg']))
 	{
 		$msgs = array();
-		foreach ($_GET['msg'] as $msg)
-		{
-			$msgs[] = (int) $msg;
-		}
+		$msgs = array_map('intval', $_GET['msg']);
 		$msgs = array_unique($msgs);
 	}
 	else
 	{
-		$msgs = $_GET['msg'];
+		$msgs = (int) $_GET['msg'];
 	}
-}
-else
-{
-	$msgs = null;
 }
 
 $tests = array(
@@ -153,7 +147,7 @@ if (isset($test_types[$type]))
 							<select name="type" class="form-control">
 								<option value="test" <?= $input['type']['test'] ?>>Test</option>
 								<option value="bench" <?= $input['type']['bench'] ?>>Benchmark</option>
-								<option value="individual" <?= $input['type']['individual'] ?>>Benchmark</option>
+								<option value="individual" <?= $input['type']['individual'] ?>>Individual</option>
 							</select>
 						</label>
 					</div>
