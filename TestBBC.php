@@ -212,6 +212,7 @@ class TestBBC
 				'order' => '',
 				'a' => array(),
 				'b' => array(),
+				'result' => '',
 			);
 
 			// Every message is a new test
@@ -226,6 +227,7 @@ class TestBBC
 			{
 				$this->results['tests'][$i]['pass'] = $this->results['tests'][$i]['a']['result'] === $this->results['tests'][$i]['b']['result'];
 				$this->results['tests'][$i]['time_diff'] = $this->results['tests'][$i]['a']['total_time'] - $this->results['tests'][$i]['b']['total_time'];
+				$this->results['tests'][$i]['result'] = $this->results['tests'][$i]['a']['result'];
 			}
 
 			// Figure out the order of the test
