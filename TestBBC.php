@@ -154,6 +154,8 @@ class TestBBC
 
 		foreach ($this->messages as $i => $message)
 		{
+			$GLOBALS['current_message_number'] = $i;
+			$GLOBALS['current_message'] = $message;
 
 			if (is_callable($object, 'beforeMessage'))
 			{
@@ -204,6 +206,9 @@ class TestBBC
 		// Individual messages to see if there is one that is screwing things up
 		foreach ($this->messages as $i => $message)
 		{
+			$GLOBALS['current_message_number'] = $i;
+			$GLOBALS['current_message'] = $message;
+
 			$this->results['tests'][$i] = array(
 				'message' => $message,
 				'pass' => true,
