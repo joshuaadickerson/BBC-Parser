@@ -48,8 +48,8 @@ $total_percent = $total_diff > 0 ? round(($total_a_time - $total_b_time) / $tota
 	Messages: <?= $results['num_messages'] ?><br>
 	Iterations: <?= $results['iterations'] ?><br>
 	Total Time In Tests: <?= round($total_a_time + $total_b_time, 2) ?><br>
-	Total Time (A): <?= round($total_a_time, 2) ?><br>
-	Total Time (B): <?= round($total_b_time, 2) ?><br>
+	Total Time A (<?= $input['tests']['a'] ?>): <?= round($total_a_time, 2) ?><br>
+	Total Time B (<?= $input['tests']['b'] ?>): <?= round($total_b_time, 2) ?><br>
 	Diff Total Time: <?= $total_diff ?><br>
 	Diff Total Time %: <?= $total_percent ?><br>
 </div>

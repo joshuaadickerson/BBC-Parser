@@ -2,7 +2,8 @@
 $num_tests = count($results['tests']);
 
 ?>
-Tests: <?= $num_tests ?><br>
+Test A: <?= $input['tests']['a'] ?>
+Number of tests: <?= $num_tests ?><br>
 <form method="get">
 	<input type="hidden" name="type" value="individual">
 	<input type="hidden" name="a" value="<?= $input['tests']['a'] ?>">
