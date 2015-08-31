@@ -56,7 +56,7 @@ $total_percent = $total_diff > 0 ? round(($total_a_time - $total_b_time) / $tota
 
 <form>
 	<input type="hidden" name="type" value="bench">
-	<input type="hidden" name="iterations" value="<?= ITERATIONS ?>">
+	<input type="hidden" name="iterations" value="<?= $testBBC->getIterations() ?>">
 <table class="table table-striped table-bordered table-condensed" data-page-length="1000">
 	<!--<colgroup>
 		<col class="col-md-1">

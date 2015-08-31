@@ -12,9 +12,13 @@ if (isset($_GET['msg']) && $_GET['msg'] !== '')
 {
 	if (is_array($_GET['msg']))
 	{
-		$msgs = array();
 		$msgs = array_map('intval', $_GET['msg']);
 		$msgs = array_unique($msgs);
+	}
+	elseif (strpos($_GET['msg'], ',') !== false)
+	{
+		$msgs = explode(',', $_GET['msg']);
+		$msgs = array_map('trim', $msgs);
 	}
 	else
 	{
@@ -22,12 +26,19 @@ if (isset($_GET['msg']) && $_GET['msg'] !== '')
 	}
 }
 
-$tests = array(
+/*$tests = array(
 	'parse_bbc' => 'Old parse_bbc',
 	'spuds_parse_bbc' => 'Spuds parse_bbc',
 	'parser' => 'Parser',
 	'regexparser' => 'Regex Parser',
 );
+*/
+
+// Include the test file
+require_once 'TestBBC.php';
+$testBBC = new TestBBC;
+
+$possible_tests = $testBBC->getPossibleTests();
 
 $input = array(
 	'type' => array(
@@ -36,8 +47,8 @@ $input = array(
 		'individual' => $type === 'individual' ? ' selected="selected"' : '',
 	),
 	'tests' => array(
-		'a' => isset($_GET['a']) && isset($tests[$_GET['a']]) ? $tests[$_GET['a']] : 'Old parse_bbc',
-		'b' => isset($_GET['b']) && isset($tests[$_GET['b']]) ? $tests[$_GET['b']] : 'Parser',
+		'a' => isset($_GET['a']) && isset($possible_tests[$_GET['a']]) ? $possible_tests[$_GET['a']]['name'] : 'Old parse_bbc',
+		'b' => isset($_GET['b']) && isset($possible_tests[$_GET['b']]) ? $possible_tests[$_GET['b']]['name'] : 'Parser',
 	),
 	'iterations' => isset($_GET['iterations']) ? min($_GET['iterations'], 10000) : 0,
 	'debug' => isset($_GET['debug']) && $_GET['debug'] ? 'checked="checked"' : '',
@@ -45,11 +56,15 @@ $input = array(
 	'msg' => $msgs,
 );
 
+$testBBC->setInput($input);
+
 // Setup those constants for the test file
-define('ITERATIONS', $input['iterations']);
-define('DEBUG', !empty($input['debug']));
-define('FAILED_TEST_IS_FATAL', !empty($input['fatal']));
+//define('ITERATIONS', $input['iterations']);
+//define('DEBUG', !empty($input['debug']));
+//define('FAILED_TEST_IS_FATAL', !empty($input['fatal']));
 define('SAVE_TOP_RESULTS', true);
+
+
 
 // Run the test (based on type)
 $test_types = array(
@@ -60,15 +75,11 @@ $test_types = array(
 
 require_once 'BBCHelpers.php';
 
-// Include the test file
-require_once 'TestBBC.php';
-$test = new TestBBC($input);
-
 if (isset($test_types[$type]))
 {
 	define('TEST_TYPE', $type);
-	call_user_func(array($test, $test_types[$type]), $input);
-	$results = $test->getResults();
+	call_user_func(array($testBBC, $test_types[$type]), $input);
+	$results = $testBBC->getResults();
 }
 
 ?><!DOCTYPE html>
@@ -135,35 +146,73 @@ if (isset($test_types[$type]))
 </div>
 <div class="modal" id="controls" tabindex="-1" role="dialog" aria-labelledby="controlsLabel">
 	<form class="modal-dialog" role="document" method="get">
-		<div class="modal-content">
+		<div class="modal-content form-horizontal">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				<h4 class="modal-title">Controls</h4>
 			</div>
 			<div class="modal-body form-horizontal">
 				<div class="form-group">
-					<div class="col-sm-10">
-						<label for="type">Type of test to run
-							<select name="type" class="form-control">
-								<option value="test" <?= $input['type']['test'] ?>>Test</option>
-								<option value="bench" <?= $input['type']['bench'] ?>>Benchmark</option>
-								<option value="individual" <?= $input['type']['individual'] ?>>Individual</option>
-							</select>
-						</label>
+					<label for="type" class="col-sm-4 control-label">Type of test to run</label>
+					<div class="col-sm-8">
+						<select name="type" class="form-control">
+							<option value="test" <?= $input['type']['test'] ?>>Test</option>
+							<option value="bench" <?= $input['type']['bench'] ?>>Benchmark</option>
+							<option value="individual" <?= $input['type']['individual'] ?>>Individual</option>
+						</select>
+
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="fatal">End tests if one fails</label>
-					<input name="fatal" type="checkbox" <?= $input['fatal'] ?> class="form-control">
+					<label for="a" class="col-sm-4 control-label">Test A</label>
+					<div class="col-sm-8">
+						<select name="a" class="form-control">
+						<?php
+
+						foreach ($possible_tests as $possible)
+						{
+							echo '
+								<option value="', $possible['name'], '"', $possible['name'] == $input['tests']['a'] ? ' selected' : '' , '>', $possible['name'], '</option>';
+						}
+
+						?>
+						</select>
+					</div>
 				</div>
-			</div>
-			<div class="form-group">
-				<label for="iterations">Number of iterations</label>
-				<input name="iterations" type="text" value="<?= $input['iterations'] ?>" class="form-control">
-			</div>
-			<div class="form-group">
-				<label for="msg">Comma separated list of message ids to parse</label>
-				<input name="msg" type="text" value="<?= isset($input['msg']) && is_array($input['msg']) ? implode(',', $input['msg']) : '' ?>" class="form-control">
+				<div class="form-group">
+					<label for="b" class="col-sm-4 control-label">Test B</label>
+					<div class="col-sm-8">
+						<select name="b" class="form-control">
+							<?php
+
+							foreach ($possible_tests as $possible)
+							{
+								echo '
+								<option value="', $possible['name'], '"', $possible['name'] == $input['tests']['b'] ? ' selected' : '' , '>', $possible['name'], '</option>';
+							}
+
+							?>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="iterations" class="col-sm-4 control-label">Number of iterations</label>
+					<div class="col-sm-8">
+						<input name="iterations" type="text" value="<?= $testBBC->getIterations() ?>" class="form-control">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="msg" class="col-sm-4 control-label">Comma separated list of message ids to parse (blank for all)</label>
+					<div class="col-sm-8">
+						<input name="msg" type="text" value="<?= isset($input['msg']) && is_array($input['msg']) ? implode(',', $input['msg']) : '' ?>" class="form-control">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="fatal" class="col-sm-4 control-label">End tests if one fails</label>
+					<div class="col-sm-8">
+						<input name="fatal" type="checkbox" <?= $input['fatal'] ?> class="form-control">
+					</div>
+				</div>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
