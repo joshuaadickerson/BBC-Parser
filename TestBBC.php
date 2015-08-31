@@ -2,6 +2,8 @@
 
 namespace BBC;
 
+// @todo this should really be autoloaded but I don't feel like setting up an autoloader for this
+// The test interface
 require_once './Tests/BBCTest.php';
 
 class TestBBC
@@ -14,12 +16,15 @@ class TestBBC
 	protected $msg_path = 'Messages.php';
 	protected $messages = array();
 	protected $save_result = true;
-	protected $iterations = 10000;
+	protected $iterations = 1;
 	protected $tests = array();
 
-	public function __construct(array $input)
+	public function __construct($test_dir_path = 'Tests')
 	{
-		$this->setInput($input);
+		error_reporting(E_ALL);
+		ini_set('display_errors', 1);
+
+		$this->tests = $this->loadPossibleTests($test_dir_path);
 	}
 
 	public function setInput($input)
@@ -27,11 +32,9 @@ class TestBBC
 		$this->globalSettings();
 		$this->input = $input;
 
-		$this->tests = $this->getPossibleTests();
-
 		$this->setMethods($input['tests']['a'], $input['tests']['b']);
 		$this->messages = $this->setMessages(isset($input['msg']) ? $input['msg'] : null);
-		$this->iterations = isset($input['iterations']) ? min((int) $input['iterations'], self::MAX_ITERATIONS) : $this->iterations;
+		$this->setIterations(isset($input['iterations']) ? $input['iterations'] : null);
 		$this->save_result = isset($input['save_result']) ? (bool) $input['save_result'] : $this->save_result;
 
 		return $this;
@@ -39,11 +42,16 @@ class TestBBC
 
 	public function setMethods($a, $b)
 	{
-		$this->methods['a'] = $this->tests[$this->input['tests']['a']]['object'];
-		$this->methods['b'] = $this->tests[$this->input['tests']['b']]['object'];
+		$this->methods['a'] = $this->tests[$a]['object'];
+		$this->methods['b'] = $this->tests[$b]['object'];
 	}
 
-	public function getPossibleTests($test_dir_path = 'Tests')
+	public function getMethods()
+	{
+		return $this->methods;
+	}
+
+	public function loadPossibleTests($test_dir_path = 'Tests')
 	{
 		$test_dir = new \DirectoryIterator($test_dir_path);
 		$tests = array();
@@ -71,12 +79,24 @@ class TestBBC
 		return $tests;
 	}
 
+	public function getPossibleTests()
+	{
+		return $this->tests;
+	}
+
+	public function setIterations($iterations = 1)
+	{
+		$this->iterations = max(min((int) $iterations, self::MAX_ITERATIONS), 1);
+	}
+
+	public function getIterations()
+	{
+		return $this->iterations;
+	}
+
 	public function globalSettings()
 	{
 		global $txt, $modSettings, $user_info, $scripturl;
-
-		error_reporting(E_ALL);
-		ini_set('display_errors', 1);
 
 		$scripturl = 'http://localhost';
 
@@ -139,6 +159,11 @@ class TestBBC
 
 	public function individual()
 	{
+		if (empty($this->methods))
+		{
+			die('NO METHODS SET');
+		}
+
 		$this->results = array(
 			'messages' => $this->messages,
 			'num_messages' => count($this->messages),
@@ -176,11 +201,23 @@ class TestBBC
 
 	public function benchmark()
 	{
+		if (empty($this->methods))
+		{
+			die('NO METHODS SET');
+		}
+
 		$this->results = array(
 			'messages' => $this->messages,
 			'num_messages' => count($this->messages),
 			'iterations' => $this->iterations,
 			'tests' => array(),
+			'totals' => array(
+				'a' => 0,
+				'b' => 0,
+				'total' => 0,
+				'diff' => 0,
+				'percent' => 0,
+			),
 		);
 
 		// Do the setup
@@ -226,6 +263,8 @@ class TestBBC
 			foreach ($this->methods as $letter => $method)
 			{
 				$this->results['tests'][$i][$letter] = $this->runBenchmark($method, $message);
+
+				$this->results['totals'][$letter] += $this->results['tests'][$i][$letter]['total_time'];
 			}
 
 			if ($this->save_result)
@@ -244,6 +283,7 @@ class TestBBC
 			$this->results['tests'][$i]['order'] = implode(',', $order);
 
 			$this->results['tests'][$i]['time_winner'] = $this->results['tests'][$i]['a']['total_time'] > $this->results['tests'][$i]['b']['total_time'] ? 'b' : 'a';
+
 			if ($this->results['tests'][$i]['a']['total_time'] == 0)
 			{
 				$this->results['tests'][$i]['time_diff_percent'] = 0;
@@ -252,7 +292,13 @@ class TestBBC
 			{
 				$this->results['tests'][$i]['time_diff_percent'] = round(($this->results['tests'][$i]['time_diff'] / $this->results['tests'][$i]['a']['total_time']) * 100, 2);
 			}
+
+			$this->results['totals']['total'] = $this->results['totals']['a'] + $this->results['totals']['b'];
+			$this->results['totals']['diff'] = abs($this->results['totals']['a'] - $this->results['totals']['b']);
+			$this->results['totals']['percent'] = $this->results['totals']['diff'] > 0 ? ($this->results['totals']['a'] - $this->results['totals']['b']) / $this->results['totals']['a'] * 100 : 0;
 		}
+
+
 	}
 
 	protected function setup()
@@ -368,7 +414,7 @@ class TestBBC
 		return $diagnostics;
 	}
 
-	protected function setMessages($msg_id)
+	public function setMessages($msg_id)
 	{
 		$messages = require $this->msg_path;
 
@@ -403,5 +449,44 @@ class TestBBC
 	{
 		$this->iterations = 1;
 		$this->benchmark();
+	}
+
+	public function getTopResults($stack_size, $key)
+	{
+		$stack = array();
+		$stack_len = 0;
+		$results = $this->getResults();
+		$key = in_array($key, array('time_diff', 'time_diff_percent')) ? $key : 'time_diff';
+
+		foreach ($results['tests'] as $i => $result)
+		{
+			if (count($stack) < $stack_size + 1)
+			{
+				$stack_len++;
+				$stack[$i] = $result[$key];
+			}
+			else
+			{
+				foreach ($stack as $k => $v)
+				{
+					if ($v > $result[$key])
+					{
+						unset($stack[$k]);
+						$stack[$i] = $result[$key];
+						arsort($stack);
+						break;
+					}
+				}
+			}
+		}
+
+		asort($stack);
+
+		return $stack;
+	}
+
+	public function saveTopResults($filename, $stack_size = 5, $key = 'time_diff')
+	{
+		file_put_contents($filename, implode(array_keys($this->getTopResults($stack_size, $key)), ',') . "\n", FILE_APPEND);
 	}
 }

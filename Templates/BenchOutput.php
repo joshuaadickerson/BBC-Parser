@@ -1,57 +1,20 @@
 <?php
-$total_a_time = 0;
-$total_b_time = 0;
-
-$stack = array();
-$stack_max_len = 5;
-$stack_len = 0;
-
-foreach ($results['tests'] as $i => $result)
-{
-	$total_a_time += $result['a']['total_time'];
-	$total_b_time += $result['b']['total_time'];
-
-	if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
-	{
-		if (count($stack) < $stack_max_len + 1)
-		{
-			$stack_len++;
-			$stack[$i] = $result['time_diff'];
-		}
-		else
-		{
-			foreach ($stack as $k => $v)
-			{
-				if ($v > $result['time_diff'])
-				{
-					unset($stack[$k]);
-					$stack[$i] = $result['time_diff'];
-					arsort($stack);
-					break;
-				}
-			}
-		}
-	}
-}
 
 if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 {
-	asort($stack);
-	file_put_contents('top_time_diff.csv', implode(array_keys($stack), ',') . "\n", FILE_APPEND);
+	$testBBC->saveTopResults('top_time_diff.csv', 5, 'time_diff');
 }
 
-$total_diff = abs($total_a_time - $total_b_time);
-$total_percent = $total_diff > 0 ? round(($total_a_time - $total_b_time) / $total_a_time * 100, 2) : 0;
 ?>
 
 <div>
 	Messages: <?= $results['num_messages'] ?><br>
 	Iterations: <?= $results['iterations'] ?><br>
-	Total Time In Tests: <?= round($total_a_time + $total_b_time, 2) ?><br>
-	Total Time A (<?= $input['tests']['a'] ?>): <?= round($total_a_time, 2) ?><br>
-	Total Time B (<?= $input['tests']['b'] ?>): <?= round($total_b_time, 2) ?><br>
-	Diff Total Time: <?= $total_diff ?><br>
-	Diff Total Time %: <?= $total_percent ?><br>
+	Total Time In Tests: <?= round($results['totals']['total'], 2) ?><br>
+	Total Time A (<?= $input['tests']['a'] ?>): <?= round($results['totals']['a'], 2) ?><br>
+	Total Time B (<?= $input['tests']['b'] ?>): <?= round($results['totals']['b'], 2) ?><br>
+	Diff Total Time: <?= $results['totals']['diff'] ?><br>
+	Diff Total Time %: <?= round($results['totals']['percent'], 2) ?><br>
 </div>
 
 <form>
