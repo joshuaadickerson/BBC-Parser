@@ -26,14 +26,6 @@ if (isset($_GET['msg']) && $_GET['msg'] !== '')
 	}
 }
 
-/*$tests = array(
-	'parse_bbc' => 'Old parse_bbc',
-	'spuds_parse_bbc' => 'Spuds parse_bbc',
-	'parser' => 'Parser',
-	'regexparser' => 'Regex Parser',
-);
-*/
-
 // Include the test file
 require_once 'TestBBC.php';
 $testBBC = new TestBBC;
@@ -58,13 +50,7 @@ $input = array(
 
 $testBBC->setInput($input);
 
-// Setup those constants for the test file
-//define('ITERATIONS', $input['iterations']);
-//define('DEBUG', !empty($input['debug']));
-//define('FAILED_TEST_IS_FATAL', !empty($input['fatal']));
 define('SAVE_TOP_RESULTS', true);
-
-
 
 // Run the test (based on type)
 $test_types = array(
@@ -77,7 +63,6 @@ require_once 'BBCHelpers.php';
 
 if (isset($test_types[$type]))
 {
-	define('TEST_TYPE', $type);
 	call_user_func(array($testBBC, $test_types[$type]), $input);
 	$results = $testBBC->getResults();
 }
@@ -100,11 +85,6 @@ if (isset($test_types[$type]))
 	<script src="//cdn.datatables.net/1.10.8/js/jquery.dataTables.min.js"></script>
 	<script src="//cdn.datatables.net/plug-ins/1.10.8/sorting/natural.js"></script>
 
-	<!--
-	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css">
-	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
-	<script>hljs.initHighlightingOnLoad();</script>
-	-->
 	<style>
 		.code {
 			height: auto;
