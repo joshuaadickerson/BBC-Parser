@@ -10,8 +10,8 @@ foreach ($results['tests'] as $result)
 }
 $num_fail = $num_tests - $num_pass;
 ?>
-Test A: <?= $input['tests']['a'] ?>
-Test B: <?= $input['tests']['b'] ?>
+Test A: <?= $input['tests']['a'] ?><br>
+Test B: <?= $input['tests']['b'] ?><br>
 Tests: <?= $num_tests ?><br>
 Pass: <?= $num_pass ?><br>
 Fail: <?= $num_fail ?><br>
