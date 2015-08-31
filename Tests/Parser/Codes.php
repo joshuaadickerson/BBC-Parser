@@ -122,6 +122,10 @@ class Codes
 	 * Whether the tag is disabled
 	 */
 	const ATTR_DISABLED = 24;
+	/**
+	 * If the message contains a code with this the message should not be cached
+	 */
+	const ATTR_NO_CACHE = 25;
 
 	/** [tag]parsed content[/tag] */
 	const TYPE_PARSED_CONTENT = 0;
