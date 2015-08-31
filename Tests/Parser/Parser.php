@@ -31,6 +31,8 @@ class Parser
 	protected $inside_tag;
 
 	protected $autolinker = null;
+	protected $possible_html;
+
 	/**
 	 * @param \BBC\Codes $bbc
 	 */
@@ -98,6 +100,8 @@ class Parser
 
 		// Check if the message might have a link or email to save a bunch of parsing in autolink()
 		$this->autolinker->setPossibleAutolink($this->message);
+
+		$this->possible_html = !empty($GLOBALS['modSettings']['enablePostHTML']) && strpos($message, '&lt;') !== false;
 
 		$this->pos = -1;
 		while ($this->pos !== false)
@@ -1096,7 +1100,7 @@ class Parser
 		}
 
 		// Take care of some HTML!
-		if (!empty($GLOBALS['modSettings']['enablePostHTML']) && strpos($data, '&lt;') !== false)
+		if ($this->possible_html && strpos($data, '&lt;') !== false)
 		{
 			// @todo new \Parser\BBC\HTML;
 			$this->parseHTML($data);

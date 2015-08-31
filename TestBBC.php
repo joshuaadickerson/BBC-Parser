@@ -139,6 +139,7 @@ class TestBBC
 			'max_image_width' => false,
 			'max_image_height' => false,
 			'smileys_url' => 'http://www.google.com/smileys',
+			'enablePostHTML' => true,
 		);
 
 		$user_info = array(
