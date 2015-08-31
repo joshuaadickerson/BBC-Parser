@@ -4,6 +4,7 @@
 namespace BBC;
 
 use \BBC\Codes;
+use \BBC\Autolink;
 
 //define('BR', '<br />');
 //define('BR_LEN', strlen(BR));
@@ -25,28 +26,22 @@ class Parser
 	protected $pos3;
 	protected $last_pos;
 	protected $do_smileys = true;
-	// This is just the name of the tags that are open, by key
 	protected $open_tags = array();
 	// This is the actual tag that's open
-	// @todo implement as SplStack
-	protected $open_bbc = array();
-	protected $do_autolink = true;
 	protected $inside_tag;
-	protected $possible_link;
-	protected $possible_email;
-	protected $autolink_search;
-	protected $autolink_replace;
 
+	protected $autolinker = null;
 	/**
 	 * @param \BBC\Codes $bbc
 	 */
-	public function __construct(Codes $bbc)
+	public function __construct(Codes $bbc, Autolink $autolinker = null)
 	{
 		$this->bbc = $bbc;
 
 		$this->bbc_codes = $this->bbc->getForParsing();
 		$this->item_codes = $this->bbc->getItemCodes();
 
+		$this->autolinker = $autolinker;
 		$this->loadAutolink();
 	}
 
@@ -60,7 +55,6 @@ class Parser
 		$this->pos2 = null;
 		$this->last_pos = null;
 		$this->open_tags = array();
-		$this->do_autolink = true;
 		$this->inside_tag = null;
 		$this->lastAutoPos = 0;
 	}
@@ -103,8 +97,7 @@ class Parser
 		$this->message = str_replace("\n", '<br />', $this->message);
 
 		// Check if the message might have a link or email to save a bunch of parsing in autolink()
-		$this->possible_link = !$this->bbc->isDisabled('url') && (strpos($this->message, '://') !== false || strpos($this->message, 'www.') !== false);
-		$this->possible_email = !$this->bbc->isDisabled('email') && strpos($this->message, '@') !== false;
+		$this->autolinker->setPossibleAutolink($this->message);
 
 		$this->pos = -1;
 		while ($this->pos !== false)
@@ -250,6 +243,18 @@ class Parser
 		$this->message = $message;
 
 		return $this->message;
+	}
+
+	protected function setPossibleAutolink()
+	{
+		$possible_link = !$this->bbc->isDisabled('url') && (strpos($this->message, '://') !== false || strpos($this->message, 'www.') !== false);
+		$possible_email = !$this->bbc->isDisabled('email') && strpos($this->message, '@') !== false;
+
+		// Your autolink integration might use something like tel.123456789.call. This makes that possible.
+		call_integration_hook('integrate_possible_autolink', array(&$possible_link, &$possible_email));
+
+		$this->possible_link = $possible_link;
+		$this->possible_email = $possible_email;
 	}
 
 	protected function handleOpenTags()
@@ -476,7 +481,7 @@ class Parser
 	 */
 	protected function autoLink(&$data)
 	{
-		if ($data === '' || $data === "\n")
+		if ($data === '' || $data === "\n"  || !$this->autolinker->hasPossible())
 		{
 			return;
 		}
@@ -493,41 +498,7 @@ class Parser
 			}
 		}
 
-		// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-		if ($this->possible_link && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
-		{
-			// Switch out quotes really quick because they can cause problems.
-			$data = str_replace(array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), $data);
-
-			$result = preg_replace($this->autolink_search, $this->autolink_replace, $data);
-
-			// Only do this if the preg survives.
-			if (is_string($result))
-			{
-				$data = $result;
-			}
-
-			// Switch those quotes back
-			$data = str_replace(array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), $data);
-		}
-
-		// Next, emails...
-		if ($this->possible_email && strpos($data, '@') !== false)
-		{
-			$data = preg_replace(
-				array(
-					'~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u',
-					'~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u',
-				),
-				array(
-					'[email]$1[/email]',
-					'[email]$1[/email]',
-				), $data
-			);
-			//$data = preg_replace('~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u', '[email]$1[/email]', $data);
-			//$data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u', '[email]$1[/email]', $data);
-
-		}
+		$this->autolinker->parse($data);
 	}
 
 	/**
@@ -535,20 +506,10 @@ class Parser
 	 */
 	protected function loadAutolink()
 	{
-		// @todo get rid of the FTP, nobody uses it
-		$search = array(
-			'~(?<=[\s>\.(;\'"]|^)((?:http|https)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui',
-			'~(?<=[\s>(\'<]|^)(www(?:\.[\w\-_]+)+(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui'
-		);
-		$replace = array(
-			'[url]$1[/url]',
-			'[url=http://$1]$1[/url]'
-		);
-
-		call_integration_hook('integrate_autolink', array(&$search, &$replace, $this->bbc));
-
-		$this->autolink_search = $search;
-		$this->autolink_replace = $replace;
+		if ($this->autolinker === null)
+		{
+			$this->autolinker = new Autolink($this->bbc);
+		}
 	}
 
 	/**
@@ -780,9 +741,11 @@ class Parser
 		{
 			// Can't use offset because of the ^
 			preg_match('~^(<br />|&nbsp;|\s|\[)+~', substr($this->message, $this->pos2 + 6), $matches);
+			//preg_match('~(<br />|&nbsp;|\s|\[)+~', $this->message, $matches, 0, $this->pos2 + 6);
 
 			// Keep the list open if the next character after the break is a [. Otherwise, close it.
-			$replacement = (!empty($matches[0]) && substr_compare($matches[0], '[', -1, 1) === 0 ? '[/li]' : '[/li][/list]');
+			$replacement = !empty($matches[0]) && substr_compare($matches[0], '[', -1, 1) === 0 ? '[/li]' : '[/li][/list]';
+
 			$this->message = substr_replace($this->message, $replacement, $this->pos2, 0);
 			$this->open_tags[$num_open_tags - 2][Codes::ATTR_AFTER] = '</ul>';
 		}
@@ -1126,6 +1089,7 @@ class Parser
 		$data = substr($this->message, $this->last_pos, $this->pos - $this->last_pos);
 
 		// @todo $data seems to be \n a lot. Why? It got called 62 times in a test
+		// This happens when the pos is > last_pos and there is a trailing \n from one of the tags having "AFTER"
 		if ($data === "\n")
 		{
 			return;
@@ -1139,7 +1103,7 @@ class Parser
 		}
 
 		// @todo is this sending tags like [/b] here?
-		if (!empty($GLOBALS['modSettings']['autoLinkUrls']) && ($this->possible_link || $this->possible_email))
+		if (!empty($GLOBALS['modSettings']['autoLinkUrls']))
 		{
 			$this->autoLink($data);
 		}

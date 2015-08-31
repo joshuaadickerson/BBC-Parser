@@ -1,22 +1,38 @@
 <?php
 
+namespace BBC;
+
 class Autolink
 {
-	public function __construct()
-	{
+	protected $bbc;
+	protected $url_enabled;
+	protected $email_enabled;
+	protected $possible_link;
+	protected $possible_email;
+	protected $search;
+	protected $replace;
+	protected $email_search;
+	protected $email_replace;
 
+	public function __construct(Codes $bbc)
+	{
+		$this->bbc = $bbc;
+
+		$this->url_enabled = !$this->bbc->isDisabled('url');
+		$this->email_enabled = !$this->bbc->isDisabled('email');
+
+		$this->load();
 	}
 
-	public function links(&$data)
+	public function parse(&$data)
 	{
-
 		// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-		if (!$this->bbc->isDisabled('url') && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
+		if ($this->url_enabled && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
 		{
 			// Switch out quotes really quick because they can cause problems.
 			$data = str_replace(array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), $data);
 
-			$result = preg_replace($this->autolink_search, $this->autolink_replace, $data);
+			$result = preg_replace($this->search, $this->replace, $data);
 
 			// Only do this if the preg survives.
 			if (is_string($result))
@@ -27,15 +43,72 @@ class Autolink
 			// Switch those quotes back
 			$data = str_replace(array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), $data);
 		}
+
+		// Next, emails...
+		if ($this->email_enabled && strpos($data, '@') !== false)
+		{
+			$data = preg_replace($this->email_search, $this->email_replace, $data);
+		}
+
+		call_integration_hook('integrate_autolink_area', array(&$data, $this->bbc));
 	}
 
-	public function email(&$data)
+	/**
+	 * Load the autolink regular expression to be used in autoLink()
+	 */
+	protected function load()
 	{
-		// Next, emails...
-		if (!$this->bbc->isDisabled('email') && strpos($data, '@') !== false)
+		$search_url = array(
+			'~(?<=[\s>\.(;\'"]|^)((?:http|https)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui',
+			'~(?<=[\s>(\'<]|^)(www(?:\.[\w\-_]+)+(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui'
+		);
+		$replace_url = array(
+			'[url]$1[/url]',
+			'[url=http://$1]$1[/url]'
+		);
+
+		$search_email = array(
+			'~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u',
+			'~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u',
+		);
+		$replace_email = array(
+			'[email]$1[/email]',
+			'[email]$1[/email]',
+		);
+
+		call_integration_hook('integrate_autolink_load', array(&$search_url, &$replace_url, $search_email, $replace_email, $this->bbc));
+
+		$this->search = $search_url;
+		$this->replace = $replace_url;
+
+		if (empty($search_url) || empty($replace_url))
 		{
-			$data = preg_replace('~(?<=[\?\s\x{A0}\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~u', '[email]$1[/email]', $data);
-			$data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u', '[email]$1[/email]', $data);
+			$this->url_enabled = false;
 		}
+
+		$this->email_search = $search_email;
+		$this->email_replace = $replace_email;
+
+		if (empty($search_email) || empty($replace_email))
+		{
+			$this->email_enabled = false;
+		}
+	}
+
+	public function setPossibleAutolink($message)
+	{
+		$possible_link = $this->url_enabled && (strpos($message, '://') !== false || strpos($message, 'www.') !== false);
+		$possible_email = $this->email_enabled && strpos($message, '@') !== false;
+
+		// Your autolink integration might use something like tel.123456789.call. This makes that possible.
+		call_integration_hook('integrate_possible_autolink', array(&$possible_link, &$possible_email));
+
+		$this->possible_link = $possible_link;
+		$this->possible_email = $possible_email;
+	}
+
+	public function hasPossible()
+	{
+		return $this->possible_link || $this->possible_email;
 	}
 }
