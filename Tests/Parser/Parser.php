@@ -33,6 +33,8 @@ class Parser
 	protected $autolinker = null;
 	protected $possible_html;
 
+	protected $can_cache = true;
+
 	/**
 	 * @param \BBC\Codes $bbc
 	 */
@@ -59,6 +61,7 @@ class Parser
 		$this->open_tags = array();
 		$this->inside_tag = null;
 		$this->lastAutoPos = 0;
+		$this->can_cache = true;
 	}
 
 	/**
@@ -683,6 +686,9 @@ class Parser
 // @todo remove this. This is only for testing
 //$GLOBALS['codes_used'][$GLOBALS['current_message']][] = $tag;
 //$GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] = isset($GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)]) ? $GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] + 1 : 1;
+
+		// If there is a code that says you can't cache, the message can't be cached
+		$this->can_cache = empty($tag[Codes::ATTR_NO_CACHE]);
 
 		return $tag;
 	}
@@ -1529,5 +1535,10 @@ class Parser
 		if (!preg_match('~^' . $preg . '\]~i', ($replace_str .= substr($test, $tpos)), $matches))
 			return true;
 		$message = substr($message, 0, $pos1 - 1) . $replace_str;
+	}
+
+	public function canCache()
+	{
+		return $this->can_cache;
 	}
 }
