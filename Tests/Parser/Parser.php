@@ -573,7 +573,7 @@ class Parser
 		$tag[Codes::ATTR_BEFORE] = str_replace('<blockquote>', '<blockquote class="bbc_' . ($quote_alt ? 'alternate' : 'standard') . '_quote">', $tag[Codes::ATTR_BEFORE]);
 	}
 
-	protected function checkCodeAttributes($next_c, array &$possible, $tag)
+	protected function checkCodeAttributes($next_c, array $possible)
 	{
 		// Do we want parameters?
 		if (!empty($possible[Codes::ATTR_PARAM]))
@@ -644,8 +644,8 @@ class Parser
 			}
 
 			// @todo this isset() is never true. Not sure what $tag does here. If we remove this, remove the & from the function parameters and the $tag as well
-			$possible[Codes::ATTR_BEFORE] = isset($possible[Codes::ATTR_DISALLOW_BEFORE]) ? $tag[Codes::ATTR_DISALLOW_BEFORE] : $possible[Codes::ATTR_BEFORE];
-			$possible[Codes::ATTR_AFTER] = isset($possible[Codes::ATTR_DISALLOW_AFTER]) ? $tag[Codes::ATTR_DISALLOW_AFTER] : $possible[Codes::ATTR_AFTER];
+			$possible[Codes::ATTR_BEFORE] = isset($possible[Codes::ATTR_DISALLOW_BEFORE]) ? $possible[Codes::ATTR_DISALLOW_BEFORE] : $possible[Codes::ATTR_BEFORE];
+			$possible[Codes::ATTR_AFTER] = isset($possible[Codes::ATTR_DISALLOW_AFTER]) ? $possible[Codes::ATTR_DISALLOW_AFTER] : $possible[Codes::ATTR_AFTER];
 		}
 
 		$this->pos1 = $this->pos + 1 + $possible[Codes::ATTR_LENGTH] + 1;
