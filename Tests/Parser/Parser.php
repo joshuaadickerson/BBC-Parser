@@ -487,120 +487,36 @@ class Parser
 				continue;
 			}
 
-			// Not a match?
-			if (substr_compare($this->message, $possible[Codes::ATTR_TAG], $this->pos + 1, $possible[Codes::ATTR_LENGTH], true) !== 0)
-			{
-				$last_check = $possible[Codes::ATTR_TAG];
-
-				continue;
-			}
-
 			// The character after the possible tag or nothing
 			$next_c = isset($this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]]) ? $this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]] : '';
 
 			// This only happens if the tag is the last character of the string
 			if ($next_c === '')
 			{
+				break;
+			}
+
+			// The next character must be one of these or it's not a tag
+			if ($next_c !== ' ' && $next_c !== ']' && $next_c !== '=' && $next_c !== '/')
+			{
 				$last_check = $possible[Codes::ATTR_TAG];
 				continue;
 			}
 
-			// A test validation?
-			// @todo figure out if the regex need can use offset
-			// this creates a copy of the entire message starting from this point!
-			// @todo where do we know if the next char is ]?
-
-			// Do we want parameters?
-			if (!empty($possible[Codes::ATTR_PARAM]))
+			// Not a match?
+			if (substr_compare($this->message, $possible[Codes::ATTR_TAG], $this->pos + 1, $possible[Codes::ATTR_LENGTH], true) !== 0)
 			{
-				if ($next_c !== ' ')
-				{
-					continue;
-				}
-			}
-			// parsed_content demands an immediate ] without parameters!
-			elseif ($possible[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_CONTENT)
-			{
-				if ($next_c !== ']')
-				{
-					continue;
-				}
-			}
-			else
-			{
-				// Do we need an equal sign?
-				if ($next_c !== '=' && in_array($possible[Codes::ATTR_TYPE], array(Codes::TYPE_UNPARSED_EQUALS, Codes::TYPE_UNPARSED_COMMAS, Codes::TYPE_UNPARSED_COMMAS_CONTENT, Codes::TYPE_UNPARSED_EQUALS_CONTENT, Codes::TYPE_PARSED_EQUALS)))
-				{
-					continue;
-				}
-
-				if ($next_c !== ']')
-				{
-					// An immediate ]?
-					if ($possible[Codes::ATTR_TYPE] === Codes::TYPE_UNPARSED_CONTENT)
-					{
-						continue;
-					}
-					// Maybe we just want a /...
-					elseif ($possible[Codes::ATTR_TYPE] === Codes::TYPE_CLOSED && substr_compare($this->message, '/]', $this->pos + 1 + $possible[Codes::ATTR_LENGTH], 2) !== 0 && substr_compare($this->message, ' /]', $this->pos + 1 + $possible[Codes::ATTR_LENGTH], 3) !== 0)
-					{
-						continue;
-					}
-				}
-			}
-
-			if (isset($possible[Codes::ATTR_TEST]) && preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 2 + $possible[Codes::ATTR_LENGTH], strpos($this->message, ']', $this->pos) - ($this->pos + 2 + $possible[Codes::ATTR_LENGTH]))) === 0)
-			{
+				$last_check = $possible[Codes::ATTR_TAG];
 				continue;
 			}
 
-			// Check allowed tree?
-			if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !isset($possible[Codes::ATTR_REQUIRE_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
+			// @todo maybe sort the BBC by length. If the message stub is a tag and the length changes, no need to ocntinue. Just break by this point.
+			// @todo maybe call the rest of this checkBBCAttributes() or checkCodeAttributes()?
+
+			$tag = $this->checkCodeAttributes($next_c, $possible, $tag);
+			if($tag === null)
 			{
 				continue;
-			}
-
-			if (isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]) && !isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN][$possible[Codes::ATTR_TAG]]))
-			{
-				continue;
-			}
-			// If this is in the list of disallowed child tags, don't parse it.
-			if (isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) && isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN][$possible[Codes::ATTR_TAG]]))
-			{
-				continue;
-			}
-
-			// Not allowed in this parent, replace the tags or show it like regular text
-			if (isset($possible[Codes::ATTR_DISALLOW_PARENTS]) && ($this->inside_tag !== null && isset($possible[Codes::ATTR_DISALLOW_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
-			{
-				if (!isset($possible[Codes::ATTR_DISALLOW_BEFORE], $possible[Codes::ATTR_DISALLOW_AFTER]))
-				{
-					continue;
-				}
-
-				$possible[Codes::ATTR_BEFORE] = isset($possible[Codes::ATTR_DISALLOW_BEFORE]) ? $tag[Codes::ATTR_DISALLOW_BEFORE] : $possible[Codes::ATTR_BEFORE];
-				$possible[Codes::ATTR_AFTER] = isset($possible[Codes::ATTR_DISALLOW_AFTER]) ? $tag[Codes::ATTR_DISALLOW_AFTER] : $possible[Codes::ATTR_AFTER];
-			}
-
-			$this->pos1 = $this->pos + 1 + $possible[Codes::ATTR_LENGTH] + 1;
-
-			// This is long, but it makes things much easier and cleaner.
-			if (!empty($possible[Codes::ATTR_PARAM]))
-			{
-				//$match = $this->matchParameters($possible, $matches);
-				$match = $this->dougiefresh($possible, $matches);
-
-				// Didn't match our parameter list, try the next possible.
-				if (empty($matches))
-				{
-					continue;
-				}
-
-				$tag = $this->setupTagParameters($possible, $matches);
-			}
-			else
-			{
-				$tag = $possible;
 			}
 
 			// Quotes can have alternate styling, we do this php-side due to all the permutations of quotes.
@@ -643,6 +559,101 @@ class Parser
 		}
 
 		return $tag;
+	}
+
+	protected function checkCodeAttributes($next_c, array &$possible, $tag)
+	{
+		// Do we want parameters?
+		if (!empty($possible[Codes::ATTR_PARAM]))
+		{
+			if ($next_c !== ' ')
+			{
+				return;
+			}
+		}
+		// parsed_content demands an immediate ] without parameters!
+		elseif ($possible[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_CONTENT)
+		{
+			if ($next_c !== ']')
+			{
+				return;
+			}
+		}
+		else
+		{
+			// Do we need an equal sign?
+			if ($next_c !== '=' && in_array($possible[Codes::ATTR_TYPE], array(Codes::TYPE_UNPARSED_EQUALS, Codes::TYPE_UNPARSED_COMMAS, Codes::TYPE_UNPARSED_COMMAS_CONTENT, Codes::TYPE_UNPARSED_EQUALS_CONTENT, Codes::TYPE_PARSED_EQUALS)))
+			{
+				return;
+			}
+
+			if ($next_c !== ']')
+			{
+				// An immediate ]?
+				if ($possible[Codes::ATTR_TYPE] === Codes::TYPE_UNPARSED_CONTENT)
+				{
+					return;
+				}
+				// Maybe we just want a /...
+				elseif ($possible[Codes::ATTR_TYPE] === Codes::TYPE_CLOSED && substr_compare($this->message, '/]', $this->pos + 1 + $possible[Codes::ATTR_LENGTH], 2) !== 0 && substr_compare($this->message, ' /]', $this->pos + 1 + $possible[Codes::ATTR_LENGTH], 3) !== 0)
+				{
+					return;
+				}
+			}
+		}
+
+		if (isset($possible[Codes::ATTR_TEST]) && preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 2 + $possible[Codes::ATTR_LENGTH], strpos($this->message, ']', $this->pos) - ($this->pos + 2 + $possible[Codes::ATTR_LENGTH]))) === 0)
+		{
+			return;
+		}
+
+		// Check allowed tree?
+		if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !isset($possible[Codes::ATTR_REQUIRE_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
+		{
+			return;
+		}
+
+		if (isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]) && !isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN][$possible[Codes::ATTR_TAG]]))
+		{
+			return;
+		}
+		// If this is in the list of disallowed child tags, don't parse it.
+		if (isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) && isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN][$possible[Codes::ATTR_TAG]]))
+		{
+			return;
+		}
+
+		// Not allowed in this parent, replace the tags or show it like regular text
+		if (isset($possible[Codes::ATTR_DISALLOW_PARENTS]) && ($this->inside_tag !== null && isset($possible[Codes::ATTR_DISALLOW_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
+		{
+			if (!isset($possible[Codes::ATTR_DISALLOW_BEFORE], $possible[Codes::ATTR_DISALLOW_AFTER]))
+			{
+				return;
+			}
+
+			// @todo this isset() is never true. Not sure what $tag does here. If we remove this, remove the & from the function parameters and the $tag as well
+			$possible[Codes::ATTR_BEFORE] = isset($possible[Codes::ATTR_DISALLOW_BEFORE]) ? $tag[Codes::ATTR_DISALLOW_BEFORE] : $possible[Codes::ATTR_BEFORE];
+			$possible[Codes::ATTR_AFTER] = isset($possible[Codes::ATTR_DISALLOW_AFTER]) ? $tag[Codes::ATTR_DISALLOW_AFTER] : $possible[Codes::ATTR_AFTER];
+		}
+
+		$this->pos1 = $this->pos + 1 + $possible[Codes::ATTR_LENGTH] + 1;
+
+		// This is long, but it makes things much easier and cleaner.
+		if (!empty($possible[Codes::ATTR_PARAM]))
+		{
+			$match = $this->matchParameters($possible, $matches);
+			//$match = $this->dougiefresh($possible, $matches);
+
+			// Didn't match our parameter list, try the next possible.
+			if (empty($matches))
+			{
+				return;
+			}
+
+			return $this->setupTagParameters($possible, $matches);
+		}
+
+		return $possible;
 	}
 
 	protected function handleItemCode()
@@ -1176,9 +1187,9 @@ class Parser
 	{
 		$pos = 0;
 		$test = substr($message, 0, $tpos = strpos($message, ']'));
-		while (substr_count($test, '"') % 2 !== 0)
+		while (substr_count($test, '&quot;') % 2 !== 0)
 		{
-			$tpos += ($pos1 = strpos(substr($message, $tpos), '"'));
+			$tpos += ($pos1 = strpos(substr($message, $tpos), '&quot;'));
 			if ($pos1 === false)
 			{
 				break;
