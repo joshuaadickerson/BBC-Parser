@@ -369,8 +369,8 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS,
 				self::ATTR_BEFORE => '<a href="mailto:$1" class="bbc_email">',
 				self::ATTR_AFTER => '</a>',
-				//self::ATTR_DISALLOW_CHILDREN => array('email', 'ftp', 'url', 'iurl'),
-				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'ftp' => 'ftp', 'url' => 'url', 'iurl' => 'iurl'),
+				//self::ATTR_DISALLOW_CHILDREN => array('email', s'url', 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'url' => 'url', 'iurl' => 'iurl'),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
@@ -401,39 +401,7 @@ class Codes
 				self::ATTR_AUTOLINK => true,
 				self::ATTR_LENGTH => 4,
 			),
-			/*			array(
-							self::ATTR_TAG => 'ftp',
-							self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
-							self::ATTR_CONTENT => '<a href="$1" class="bbc_ftp new_win" target="_blank">$1</a>',
-							self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-								$data = strtr($data, array('<br />' => ''));
-								if (strpos($data, 'ftp://') !== 0 && strpos($data, 'ftps://') !== 0)
-								{
-									$data = 'ftp://' . $data;
-								}
-							},
-							self::ATTR_BLOCK_LEVEL => false,
-							self::ATTR_AUTOLINK => false,
-							self::ATTR_LENGTH => 3,
-						),
-						array(
-							self::ATTR_TAG => 'ftp',
-							self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS,
-							self::ATTR_BEFORE => '<a href="$1" class="bbc_ftp new_win" target="_blank">',
-							self::ATTR_AFTER => '</a>',
-							self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-								if (strpos($data, 'ftp://') !== 0 && strpos($data, 'ftps://') !== 0)
-								{
-									$data = 'ftp://' . $data;
-								}
-							},
-							self::ATTR_DISALLOW_CHILDREN => array('email', 'ftp', 'url', 'iurl'),
-							self::ATTR_DISABLED_AFTER => ' ($1)',
-							self::ATTR_BLOCK_LEVEL => false,
-							self::ATTR_AUTOLINK => false,
-							self::ATTR_LENGTH => 3,
-						),
-			*/			array(
+			array(
 				self::ATTR_TAG => 'hr',
 				self::ATTR_TYPE => self::TYPE_CLOSED,
 				self::ATTR_CONTENT => '<hr />',
@@ -454,16 +422,18 @@ class Codes
 				self::ATTR_TAG => 'img',
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_PARAM => array(
-					'alt' => array(self::PARAM_ATTR_OPTIONAL => true),
+					'alt' => array(
+						self::PARAM_ATTR_OPTIONAL => true,
+					),
 					'width' => array(
 						self::PARAM_ATTR_OPTIONAL => true,
 						self::PARAM_ATTR_VALUE => 'width:100%;max-width:$1px;',
-						self::PARAM_ATTR_MATCH => '(\d+)'
+						self::PARAM_ATTR_MATCH => '(\d+)',
 					),
 					'height' => array(
 						self::PARAM_ATTR_OPTIONAL => true,
 						self::PARAM_ATTR_VALUE => 'max-height:$1px;',
-						self::PARAM_ATTR_MATCH => '(\d+)'
+						self::PARAM_ATTR_MATCH => '(\d+)',
 					),
 				),
 				self::ATTR_CONTENT => '<img src="$1" alt="{alt}" style="{width}{height}" class="bbc_img resized" />',
@@ -525,8 +495,8 @@ class Codes
 						$data = 'http://' . $data;
 					}
 				},
-				//self::ATTR_DISALLOW_CHILDREN => array('email', 'ftp', 'url', 'iurl'),
-				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'ftp' => 'ftp', 'url' => 'url', 'iurl' => 'iurl'),
+				//self::ATTR_DISALLOW_CHILDREN => array('email', 'url', 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'url' => 'url', 'iurl' => 'iurl'),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
@@ -654,7 +624,7 @@ class Codes
 				self::ATTR_AFTER => '</blockquote>',
 				self::ATTR_QUOTED => self::OPTIONAL,
 				// Don't allow everything to be embedded with the author name.
-				//self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl', 'ftp'),
+				//self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl'),
 				self::ATTR_PARSED_TAGS_ALLOWED => array('url', 'iurl'),
 				self::ATTR_BLOCK_LEVEL => true,
 				self::ATTR_AUTOLINK => true,
@@ -861,8 +831,8 @@ class Codes
 						$data = 'http://' . $data;
 					}
 				},
-				//self::ATTR_DISALLOW_CHILDREN => array('email', 'ftp', 'url', 'iurl'),
-				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'ftp' => 'ftp', 'url' => 'url', 'iurl' => 'iurl'),
+				//self::ATTR_DISALLOW_CHILDREN => array('email', 'url', 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'url' => 'url', 'iurl' => 'iurl'),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
