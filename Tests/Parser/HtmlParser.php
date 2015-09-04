@@ -9,24 +9,47 @@ class HtmlParser
 
     public function __construct()
     {
-        require_once(SUBSDIR . '/Attachments.subs.php');
+        // Commented only for testing purposes
+        //require_once(SUBSDIR . '/Attachments.subs.php');
     }
 
     public function parse(&$data)
     {
-        global $modSettings;
+        $this->anchorTags($data);
 
+        $this->emptyTags($data);
+
+        $this->closableTags($data);
+
+        $this->imageTags($data);
+    }
+
+    public function setImageWidthHeight($width, $height)
+    {
+        $this->image_width = (int) $width;
+        $this->image_height = (int) $height;
+
+        return $this;
+    }
+
+    protected function anchorTags(&$data)
+    {
         // Changes <a href=... to [url=
         $data = preg_replace('~&lt;a\s+href=((?:&quot;)?)((?:https?://|mailto:)\S+?)\\1&gt;~i', '[url=$2]', $data);
         $data = preg_replace('~&lt;/a&gt;~i', '[/url]', $data);
+    }
 
+    protected function emptyTags(&$data)
+    {
         // <br /> should be empty.
         foreach ($this->empty_tags as $tag)
         {
             $data = str_replace(array('&lt;' . $tag . '&gt;', '&lt;' . $tag . '/&gt;', '&lt;' . $tag . ' /&gt;'), '[' . $tag . ' /]', $data);
         }
+    }
 
-        // b, u, i, s, pre... basic tags.
+    protected function closableTags(&$data)
+    {
         foreach ($this->closable_tags as $tag)
         {
             $diff = substr_count($data, '&lt;' . $tag . '&gt;') - substr_count($data, '&lt;/' . $tag . '&gt;');
@@ -37,6 +60,11 @@ class HtmlParser
                 $data = substr($data, 0, -1) . str_repeat('</' . $tag . '>', $diff) . substr($data, -1);
             }
         }
+}
+
+protected function imageTags(&$data)
+    {
+        global $modSettings;
 
         // Do <img ... /> - with security... action= -> action-.
         preg_match_all('~&lt;img\s+src=((?:&quot;)?)((?:https?://)\S+?)\\1(?:\s+alt=(&quot;.*?&quot;|\S*?))?(?:\s?/)?&gt;~i', $data, $matches, PREG_PATTERN_ORDER);
@@ -81,13 +109,5 @@ class HtmlParser
 
             $data = strtr($data, $replaces);
         }
-    }
-
-    public function setImageWidthHeight($width, $height)
-    {
-        $this->image_width = (int) $width;
-        $this->image_height = (int) $height;
-
-        return $this;
     }
 }

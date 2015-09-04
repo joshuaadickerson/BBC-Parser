@@ -2,7 +2,9 @@
 
 namespace BBC\Tests\Parser;
 
+use BBC\Autolink;
 use \BBC\Codes;
+use BBC\HtmlParser;
 
 class Test implements \BBC\Tests\BBCTest
 {
@@ -11,6 +13,8 @@ class Test implements \BBC\Tests\BBCTest
 		require_once __DIR__ . '/Parser.php';
 		require_once __DIR__ . '/Codes.php';
 		require_once __DIR__ . '/SmileyParser.php';
+		require_once __DIR__ . '/Autolink.php';
+		require_once __DIR__ . '/HtmlParser.php';
 	}
 
 	public function getName()
@@ -20,7 +24,11 @@ class Test implements \BBC\Tests\BBCTest
 
 	public function setup()
 	{
-		$this->parser = new \BBC\Parser(new Codes);
+		$bbc = new Codes;
+		$autolink = new Autolink($bbc);
+		$html = new HtmlParser;
+
+		$this->parser = new \BBC\Parser($bbc, $autolink, $html);
 	}
 
 	public function parseMessage($message)

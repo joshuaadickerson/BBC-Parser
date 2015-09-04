@@ -30,15 +30,16 @@ class Parser
 	// This is the actual tag that's open
 	protected $inside_tag;
 
-	protected $autolinker = null;
+	protected $autolinker;
 	protected $possible_html;
+	protected $html_parser;
 
 	protected $can_cache = true;
 
 	/**
 	 * @param \BBC\Codes $bbc
 	 */
-	public function __construct(Codes $bbc, Autolink $autolinker = null)
+	public function __construct(Codes $bbc, Autolink $autolinker = null, HtmlParser $html_parser = null)
 	{
 		$this->bbc = $bbc;
 
@@ -47,6 +48,8 @@ class Parser
 
 		$this->autolinker = $autolinker;
 		$this->loadAutolink();
+
+		$this->html_parser = $html_parser;
 	}
 
 	/**
@@ -105,6 +108,12 @@ class Parser
 		$this->autolinker->setPossibleAutolink($this->message);
 
 		$this->possible_html = !empty($GLOBALS['modSettings']['enablePostHTML']) && strpos($message, '&lt;') !== false;
+
+		// Don't load the HTML Parser unless we have to
+		if ($this->possible_html && $this->html_parser === null)
+		{
+			$this->loadHtmlParser();
+		}
 
 		$this->pos = -1;
 		while ($this->pos !== false)
@@ -403,6 +412,13 @@ class Parser
 		return !empty($GLOBALS['modSettings']['enableBBC']);
 	}
 
+	public function loadHtmlParser()
+	{
+		$parser = new HtmlParser;
+		call_integration_hook('integrate_bbc_load_html_parser', array(&$parser));
+		$this->html_parser = $parser;
+	}
+
 	/**
 	 * Parse the HTML in a string
 	 *
@@ -410,75 +426,7 @@ class Parser
 	 */
 	protected function parseHTML(&$data)
 	{
-		global $modSettings;
-
-		$data = preg_replace('~&lt;a\s+href=((?:&quot;)?)((?:https?://|mailto:)\S+?)\\1&gt;~i', '[url=$2]', $data);
-		$data = preg_replace('~&lt;/a&gt;~i', '[/url]', $data);
-
-		// <br /> should be empty.
-		$empty_tags = array('br', 'hr');
-		foreach ($empty_tags as $tag)
-		{
-			$data = str_replace(array('&lt;' . $tag . '&gt;', '&lt;' . $tag . '/&gt;', '&lt;' . $tag . ' /&gt;'), '[' . $tag . ' /]', $data);
-		}
-
-		// b, u, i, s, pre... basic tags.
-		$closable_tags = array('b', 'u', 'i', 's', 'em', 'ins', 'del', 'pre', 'blockquote');
-		foreach ($closable_tags as $tag)
-		{
-			$diff = substr_count($data, '&lt;' . $tag . '&gt;') - substr_count($data, '&lt;/' . $tag . '&gt;');
-			$data = strtr($data, array('&lt;' . $tag . '&gt;' => '<' . $tag . '>', '&lt;/' . $tag . '&gt;' => '</' . $tag . '>'));
-
-			if ($diff > 0)
-			{
-				$data = substr($data, 0, -1) . str_repeat('</' . $tag . '>', $diff) . substr($data, -1);
-			}
-		}
-
-		// Do <img ... /> - with security... action= -> action-.
-		preg_match_all('~&lt;img\s+src=((?:&quot;)?)((?:https?://)\S+?)\\1(?:\s+alt=(&quot;.*?&quot;|\S*?))?(?:\s?/)?&gt;~i', $data, $matches, PREG_PATTERN_ORDER);
-		if (!empty($matches[0]))
-		{
-			$replaces = array();
-			foreach ($matches[2] as $match => $imgtag)
-			{
-				$alt = empty($matches[3][$match]) ? '' : ' alt=' . preg_replace('~^&quot;|&quot;$~', '', $matches[3][$match]);
-
-				// Remove action= from the URL - no funny business, now.
-				if (preg_match('~action(=|%3d)(?!dlattach)~i', $imgtag) !== 0)
-				{
-					$imgtag = preg_replace('~action(?:=|%3d)(?!dlattach)~i', 'action-', $imgtag);
-				}
-
-				// Check if the image is larger than allowed.
-				// @todo - We should seriously look at deprecating some of $this in favour of CSS resizing.
-				if (!empty($modSettings['max_image_width']) && !empty($modSettings['max_image_height']))
-				{
-					// For images, we'll want $this.
-					require_once(SUBSDIR . '/Attachments.subs.php');
-					list ($width, $height) = url_image_size($imgtag);
-
-					if (!empty($modSettings['max_image_width']) && $width > $modSettings['max_image_width'])
-					{
-						$height = (int) (($modSettings['max_image_width'] * $height) / $width);
-						$width = $modSettings['max_image_width'];
-					}
-
-					if (!empty($modSettings['max_image_height']) && $height > $modSettings['max_image_height'])
-					{
-						$width = (int) (($modSettings['max_image_height'] * $width) / $height);
-						$height = $modSettings['max_image_height'];
-					}
-
-					// Set the new image tag.
-					$replaces[$matches[0][$match]] = '[img width=' . $width . ' height=' . $height . $alt . ']' . $imgtag . '[/img]';
-				}
-				else
-					$replaces[$matches[0][$match]] = '[img' . $alt . ']' . $imgtag . '[/img]';
-			}
-
-			$data = strtr($data, $replaces);
-		}
+		$this->html_parser->parse($data);
 	}
 
 	/**
@@ -1241,12 +1189,16 @@ class Parser
 
 		// Do not use $this->autolinker. For some reason it causes a recursive loop
 		$autolinker = null;
-		call_integration_hook('integrate_recursive_bbc', array(&$autolinker));
+		$html = null;
+		call_integration_hook('integrate_recursive_bbc', array(&$autolinker, &$html));
 
 		$parser = new \BBC\Parser($bbc, $autolinker);
 		$data = $parser->enableSmileys(empty($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]))->parse($data);
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getBBC()
 	{
 		return $this->bbc_codes;
