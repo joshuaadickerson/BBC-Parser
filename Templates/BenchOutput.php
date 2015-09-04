@@ -17,7 +17,7 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 	Diff Total Time %: <?= round($results['totals']['percent'], 2) ?><br>
 </div>
 
-<form>
+<form action="<?= $_SERVER['REQUEST_URI'] ?>">
 	<input type="hidden" name="type" value="bench">
 	<input type="hidden" name="iterations" value="<?= $testBBC->getIterations() ?>">
 <table class="table table-striped table-bordered table-condensed" data-page-length="1000">

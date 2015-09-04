@@ -15,7 +15,7 @@ Test B: <?= $input['tests']['b'] ?><br>
 Tests: <?= $num_tests ?><br>
 Pass: <?= $num_pass ?><br>
 Fail: <?= $num_fail ?><br>
-<form method="get" action="../index.php?type=test">
+<form action="<?= $_SERVER['REQUEST_URI'] ?>">
 	<input type="hidden" name="type" value="test">
 	<table class="table table-striped table-bordered table-condensed" data-page-length="1000">
 		<colgroup>
