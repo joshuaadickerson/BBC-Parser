@@ -587,10 +587,11 @@ class Parser
 			// This is long, but it makes things much easier and cleaner.
 			if (!empty($possible[Codes::ATTR_PARAM]))
 			{
-				$match = $this->matchParameters($possible, $matches);
+				//$match = $this->matchParameters($possible, $matches);
+				$match = $this->dougiefresh($possible, $matches);
 
 				// Didn't match our parameter list, try the next possible.
-				if (!$match)
+				if (empty($matches))
 				{
 					continue;
 				}
@@ -1170,6 +1171,74 @@ class Parser
 		return $match;
 	}
 
+	// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
+	protected function fix_param_order($message, &$parameters, &$replace_str, &$tpos)
+	{
+		$pos = 0;
+		$test = substr($message, 0, $tpos = strpos($message, ']'));
+		while (substr_count($test, '"') % 2 !== 0)
+		{
+			$tpos += ($pos1 = strpos(substr($message, $tpos), '"'));
+			if ($pos1 === false)
+			{
+				break;
+			}
+			$test = substr($message, 0, ($pos += strpos(substr($message, $tpos), ']')));
+		}
+		$params = explode(' ', $test);
+		unset($params[0]);
+		$order = array();
+		$replace_str = $old = '';
+		foreach ($params as $param)
+		{
+			if (strpos($param, '=') === false)
+			{
+				$order[$old] .= ' ' . $param;
+			}
+			else
+			{
+				$order[$old = substr($param, 0, strpos($param, '='))] = substr($param, strpos($param, '=') + 1);
+			}
+		}
+		foreach ($parameters as $key => $ignore)
+		{
+			$replace_str .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
+			unset($order[$key]);
+		}
+
+		return count($order) === 0;
+	}
+
+	protected function dougiefresh(array $possible, &$matches)
+	{
+		$message_stub = substr($this->message, $this->pos1 - 1);
+
+		// Reorganize the parameter list, then compare the result.  Continue if found:
+		if (!$this->fix_param_order($message_stub, $possible[Codes::ATTR_PARAM], $replace_str, $tpos))
+		{
+			return true;
+		}
+
+		if (!isset($possible['regex_cache']))
+		{
+			$possible['regex_cache'] = '';
+			foreach ($possible[Codes::ATTR_PARAM] as $p => $info)
+			{
+				$quote = empty($info[Codes::PARAM_ATTR_QUOTED]) ? '' : '&quot;';
+				$possible['regex_cache'] .= '(\s+' . $p . '=' . $quote . (isset($info[Codes::PARAM_ATTR_MATCH]) ? $info[Codes::PARAM_ATTR_MATCH] : '(.+?)') . $quote. ')' . (empty($info[Codes::PARAM_ATTR_OPTIONAL]) ? '' : '?');
+			}
+		}
+
+		if (!preg_match('~^' . $possible['regex_cache'] . '\]~i', ($replace_str .= substr($message_stub, $tpos)), $matches))
+		{
+			return true;
+		}
+
+		$this->message = substr($this->message, 0, $this->pos1 - 1) . $replace_str;
+
+		return false;
+	}
+
 	/**
 	 * Recursively call the parser with a new Codes object
 	 * This allows to parse BBC in parameters like [quote author="[url]www.quotes.com[/url]"]Something famous.[/quote]
@@ -1454,50 +1523,6 @@ class Parser
 		{
 			$this->message = str_replace("\n", '', $this->message);
 		}
-	}
-
-	// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
-	function fix_param_order($message, &$parameters, &$replace_str, &$tpos)
-	{
-		$pos = 0;
-		$test = substr($message, 0, $tpos = strpos($message, ']'));
-		while (substr_count($test, '"') % 2 !== 0)
-		{
-			$tpos += ($pos1 = strpos(substr($message, $tpos), '"'));
-			if ($pos1 === false)
-				break;
-			$test = substr($message, 0, ($pos += strpos(substr($message, $tpos), ']')));
-		}
-		$params = explode(' ', $test);
-		unset($params[0]);
-		$order = array();
-		$replace_str = $old = '';
-		foreach ($params as $param)
-		{
-			if (strpos($param, '=') === false)
-				$order[$old] .= ' ' . $param;
-			else
-				$order[$old = substr($param, 0, strpos($param, '='))] = substr($param, strpos($param, '=') + 1);
-		}
-		foreach ($parameters as $key => $ignore)
-		{
-			$replace_str .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
-			unset($order[$key]);
-		}
-		return count($order) === 0;
-	}
-
-	function dougiefresh()
-	{
-		// Reorganize the parameter list, then compare the result.  Continue if found:
-		if (!fix_param_order(($test = substr($this->message, $this->pos1 - 1)), $possible['parameters'], $replace_str, $tpos))
-			return true;
-		$preg = '';
-		foreach ($possible['parameters'] as $p => $info)
-			$preg .= '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
-		if (!preg_match('~^' . $preg . '\]~i', ($replace_str .= substr($test, $tpos)), $matches))
-			return true;
-		$message = substr($message, 0, $pos1 - 1) . $replace_str;
 	}
 
 	public function canCache()
