@@ -38,6 +38,7 @@ return array(
 	'Neither does [] this one',
 	'Nor do[es] this one',
 	'Not ev[en] this on[/en] has bbc',
+	'do [u even] know what you talkin bout',
 	'This one is sneaky: [/] [ /] [  /] [   /]',
 
 	// Time for smilies
@@ -76,7 +77,7 @@ return array(
 	// Images
 	'[img width=500]http://www.google.com/intl/en_ALL/images/srpr/logo1w.png[/img]',
 	'[img height=50]http://www.google.com/intl/en_ALL/images/srpr/logo1w.png[/img]',
-	'[img width=43 alt="google" height=50]http://www.google.com/intl/en_ALL/images/srpr/logo1w.png[/img]',
+	'[img width=43 alt=&quot;google&quot; height=50]http://www.google.com/intl/en_ALL/images/srpr/logo1w.png[/img]',
 
 	// Quotes are actually a huge part of the parser
 	'[quote]If at first you do not succeed; call it version 1.0[/quote]',
@@ -211,10 +212,14 @@ return array(
 	'[size=6.2]itty bitty (does not pass test)[/size]',
 	'Nothing should [table',
 
+	// Disallowed?
+	'[size=2]inside size[size=3] - and now even deeper [/size] pull back a little.[/size]',
+
 	// Some non-english characters?
 	'[url]www.ñchan.org[/url]',
 	'www.ñchan.org',
 	'http://www.ñchan.org',
+
 	// Long messages (put last so I don't have to see them) These usually take too long to run
 	// A really long message but without bbc
 	//str_repeat('hello world', 1000),

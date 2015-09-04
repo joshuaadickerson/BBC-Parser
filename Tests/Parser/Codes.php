@@ -99,11 +99,11 @@ class Codes
 	 */
 	const ATTR_DISALLOW_CHILDREN = 18;
 	/**
-	 * When ATTR_DISALLOW_* is used, this gets put before the tag.
+	 * When ATTR_DISALLOW_PARENTS is used, this gets put before the tag.
 	 */
 	const ATTR_DISALLOW_BEFORE = 19;
 	/**
-	 * * When ATTR_DISALLOW_* is used, this gets put after the tag.
+	 * * When ATTR_DISALLOW_PARENTS is used, this gets put after the tag.
 	 */
 	const ATTR_DISALLOW_AFTER = 20;
 	/**
