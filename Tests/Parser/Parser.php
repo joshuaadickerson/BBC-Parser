@@ -35,6 +35,7 @@ class Parser
 	protected $html_parser;
 
 	protected $can_cache = true;
+	protected $num_footnotes = 0;
 
 	/**
 	 * @param \BBC\Codes $bbc
@@ -65,6 +66,7 @@ class Parser
 		$this->inside_tag = null;
 		$this->lastAutoPos = 0;
 		$this->can_cache = true;
+		$this->num_footnotes = 0;
 	}
 
 	/**
@@ -247,8 +249,9 @@ class Parser
 		// Cleanup whitespace.
 		$this->message = str_replace(array('  ', '<br /> ', '&#13;'), array('&nbsp; ', '<br />&nbsp;', "\n"), $this->message);
 
+		// @todo add $num_footnotes as a property of this and then check if that is >0 here.
 		// Finish footnotes if we have any.
-		if (strpos($this->message, '<sup class="bbc_footnotes">') !== false)
+		if ($this->num_footnotes > 0)
 		{
 			$this->handleFootnotes();
 		}
@@ -510,8 +513,7 @@ class Parser
 				continue;
 			}
 
-			// @todo maybe sort the BBC by length. If the message stub is a tag and the length changes, no need to ocntinue. Just break by this point.
-			// @todo maybe call the rest of this checkBBCAttributes() or checkCodeAttributes()?
+			// @todo maybe sort the BBC by length descending. If the message stub is a tag and the length changes, no need to continue. Just break by this point.
 
 			$tag = $this->checkCodeAttributes($next_c, $possible, $tag);
 			if($tag === null)
@@ -522,27 +524,7 @@ class Parser
 			// Quotes can have alternate styling, we do this php-side due to all the permutations of quotes.
 			if ($tag[Codes::ATTR_TAG] === 'quote')
 			{
-				// Start with standard
-				$quote_alt = false;
-				foreach ($this->open_tags as $open_quote)
-				{
-					// Every parent quote this quote has flips the styling
-					if ($open_quote[Codes::ATTR_TAG] === 'quote')
-					{
-						$quote_alt = !$quote_alt;
-					}
-				}
-				// Add a class to the quote to style alternating blockquotes
-				// @todo - Frankly it makes little sense to allow alternate blockquote
-				// styling without also catering for alternate quoteheader styling.
-				// I do remember coding that some time back, but it seems to have gotten
-				// lost somewhere in the Elk processes.
-				// Come to think of it, it may be better to append a second class rather
-				// than alter the standard one.
-				//  - Example: class="bbc_quote" and class="bbc_quote alt_quote".
-				// This would mean simpler CSS for themes (like default) which do not use the alternate styling,
-				// but would still allow it for themes that want it.
-				$tag[Codes::ATTR_BEFORE] = str_replace('<blockquote>', '<blockquote class="bbc_' . ($quote_alt ? 'alternate' : 'standard') . '_quote">', $tag[Codes::ATTR_BEFORE]);
+				$this->alternateQuoteStyle($tag);
 			}
 
 			break;
@@ -553,12 +535,42 @@ class Parser
 //$GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] = isset($GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)]) ? $GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] + 1 : 1;
 
 		// If there is a code that says you can't cache, the message can't be cached
-		if ($tag !== null)
+		if ($tag !== null && $this->can_cache !== false)
 		{
 			$this->can_cache = empty($tag[Codes::ATTR_NO_CACHE]);
 		}
 
+		if ($tag[Codes::ATTR_TAG] === 'footnote')
+		{
+			$this->num_footnotes++;
+		}
+
 		return $tag;
+	}
+
+	protected function alternateQuoteStyle(&$tag)
+	{
+		// Start with standard
+		$quote_alt = false;
+		foreach ($this->open_tags as $open_quote)
+		{
+			// Every parent quote this quote has flips the styling
+			if ($open_quote[Codes::ATTR_TAG] === 'quote')
+			{
+				$quote_alt = !$quote_alt;
+			}
+		}
+		// Add a class to the quote to style alternating blockquotes
+		// @todo - Frankly it makes little sense to allow alternate blockquote
+		// styling without also catering for alternate quoteheader styling.
+		// I do remember coding that some time back, but it seems to have gotten
+		// lost somewhere in the Elk processes.
+		// Come to think of it, it may be better to append a second class rather
+		// than alter the standard one.
+		//  - Example: class="bbc_quote" and class="bbc_quote alt_quote".
+		// This would mean simpler CSS for themes (like default) which do not use the alternate styling,
+		// but would still allow it for themes that want it.
+		$tag[Codes::ATTR_BEFORE] = str_replace('<blockquote>', '<blockquote class="bbc_' . ($quote_alt ? 'alternate' : 'standard') . '_quote">', $tag[Codes::ATTR_BEFORE]);
 	}
 
 	protected function checkCodeAttributes($next_c, array &$possible, $tag)
@@ -1074,13 +1086,11 @@ class Parser
 			$this->parseHTML($data);
 		}
 
-		// @todo is this sending tags like [/b] here?
 		if (!empty($GLOBALS['modSettings']['autoLinkUrls']))
 		{
 			$this->autoLink($data);
 		}
 
-		// @todo can this be moved much earlier?
 		// This cannot be moved earlier. It breaks tests
 		$data = str_replace("\t", '&nbsp;&nbsp;&nbsp;', $data);
 
@@ -1109,7 +1119,7 @@ class Parser
 		$fn_count = isset($fn_total) ? $fn_total : 0;
 
 		// Replace our footnote text with a [1] link, save the text for use at the end of the message
-		$this->message = preg_replace_callback('~(%fn%(.*?)%fn%)~is', 'footnote_callback', $this->message);
+		$this->message = preg_replace_callback('~(%fn%(.*?)%fn%)~is', array($this, 'footnoteCallback'), $this->message);
 		$fn_total += $fn_num;
 
 		// If we have footnotes, add them in at the end of the message
@@ -1117,6 +1127,16 @@ class Parser
 		{
 			$this->message .= '<div class="bbc_footnotes">' . implode('', $fn_content) . '</div>';
 		}
+	}
+
+	protected function footnoteCallback($matches)
+	{
+		global $fn_num, $fn_content, $fn_count;
+
+		$fn_num++;
+		$fn_content[] = '<div class="target" id="fn' . $fn_num . '_' . $fn_count . '"><sup>' . $fn_num . '&nbsp;</sup>' . $matches[2] . '<a class="footnote_return" href="#ref' . $fn_num . '_' . $fn_count . '">&crarr;</a></div>';
+
+		return '<a class="target" href="#fn' . $fn_num . '_' . $fn_count . '" id="ref' . $fn_num . '_' . $fn_count . '">[' . $fn_num . ']</a>';
 	}
 
 	/**

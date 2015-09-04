@@ -17,6 +17,7 @@ Pass: <?= $num_pass ?><br>
 Fail: <?= $num_fail ?><br>
 <form action="<?= $_SERVER['REQUEST_URI'] ?>">
 	<input type="hidden" name="type" value="test">
+	<input type="hidden" name="disabled_tags" value="<?= implode(',', $input['disabled']) ?>">
 	<table class="table table-striped table-bordered table-condensed" data-page-length="1000">
 		<colgroup>
 			<col class="col-md-1">
@@ -29,8 +30,8 @@ Fail: <?= $num_fail ?><br>
 		<tr>
 			<th>#</th>
 			<th>Message</th>
-			<th>Old Result</th>
-			<th>New Result</th>
+			<th>Test A (<?= $input['tests']['a'] ?>)</th>
+			<th>Test B (<?= $input['tests']['b'] ?>)</th>
 			<th>Codes Used</th>
 		</tr>
 		</thead>

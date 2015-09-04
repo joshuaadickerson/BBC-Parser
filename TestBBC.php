@@ -18,8 +18,9 @@ class TestBBC
 	protected $save_result = true;
 	protected $iterations = 1;
 	protected $tests = array();
+	protected $disabled;
 
-	public function __construct($test_dir_path = 'Tests')
+		public function __construct($test_dir_path = 'Tests')
 	{
 		error_reporting(E_ALL);
 		ini_set('display_errors', 1);
@@ -27,7 +28,7 @@ class TestBBC
 		$this->tests = $this->loadPossibleTests($test_dir_path);
 	}
 
-	public function setInput($input)
+		public function setInput($input)
 	{
 		$this->globalSettings();
 		$this->input = $input;
@@ -36,6 +37,7 @@ class TestBBC
 		$this->messages = $this->setMessages(isset($input['msg']) ? $input['msg'] : null);
 		$this->setIterations(isset($input['iterations']) ? $input['iterations'] : null);
 		$this->save_result = isset($input['save_result']) ? (bool) $input['save_result'] : $this->save_result;
+		$this->disabled = isset($input['disabled']) ? $input['disabled'] : null;
 
 		return $this;
 	}
@@ -173,6 +175,11 @@ class TestBBC
 
 		$object = $this->methods['a'];
 
+		if ($this->disabled !== null)
+		{
+			$object->setDisabled($this->disabled);
+		}
+
 		if (is_callable(array($object, 'setup')))
 		{
 			$object->setup();
@@ -224,6 +231,11 @@ class TestBBC
 		// Do the setup
 		foreach ($this->methods as $letter => $method)
 		{
+			if ($this->disabled !== null)
+			{
+				$method->setDisabled($this->disabled);
+			}
+
 			if (is_callable(array($method, 'setup')))
 			{
 				$time = microtime(true);

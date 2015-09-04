@@ -8,4 +8,5 @@ interface BBCTest
 	public function getName();
 	public function parseMessage($message);
 	public function codes();
+	public function setDisabled(array $disabled);
 }

@@ -20,6 +20,7 @@ if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
 <form action="<?= $_SERVER['REQUEST_URI'] ?>">
 	<input type="hidden" name="type" value="bench">
 	<input type="hidden" name="iterations" value="<?= $testBBC->getIterations() ?>">
+	<input type="hidden" name="disabled_tags" value="<?= implode(',', $input['disabled']) ?>">
 <table class="table table-striped table-bordered table-condensed" data-page-length="1000">
 	<!--<colgroup>
 		<col class="col-md-1">

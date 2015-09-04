@@ -26,6 +26,25 @@ if (isset($_GET['msg']) && $_GET['msg'] !== '')
 	}
 }
 
+$disabled_tags = array();
+if (isset($_GET['disabled_tags']) && $_GET['disabled_tags'] !== '')
+{
+	if (is_array($_GET['disabled_tags']))
+	{
+		$disabled_tags = array_unique($disabled_tags);
+	}
+	elseif (strpos($_GET['disabled_tags'], ',') !== false)
+	{
+		$disabled_tags = explode(',', $_GET['disabled_tags']);
+	}
+	else
+	{
+		$disabled_tags = array($_GET['disabled_tags']);
+	}
+
+	$disabled_tags = array_map('trim', $disabled_tags);
+}
+
 // Include the test file
 require_once 'TestBBC.php';
 $testBBC = new TestBBC;
@@ -46,6 +65,7 @@ $input = array(
 	'debug' => isset($_GET['debug']) && $_GET['debug'] ? 'checked="checked"' : '',
 	'fatal' => isset($_GET['fatal']) && $_GET['fatal'] ? 'checked="checked"' : '',
 	'msg' => $msgs,
+	'disabled' => $disabled_tags,
 );
 
 $testBBC->setInput($input);
@@ -185,6 +205,12 @@ if (isset($test_types[$type]))
 					<label for="msg" class="col-sm-4 control-label">Comma separated list of message ids to parse (blank for all)</label>
 					<div class="col-sm-8">
 						<input name="msg" type="text" value="<?= isset($input['msg']) && is_array($input['msg']) ? implode(',', $input['msg']) : '' ?>" class="form-control">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="disabled_tags" class="col-sm-4 control-label">Comma separated list of tags to disable (blank for none)</label>
+					<div class="col-sm-8">
+						<input name="disabled_tags" type="text" value="<?= isset($input['disabled']) && is_array($input['disabled']) ? implode(',', $input['disabled']) : '' ?>" class="form-control">
 					</div>
 				</div>
 				<div class="form-group">

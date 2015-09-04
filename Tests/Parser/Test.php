@@ -8,6 +8,8 @@ use BBC\HtmlParser;
 
 class Test implements \BBC\Tests\BBCTest
 {
+	protected $disabled = array();
+
 	public function __construct()
 	{
 		require_once __DIR__ . '/Parser.php';
@@ -24,7 +26,7 @@ class Test implements \BBC\Tests\BBCTest
 
 	public function setup()
 	{
-		$bbc = new Codes;
+		$bbc = new Codes(array(), $this->disabled);
 		$autolink = new Autolink($bbc);
 		$html = new HtmlParser;
 
@@ -39,5 +41,10 @@ class Test implements \BBC\Tests\BBCTest
 	public function codes()
 	{
 		return new Codes;
+	}
+
+	public function setDisabled(array $disabled)
+	{
+		$this->disabled = $disabled;
 	}
 }

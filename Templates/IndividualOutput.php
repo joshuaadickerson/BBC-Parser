@@ -7,6 +7,7 @@ Number of tests: <?= $num_tests ?><br>
 <form action="<?= $_SERVER['REQUEST_URI'] ?>">
 	<input type="hidden" name="type" value="individual">
 	<input type="hidden" name="a" value="<?= $input['tests']['a'] ?>">
+	<input type="hidden" name="disabled_tags" value="<?= implode(',', $input['disabled']) ?>">
 	<table class="table table-striped table-bordered table-condensed" data-page-length="1000">
 		<colgroup>
 			<col class="col-md-1">

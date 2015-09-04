@@ -180,10 +180,7 @@ class Codes
 
 	public function __construct(array $tags = array(), array $disabled = array())
 	{
-		$this->bbc = $this->getDefault();
-		//$this->getDefault();
 		$this->additional_bbc = $tags;
-		$this->disabled = $disabled;
 
 		foreach ($disabled as $tag)
 		{
@@ -194,6 +191,8 @@ class Codes
 		{
 			$this->add($tag);
 		}
+
+		$this->bbc = $this->getDefault();
 	}
 
 	public function add(array $code)

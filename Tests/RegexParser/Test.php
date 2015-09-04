@@ -6,6 +6,8 @@ use \BBC\Codes;
 
 class Test implements \BBC\Tests\BBCTest
 {
+	protected $disabled;
+
 	/** @var  \BBC\RegexParser */
 	protected $parser;
 
@@ -33,5 +35,10 @@ class Test implements \BBC\Tests\BBCTest
 	public function codes()
 	{
 		return new Codes;
+	}
+
+	public function setDisabled(array $disabled)
+	{
+		$this->disabled = $disabled;
 	}
 }

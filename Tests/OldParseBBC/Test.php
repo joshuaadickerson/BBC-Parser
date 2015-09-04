@@ -4,6 +4,8 @@ namespace BBC\Tests\OldParseBBC;
 
 class Test implements \BBC\Tests\BBCTest
 {
+	protected $disabled = array();
+
 	public function __construct()
 	{
 		require_once __DIR__ . '/ParseBBC.php';
@@ -22,7 +24,7 @@ class Test implements \BBC\Tests\BBCTest
 		$bbc_codes = array();
 		$itemcodes = array();
 		$no_autolink_tags = array();
-		$disabled = null;
+		$disabled = array_flip($this->disabled);
 		$default_disabled = null;
 		$parse_tag_cache = null;
 	}
@@ -40,5 +42,10 @@ class Test implements \BBC\Tests\BBCTest
 	public function codes()
 	{
 		return parse_bbc(false);
+	}
+
+	public function setDisabled(array $disabled)
+	{
+		$this->disabled = $disabled;
 	}
 }
