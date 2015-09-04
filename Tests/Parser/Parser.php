@@ -688,7 +688,10 @@ class Parser
 //$GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] = isset($GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)]) ? $GLOBALS['codes_used_count'][$GLOBALS['current_message']][serialize($tag)] + 1 : 1;
 
 		// If there is a code that says you can't cache, the message can't be cached
-		$this->can_cache = empty($tag[Codes::ATTR_NO_CACHE]);
+		if ($tag !== null)
+		{
+			$this->can_cache = empty($tag[Codes::ATTR_NO_CACHE]);
+		}
 
 		return $tag;
 	}
@@ -1221,7 +1224,7 @@ class Parser
 
 	/**
 	 * Recursively call the parser with a new Codes object
-	 * This allows to parse BBC in parameters like [quote author="[url]www.quotes.com[/quote]"]Something famous.[/quote]
+	 * This allows to parse BBC in parameters like [quote author="[url]www.quotes.com[/url]"]Something famous.[/quote]
 	 *
 	 * @param string $data
 	 * @param array $tag
@@ -1236,7 +1239,11 @@ class Parser
 			$bbc->setParsedTags($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]);
 		}
 
-		$parser = new \BBC\Parser($bbc);
+		// Do not use $this->autolinker. For some reason it causes a recursive loop
+		$autolinker = null;
+		call_integration_hook('integrate_recursive_bbc', array(&$autolinker));
+
+		$parser = new \BBC\Parser($bbc, $autolinker);
 		$data = $parser->enableSmileys(empty($tag[Codes::ATTR_PARSED_TAGS_ALLOWED]))->parse($data);
 	}
 
@@ -1267,7 +1274,7 @@ class Parser
 	}
 
 	/**
-	 * @param string|false $tag False closes the last open tag. Anything else finds that tag LIFO
+	 * @param string|false $tag = false False closes the last open tag. Anything else finds that tag LIFO
 	 *
 	 * @return mixed
 	 */
@@ -1324,7 +1331,11 @@ class Parser
 		return $tags;
 	}
 
-	// There's not 1 test that the substr_replace() gets called here.
+	// @todo There's not 1 test that the substr_replace() gets called here.
+	/**
+	 * @param string &$message
+	 * @param null|int $offset = null
+	 */
 	protected function trimWhiteSpace(&$message, $offset = null)
 	{
 		if (preg_match('~(<br />|&nbsp;|\s)*~', $this->message, $matches, null, $offset) !== 0 && isset($matches[0]) && $matches[0] !== '')
