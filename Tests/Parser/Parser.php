@@ -642,10 +642,9 @@ class Parser
 		if (!empty($possible[Codes::ATTR_PARAM]))
 		{
 			$match = $this->matchParameters($possible, $matches);
-			//$match = $this->dougiefresh($possible, $matches);
 
 			// Didn't match our parameter list, try the next possible.
-			if (empty($matches))
+			if (!$match)
 			{
 				return;
 			}
@@ -1180,74 +1179,6 @@ class Parser
 		} while (!$match && --$max_iterations && ($possible['regex_keys'] = pc_next_permutation($possible['regex_keys'], $possible['regex_size'])));
 
 		return $match;
-	}
-
-	// Rearranges all parameters to be in the right order.  Returns TRUE if no parameters are leftover.
-	protected function fix_param_order($message, &$parameters, &$replace_str, &$tpos)
-	{
-		$pos = 0;
-		$test = substr($message, 0, $tpos = strpos($message, ']'));
-		while (substr_count($test, '&quot;') % 2 !== 0)
-		{
-			$tpos += ($pos1 = strpos(substr($message, $tpos), '&quot;'));
-			if ($pos1 === false)
-			{
-				break;
-			}
-			$test = substr($message, 0, ($pos += strpos(substr($message, $tpos), ']')));
-		}
-		$params = explode(' ', $test);
-		unset($params[0]);
-		$order = array();
-		$replace_str = $old = '';
-		foreach ($params as $param)
-		{
-			if (strpos($param, '=') === false)
-			{
-				$order[$old] .= ' ' . $param;
-			}
-			else
-			{
-				$order[$old = substr($param, 0, strpos($param, '='))] = substr($param, strpos($param, '=') + 1);
-			}
-		}
-		foreach ($parameters as $key => $ignore)
-		{
-			$replace_str .= (isset($order[$key]) ? ' ' . $key . '=' . $order[$key] : '');
-			unset($order[$key]);
-		}
-
-		return count($order) === 0;
-	}
-
-	protected function dougiefresh(array $possible, &$matches)
-	{
-		$message_stub = substr($this->message, $this->pos1 - 1);
-
-		// Reorganize the parameter list, then compare the result.  Continue if found:
-		if (!$this->fix_param_order($message_stub, $possible[Codes::ATTR_PARAM], $replace_str, $tpos))
-		{
-			return true;
-		}
-
-		if (!isset($possible['regex_cache']))
-		{
-			$possible['regex_cache'] = '';
-			foreach ($possible[Codes::ATTR_PARAM] as $p => $info)
-			{
-				$quote = empty($info[Codes::PARAM_ATTR_QUOTED]) ? '' : '&quot;';
-				$possible['regex_cache'] .= '(\s+' . $p . '=' . $quote . (isset($info[Codes::PARAM_ATTR_MATCH]) ? $info[Codes::PARAM_ATTR_MATCH] : '(.+?)') . $quote. ')' . (empty($info[Codes::PARAM_ATTR_OPTIONAL]) ? '' : '?');
-			}
-		}
-
-		if (!preg_match('~^' . $possible['regex_cache'] . '\]~i', ($replace_str .= substr($message_stub, $tpos)), $matches))
-		{
-			return true;
-		}
-
-		$this->message = substr($this->message, 0, $this->pos1 - 1) . $replace_str;
-
-		return false;
 	}
 
 	/**
