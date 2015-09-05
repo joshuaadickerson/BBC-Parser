@@ -105,15 +105,9 @@ class Parser
 		// Clean up any cut/paste issues we may have
 		$this->message = sanitizeMSCutPaste($this->message);
 
-		// Unfortunately, this has to be done here because smileys are parsed as blocks between BBC
 		// @todo remove from here and make the caller figure it out
 		if (!$this->parsingEnabled())
 		{
-			if ($this->do_smileys)
-			{
-				//parsesmileys($this->message);
-			}
-
 			return $this->message;
 		}
 
@@ -253,8 +247,6 @@ class Parser
 		{
 			$this->message .= $this->noSmileys($tag[Codes::ATTR_AFTER]);
 		}
-
-		//$this->parseSmileys();
 
 		// @todo substr_replace
 		if (isset($this->message[0]) && $this->message[0] === ' ')
@@ -1479,28 +1471,6 @@ class Parser
 	protected function noSmileys($string)
 	{
 		return $this->smiley_marker . $string . $this->smiley_marker;
-	}
-
-	protected function parseSmileys()
-	{
-		// Parse the smileys within the parts where it can be done safely.
-		if ($this->do_smileys === true)
-		{
-			$message_parts = explode($this->smiley_marker, $this->message);
-
-			// first part (0) parse smileys. Then every other one after that parse smileys
-			for ($i = 0, $n = count($message_parts); $i < $n; $i += 2)
-			{
-				parsesmileys($message_parts[$i]);
-			}
-
-			$this->message = implode('', $message_parts);
-		}
-		// No smileys, just get rid of the markers.
-		else
-		{
-			$this->message = str_replace($this->smiley_marker, '', $this->message);
-		}
 	}
 
 	public function canCache()
