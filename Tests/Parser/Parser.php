@@ -34,6 +34,7 @@ class Parser
 	protected $bbc_codes;
 	protected $item_codes;
 	protected $tags;
+	// @todo are all of these pos properties necessary? Seems like most of them are purely local and the rest can probably be shared
 	protected $pos;
 	protected $pos1;
 	protected $pos2;
@@ -50,6 +51,7 @@ class Parser
 
 	protected $can_cache = true;
 	protected $num_footnotes = 0;
+	protected $smiley_marker = "\r";
 
 	/**
 	 * @param \BBC\Codes $bbc
@@ -109,7 +111,7 @@ class Parser
 		{
 			if ($this->do_smileys)
 			{
-				parsesmileys($this->message);
+				//parsesmileys($this->message);
 			}
 
 			return $this->message;
@@ -252,7 +254,7 @@ class Parser
 			$this->message .= $this->noSmileys($tag[Codes::ATTR_AFTER]);
 		}
 
-		$this->parseSmileys();
+		//$this->parseSmileys();
 
 		// @todo substr_replace
 		if (isset($this->message[0]) && $this->message[0] === ' ')
@@ -453,7 +455,7 @@ class Parser
 	 */
 	protected function autoLink(&$data)
 	{
-		if ($data === '' || $data === "\n"  || !$this->autolinker->hasPossible())
+		if ($data === '' || $data === $this->smiley_marker  || !$this->autolinker->hasPossible())
 		{
 			return;
 		}
@@ -1087,7 +1089,7 @@ class Parser
 
 		// @todo $data seems to be \n a lot. Why? It got called 62 times in a test
 		// This happens when the pos is > last_pos and there is a trailing \n from one of the tags having "AFTER"
-		if ($data === "\n")
+		if ($data === $this->smiley_marker)
 		{
 			return;
 		}
@@ -1476,7 +1478,7 @@ class Parser
 	 */
 	protected function noSmileys($string)
 	{
-		return "\n" . $string . "\n";
+		return $this->smiley_marker . $string . $this->smiley_marker;
 	}
 
 	protected function parseSmileys()
@@ -1484,8 +1486,9 @@ class Parser
 		// Parse the smileys within the parts where it can be done safely.
 		if ($this->do_smileys === true)
 		{
-			$message_parts = explode("\n", $this->message);
+			$message_parts = explode($this->smiley_marker, $this->message);
 
+			// first part (0) parse smileys. Then every other one after that parse smileys
 			for ($i = 0, $n = count($message_parts); $i < $n; $i += 2)
 			{
 				parsesmileys($message_parts[$i]);
@@ -1496,7 +1499,7 @@ class Parser
 		// No smileys, just get rid of the markers.
 		else
 		{
-			$this->message = str_replace("\n", '', $this->message);
+			$this->message = str_replace($this->smiley_marker, '', $this->message);
 		}
 	}
 

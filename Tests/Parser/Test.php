@@ -9,6 +9,8 @@ use BBC\HtmlParser;
 class Test implements \BBC\Tests\BBCTest
 {
 	protected $disabled = array();
+	protected $parser;
+	protected $smiley_parser;
 
 	public function __construct()
 	{
@@ -31,11 +33,16 @@ class Test implements \BBC\Tests\BBCTest
 		$html = new HtmlParser;
 
 		$this->parser = new \BBC\Parser($bbc, $autolink, $html);
+
+		$this->smiley_parser = new \BBC\SmileyParser;
 	}
 
 	public function parseMessage($message)
 	{
-		return $this->parser->parse($message);
+		$message = $this->parser->parse($message);
+		$this->smiley_parser->parse($message);
+
+		return $message;
 	}
 
 	public function codes()
