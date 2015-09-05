@@ -1,6 +1,21 @@
 <?php
 
 /**
+ *
+ * @name      ElkArte Forum
+ * @copyright ElkArte Forum contributors
+ * @license   BSD http://opensource.org/licenses/BSD-3-Clause
+ *
+ * This software is a derived product, based on:
+ *
+ * Simple Machines Forum (SMF)
+ * copyright:	2011 Simple Machines (http://www.simplemachines.org)
+ * license:		BSD, See included LICENSE.TXT for terms and conditions.
+ *
+ *
+ */
+
+/**
  * Microsoft uses their own character set Code Page 1252 (CP1252), which is a
  * superset of ISO 8859-1, defining several characters between DEC 128 and 159
  * that are not normally displayable.  This converts the popular ones that

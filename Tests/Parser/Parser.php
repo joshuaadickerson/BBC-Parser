@@ -1,4 +1,18 @@
 <?php
+/**
+ *
+ * @name      ElkArte Forum
+ * @copyright ElkArte Forum contributors
+ * @license   BSD http://opensource.org/licenses/BSD-3-Clause
+ *
+ * This software is a derived product, based on:
+ *
+ * Simple Machines Forum (SMF)
+ * copyright:	2011 Simple Machines (http://www.simplemachines.org)
+ * license:		BSD, See included LICENSE.TXT for terms and conditions.
+ *
+ *
+ */
 
 // @todo change to \StringParser\BBC
 namespace BBC;
@@ -643,7 +657,6 @@ class Parser
 				return;
 			}
 
-			// @todo this isset() is never true. Not sure what $tag does here. If we remove this, remove the & from the function parameters and the $tag as well
 			$possible[Codes::ATTR_BEFORE] = isset($possible[Codes::ATTR_DISALLOW_BEFORE]) ? $possible[Codes::ATTR_DISALLOW_BEFORE] : $possible[Codes::ATTR_BEFORE];
 			$possible[Codes::ATTR_AFTER] = isset($possible[Codes::ATTR_DISALLOW_AFTER]) ? $possible[Codes::ATTR_DISALLOW_AFTER] : $possible[Codes::ATTR_AFTER];
 		}

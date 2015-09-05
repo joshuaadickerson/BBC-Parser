@@ -417,7 +417,7 @@ class PreParser
 		// Fix each type of tag.
 		foreach ($fixArray as $param)
 		{
-			fixTag($this->message, $param['tag'], $param['protocols'], $param['embeddedUrl'], $param['hasEqualSign'], !empty($param['hasExtra']));
+			$this->fixTag($this->message, $param['tag'], $param['protocols'], $param['embeddedUrl'], $param['hasEqualSign'], !empty($param['hasExtra']));
 		}
 
 		// Now fix possible security problems with images loading links automatically...
