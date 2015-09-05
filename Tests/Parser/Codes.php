@@ -211,28 +211,28 @@ class Codes
 
 	protected function checkCode(array &$code)
 	{
-		if (!isset($tag[self::ATTR_TAG]) || !is_string($tag))
+		if (!isset($code[self::ATTR_TAG]) || !is_string($code))
 		{
 			throw new \InvalidArgumentException('BBC must have a tag name');
 		}
 
-		$tag[self::ATTR_TAG] = trim($tag[self::ATTR_TAG]);
+		$code[self::ATTR_TAG] = trim($code[self::ATTR_TAG]);
 
-		if ($tag[self::ATTR_TAG] == '')
+		if ($code[self::ATTR_TAG] == '')
 		{
 			throw new \InvalidArgumentException('BBC must have a tag name');
 		}
 
-		$tag[self::ATTR_TYPE] = empty($tag[self::ATTR_TYPE]) ? self::UNPARSED_CONTENT : $tag[self::ATTR_TYPE];
+		$code[self::ATTR_TYPE] = empty($code[self::ATTR_TYPE]) ? self::TYPE_UNPARSED_CONTENT : $code[self::ATTR_TYPE];
 
-		if (!is_int($tag[self::ATTR_TYPE]) || $tag[self::ATTR_TYPE] > self::TYPE_PARSED_EQUALS_CONTENT || $tag[self::ATTR_TYPE] < self::UNPARSED_CONTENT)
+		if (!is_int($code[self::ATTR_TYPE]) || $code[self::ATTR_TYPE] > self::TYPE_PARSED_EQUALS_CONTENT || $code[self::ATTR_TYPE] < self::TYPE_UNPARSED_CONTENT)
 		{
-			throw new \InvalidArgumentException('Invalid type for tag: ' . $tag[self::ATTR_TYPE]);
+			throw new \InvalidArgumentException('Invalid type for tag: ' . $code[self::ATTR_TYPE]);
 		}
 
-		if (isset($tag[self::ATTR_PARAM]))
+		if (isset($code[self::ATTR_PARAM]))
 		{
-			foreach ($parameters as &$parameter)
+			foreach ($code[self::ATTR_PARAM] as &$parameter)
 			{
 				$parameter[self::PARAM_ATTR_QUOTED] = !empty($parameter[self::PARAM_ATTR_QUOTED]);
 				$parameter[self::PARAM_ATTR_OPTIONAL] = !empty($parameter[self::PARAM_ATTR_OPTIONAL]);
@@ -244,13 +244,13 @@ class Codes
 			}
 		}
 
-		if (!isset($tag[self::ATTR_LENGTH]))
+		if (!isset($code[self::ATTR_LENGTH]))
 		{
-			$tag[self::ATTR_LENGTH] = strlen($tag[self::ATTR_TAG]);
+			$code[self::ATTR_LENGTH] = strlen($code[self::ATTR_TAG]);
 		}
 
-		$tag[self::ATTR_AUTOLINK] = !empty($tag[self::ATTR_AUTOLINK]);
-		$tag[self::ATTR_BLOCK_LEVEL] = !empty($tag[self::ATTR_BLOCK_LEVEL]);
+		$code[self::ATTR_AUTOLINK] = !empty($code[self::ATTR_AUTOLINK]);
+		$code[self::ATTR_BLOCK_LEVEL] = !empty($code[self::ATTR_BLOCK_LEVEL]);
 	}
 
 	public function remove($code)
