@@ -91,7 +91,7 @@ class Autolink
 			'[email]$1[/email]',
 		);
 
-		call_integration_hook('integrate_autolink_load', array(&$search_url, &$replace_url, $search_email, $replace_email, $this->bbc));
+		call_integration_hook('integrate_autolink_load', array(&$search_url, &$replace_url, &$search_email, &$replace_email, $this->bbc));
 
 		$this->search = $search_url;
 		$this->replace = $replace_url;

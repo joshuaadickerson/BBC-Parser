@@ -30,7 +30,8 @@ class SmileyParser
 	{
 		$this->has_smileys = $GLOBALS['user_info']['smiley_set'] !== 'none';
 
-		if ($this->has_smileys) {
+		if ($this->has_smileys)
+		{
 			$this->smileys = empty($smileys) ? $this->load() : $smileys;
 		}
 	}
@@ -56,7 +57,7 @@ class SmileyParser
 	public function parseBlock(&$message)
 	{
 		// No smiley set at all?!
-		if (!$this->has_smileys || trim($message) == '')
+		if (!$this->has_smileys || trim($message) === '')
 		{
 			return;
 		}
@@ -79,7 +80,8 @@ class SmileyParser
 			}
 
 			$message = implode('', $message_parts);
-		} // No smileys, just get rid of the markers.
+		}
+		// No smileys, just get rid of the markers.
 		else
 		{
 			$message = str_replace($this->marker, '', $message);

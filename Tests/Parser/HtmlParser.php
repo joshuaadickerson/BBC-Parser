@@ -26,6 +26,12 @@ class HtmlParser
     {
         // Commented only for testing purposes
         //require_once(SUBSDIR . '/Attachments.subs.php');
+
+        $empty_tags = $this->empty_tags;
+        $closable_tags = $this->closable_tags;
+        call_integration_hook('integrate_html_parser_load', array(&$empty_tags, &$closable_tags));
+        $this->empty_tags = $empty_tags;
+        $this->closable_tags = $closable_tags;
     }
 
     public function parse(&$data)

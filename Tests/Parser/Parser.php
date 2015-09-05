@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @name      ElkArte Forum
@@ -270,18 +271,6 @@ class Parser
 		$this->message = $message;
 
 		return $this->message;
-	}
-
-	protected function setPossibleAutolink()
-	{
-		$possible_link = !$this->bbc->isDisabled('url') && (strpos($this->message, '://') !== false || strpos($this->message, 'www.') !== false);
-		$possible_email = !$this->bbc->isDisabled('email') && strpos($this->message, '@') !== false;
-
-		// Your autolink integration might use something like tel.123456789.call. This makes that possible.
-		call_integration_hook('integrate_possible_autolink', array(&$possible_link, &$possible_email));
-
-		$this->possible_link = $possible_link;
-		$this->possible_email = $possible_email;
 	}
 
 	protected function handleOpenTags()
