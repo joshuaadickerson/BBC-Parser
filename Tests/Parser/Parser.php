@@ -95,6 +95,8 @@ class Parser
 	 */
 	public function parse($message)
 	{
+		call_integration_hook('integrate_pre_parsebbc', array(&$message, $this->bbc));
+
 		$this->message = $message;
 
 		// Don't waste cycles
@@ -258,7 +260,6 @@ class Parser
 		// Cleanup whitespace.
 		$this->message = str_replace(array('  ', '<br /> ', '&#13;'), array('&nbsp; ', '<br />&nbsp;', "\n"), $this->message);
 
-		// @todo add $num_footnotes as a property of this and then check if that is >0 here.
 		// Finish footnotes if we have any.
 		if ($this->num_footnotes > 0)
 		{
@@ -545,7 +546,10 @@ class Parser
 		return $tag;
 	}
 
-	protected function alternateQuoteStyle(&$tag)
+	/**
+	 * @param array $tag
+	 */
+	protected function alternateQuoteStyle(array &$tag)
 	{
 		// Start with standard
 		$quote_alt = false;
@@ -570,6 +574,11 @@ class Parser
 		$tag[Codes::ATTR_BEFORE] = str_replace('<blockquote>', '<blockquote class="bbc_' . ($quote_alt ? 'alternate' : 'standard') . '_quote">', $tag[Codes::ATTR_BEFORE]);
 	}
 
+	/**
+	 * @param $next_c
+	 * @param array $possible
+	 * @return array|void
+	 */
 	protected function checkCodeAttributes($next_c, array $possible)
 	{
 		// Do we want parameters?
@@ -611,10 +620,6 @@ class Parser
 			}
 		}
 
-		if (isset($possible[Codes::ATTR_TEST]) && preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 2 + $possible[Codes::ATTR_LENGTH], strpos($this->message, ']', $this->pos) - ($this->pos + 2 + $possible[Codes::ATTR_LENGTH]))) === 0)
-		{
-			return;
-		}
 
 		// Check allowed tree?
 		if (isset($possible[Codes::ATTR_REQUIRE_PARENTS]) && ($this->inside_tag === null || !isset($possible[Codes::ATTR_REQUIRE_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
@@ -622,28 +627,38 @@ class Parser
 			return;
 		}
 
-		if (isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]) && !isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN][$possible[Codes::ATTR_TAG]]))
+		if ($this->inside_tag !== null)
 		{
-			return;
-		}
-		// If this is in the list of disallowed child tags, don't parse it.
-		if (isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) && isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN][$possible[Codes::ATTR_TAG]]))
-		{
-			return;
-		}
-
-		// Not allowed in this parent, replace the tags or show it like regular text
-		if (isset($possible[Codes::ATTR_DISALLOW_PARENTS]) && ($this->inside_tag !== null && isset($possible[Codes::ATTR_DISALLOW_PARENTS][$this->inside_tag[Codes::ATTR_TAG]])))
-		{
-			if (!isset($possible[Codes::ATTR_DISALLOW_BEFORE], $possible[Codes::ATTR_DISALLOW_AFTER]))
+			if (isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]) && !isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN][$possible[Codes::ATTR_TAG]]))
 			{
 				return;
 			}
 
-			$possible[Codes::ATTR_BEFORE] = isset($possible[Codes::ATTR_DISALLOW_BEFORE]) ? $possible[Codes::ATTR_DISALLOW_BEFORE] : $possible[Codes::ATTR_BEFORE];
-			$possible[Codes::ATTR_AFTER] = isset($possible[Codes::ATTR_DISALLOW_AFTER]) ? $possible[Codes::ATTR_DISALLOW_AFTER] : $possible[Codes::ATTR_AFTER];
+			// If this is in the list of disallowed child tags, don't parse it.
+			if (isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) && isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN][$possible[Codes::ATTR_TAG]]))
+			{
+				return;
+			}
+
+			// Not allowed in this parent, replace the tags or show it like regular text
+			if (isset($possible[Codes::ATTR_DISALLOW_PARENTS]) && isset($possible[Codes::ATTR_DISALLOW_PARENTS][$this->inside_tag[Codes::ATTR_TAG]]))
+			{
+				if (!isset($possible[Codes::ATTR_DISALLOW_BEFORE], $possible[Codes::ATTR_DISALLOW_AFTER]))
+				{
+					return;
+				}
+
+				$possible[Codes::ATTR_BEFORE] = isset($possible[Codes::ATTR_DISALLOW_BEFORE]) ? $possible[Codes::ATTR_DISALLOW_BEFORE] : $possible[Codes::ATTR_BEFORE];
+				$possible[Codes::ATTR_AFTER] = isset($possible[Codes::ATTR_DISALLOW_AFTER]) ? $possible[Codes::ATTR_DISALLOW_AFTER] : $possible[Codes::ATTR_AFTER];
+			}
 		}
 
+		if (isset($possible[Codes::ATTR_TEST]) && $this->handleTest($possible))
+		{
+			return;
+		}
+
+		// +1 for [, then the length of the tag, then a space
 		$this->pos1 = $this->pos + 1 + $possible[Codes::ATTR_LENGTH] + 1;
 
 		// This is long, but it makes things much easier and cleaner.
@@ -661,6 +676,11 @@ class Parser
 		}
 
 		return $possible;
+	}
+
+	protected function handleTest(array $possible)
+	{
+		return preg_match('~^' . $possible[Codes::ATTR_TEST] . '~', substr($this->message, $this->pos + 2 + $possible[Codes::ATTR_LENGTH], strpos($this->message, ']', $this->pos) - ($this->pos + 2 + $possible[Codes::ATTR_LENGTH]))) === 0;
 	}
 
 	protected function handleItemCode()
@@ -782,7 +802,8 @@ class Parser
 
 		if (isset($tag[Codes::ATTR_VALIDATE]))
 		{
-			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			//$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			$this->filterData($tag, $data);
 		}
 
 		$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data));
@@ -846,7 +867,8 @@ class Parser
 		// Validation for my parking, please!
 		if (isset($tag[Codes::ATTR_VALIDATE]))
 		{
-			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			//$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			$this->filterData($tag, $data);
 		}
 
 		$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data[0], '$2' => $data[1]));
@@ -899,7 +921,8 @@ class Parser
 
 		if (isset($tag[Codes::ATTR_VALIDATE]))
 		{
-			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			//$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			$this->filterData($tag, $data);
 		}
 
 		$code = $tag[Codes::ATTR_CONTENT];
@@ -933,7 +956,8 @@ class Parser
 
 		if (isset($tag[Codes::ATTR_VALIDATE]))
 		{
-			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			//$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			$this->filterData($tag, $data);
 		}
 
 		// Fix after, for disabled code mainly.
@@ -996,7 +1020,8 @@ class Parser
 		// Validation for my parking, please!
 		if (isset($tag[Codes::ATTR_VALIDATE]))
 		{
-			$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			//$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
+			$this->filterData($tag, $data);
 		}
 
 		// For parsed content, we must recurse to avoid security problems.
@@ -1068,8 +1093,8 @@ class Parser
 		// Pick a block of data to do some raw fixing on.
 		$data = substr($this->message, $this->last_pos, $this->pos - $this->last_pos);
 
-		// @todo $data seems to be \n a lot. Why? It got called 62 times in a test
 		// This happens when the pos is > last_pos and there is a trailing \n from one of the tags having "AFTER"
+		// In micro-optimization tests, using substr() here doesn't prove to be slower. This is much easier to read so leave it.
 		if ($data === $this->smiley_marker)
 		{
 			return;
@@ -1125,7 +1150,11 @@ class Parser
 		}
 	}
 
-	protected function footnoteCallback($matches)
+	/**
+	 * @param array $matches
+	 * @return string
+	 */
+	protected function footnoteCallback(array $matches)
 	{
 		global $fn_num, $fn_content, $fn_count;
 
@@ -1159,6 +1188,11 @@ class Parser
 	}
 
 	// @todo change to returning matches. If array() continue
+	/**
+	 * @param array &$possible
+	 * @param array &$matches
+	 * @return bool
+	 */
 	protected function matchParameters(array &$possible, &$matches)
 	{
 		if (!isset($possible['regex_cache']))
@@ -1181,10 +1215,14 @@ class Parser
 		// 5040 = 7, 40,320 = 8, (N!) etc
 		$max_iterations = self::MAX_PERMUTE_ITERATIONS;
 
+		// Use the same range to start each time. Most BBC is in the order that it should be in when it starts.
+		$keys = $possible['regex_keys'];
+
 		// Step, one by one, through all possible permutations of the parameters until we have a match
 		do {
 			$match_preg = '~^';
-			foreach ($possible['regex_keys'] as $key)
+			//foreach ($possible['regex_keys'] as $key)
+			foreach ($keys as $key)
 			{
 				$match_preg .= $possible['regex_cache'][$key];
 			}
@@ -1192,7 +1230,8 @@ class Parser
 
 			// Check if this combination of parameters matches the user input
 			$match = preg_match($match_preg, $message_stub, $matches) !== 0;
-		} while (!$match && --$max_iterations && ($possible['regex_keys'] = pc_next_permutation($possible['regex_keys'], $possible['regex_size'])));
+		} while (!$match && --$max_iterations && ($keys = pc_next_permutation($keys, $possible['regex_size'])));
+		//} while (!$match && --$max_iterations && ($possible['regex_keys'] = pc_next_permutation($possible['regex_keys'], $possible['regex_size'])));
 
 		return $match;
 	}
@@ -1201,7 +1240,7 @@ class Parser
 	 * Recursively call the parser with a new Codes object
 	 * This allows to parse BBC in parameters like [quote author="[url]www.quotes.com[/url]"]Something famous.[/quote]
 	 *
-	 * @param string $data
+	 * @param string &$data
 	 * @param array $tag
 	 */
 	protected function recursiveParser(&$data, array $tag)
@@ -1465,5 +1504,11 @@ class Parser
 	public function canCache()
 	{
 		return $this->can_cache;
+	}
+
+	// This is just so I can profile it.
+	protected function filterData(array $tag, &$data)
+	{
+		$tag[Codes::ATTR_VALIDATE]($tag, $data, $this->bbc->getDisabled());
 	}
 }

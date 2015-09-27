@@ -329,7 +329,7 @@ function addProtocol($string, $protocol = 'http')
 {
 	if (substr_compare($string, 'http://', 0) !== 0
 		&& substr_compare($string, 'https://', 0) !== 0
-		&& substr_compare($string, 'ftp://', 0) !== 0
+		//&& substr_compare($string, 'ftp://', 0) !== 0
 		&& substr_compare($string, 'mailto://', 0) !== 0
 		&& substr_compare($string, $protocol, 0) !== 0)
 	{

@@ -57,7 +57,7 @@ class SmileyParser
 	public function parseBlock(&$message)
 	{
 		// No smiley set at all?!
-		if (!$this->has_smileys || trim($message) === '')
+		if (!$this->has_smileys || $message === '' || trim($message) === '')
 		{
 			return;
 		}
@@ -144,6 +144,38 @@ class SmileyParser
 		$smileysto = array('evil.gif', 'cheesy.gif', 'rolleyes.gif', 'angry.gif', 'laugh.gif', 'smiley.gif', 'wink.gif', 'grin.gif', 'sad.gif', 'shocked.gif', 'cool.gif', 'tongue.gif', 'huh.gif', 'embarrassed.gif', 'lipsrsealed.gif', 'kiss.gif', 'cry.gif', 'undecided.gif', 'azn.gif', 'afro.gif', 'police.gif', 'angel.gif');
 		$smileysdescs = array('', $txt['icon_cheesy'], $txt['icon_rolleyes'], $txt['icon_angry'], $txt['icon_laugh'], $txt['icon_smiley'], $txt['icon_wink'], $txt['icon_grin'], $txt['icon_sad'], $txt['icon_shocked'], $txt['icon_cool'], $txt['icon_tongue'], $txt['icon_huh'], $txt['icon_embarrassed'], $txt['icon_lips'], $txt['icon_kiss'], $txt['icon_cry'], $txt['icon_undecided'], '', '', '', $txt['icon_angel']);
 
+		/**
+		 *
+		'~(?<=[>:\\?\\.\\s\\x{A0}[\\]()*\\\\;]|^)(\\>\\:D|&gt;\\:D|\\:D|\\:\\:\\)|\\>\\:\\(|&gt;\\:\\(|\\:\\)\\)|\\:\\)|;\\)|;D|\\:\\(|\\:o|8\\)|\\:P|\\?\\?\\?|\\:\\-\\[|\\:\\-X|\\:\\-\\*|\\:\'\\(|\\:&#039;\\(|\\:\\-\\\\|\\^\\-\\^|O0|C\\:\\-\\)|O\\:\\))(?=[^[:alpha:]0-9]|$)~'
+		 *
+		array (
+		'>:D' => '<img src="http://www.google.com/smileys//evil.gif" alt="&gt;&#58;D" title="" class="smiley" />',
+		'&gt;:D' => '<img src="http://www.google.com/smileys//evil.gif" alt="&gt;&#58;D" title="" class="smiley" />',
+		':D' => '<img src="http://www.google.com/smileys//cheesy.gif" alt="&#58;D" title="cheesy" class="smiley" />',
+		'::)' => '<img src="http://www.google.com/smileys//rolleyes.gif" alt="&#58;&#58;&#41;" title="rolleyes" class="smiley" />',
+		'>:(' => '<img src="http://www.google.com/smileys//angry.gif" alt="&gt;&#58;&#40;" title="angry" class="smiley" />',
+		'&gt;:(' => '<img src="http://www.google.com/smileys//angry.gif" alt="&gt;&#58;&#40;" title="angry" class="smiley" />',
+		':))' => '<img src="http://www.google.com/smileys//laugh.gif" alt="&#58;&#41;&#41;" title="laugh" class="smiley" />',
+		':)' => '<img src="http://www.google.com/smileys//smiley.gif" alt="&#58;&#41;" title="smile" class="smiley" />',
+		';)' => '<img src="http://www.google.com/smileys//wink.gif" alt=";&#41;" title="wink" class="smiley" />',
+		';D' => '<img src="http://www.google.com/smileys//grin.gif" alt=";D" title="grin" class="smiley" />',
+		':(' => '<img src="http://www.google.com/smileys//sad.gif" alt="&#58;&#40;" title="sad" class="smiley" />',
+		':o' => '<img src="http://www.google.com/smileys//shocked.gif" alt="&#58;o" title="shocked" class="smiley" />',
+		'8)' => '<img src="http://www.google.com/smileys//cool.gif" alt="8&#41;" title="cool" class="smiley" />',
+		':P' => '<img src="http://www.google.com/smileys//tongue.gif" alt="&#58;P" title="tongue" class="smiley" />',
+		'???' => '<img src="http://www.google.com/smileys//huh.gif" alt="???" title="huh" class="smiley" />',
+		':-[' => '<img src="http://www.google.com/smileys//embarrassed.gif" alt="&#58;-&#091;" title="embarrassed" class="smiley" />',
+		':-X' => '<img src="http://www.google.com/smileys//lipsrsealed.gif" alt="&#58;-X" title="lips" class="smiley" />',
+		':-*' => '<img src="http://www.google.com/smileys//kiss.gif" alt="&#58;-*" title="kiss" class="smiley" />',
+		':\'(' => '<img src="http://www.google.com/smileys//cry.gif" alt="&#58;&#039;&#40;" title="cry" class="smiley" />',
+		':&#039;(' => '<img src="http://www.google.com/smileys//cry.gif" alt="&#58;&#039;&#40;" title="cry" class="smiley" />',
+		':-\\' => '<img src="http://www.google.com/smileys//undecided.gif" alt="&#58;-\\" title="undecided" class="smiley" />',
+		'^-^' => '<img src="http://www.google.com/smileys//azn.gif" alt="^-^" title="" class="smiley" />',
+		'O0' => '<img src="http://www.google.com/smileys//afro.gif" alt="O0" title="" class="smiley" />',
+		'C:-)' => '<img src="http://www.google.com/smileys//police.gif" alt="C&#58;-&#41;" title="" class="smiley" />',
+		'O:)' => '<img src="http://www.google.com/smileys//angel.gif" alt="O&#58;&#41;" title="angel" class="smiley" />',
+		)
+		 */
 		return array($smileysfrom, $smileysto, $smileysdescs);
 	}
 

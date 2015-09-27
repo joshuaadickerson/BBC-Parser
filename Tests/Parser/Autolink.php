@@ -41,31 +41,51 @@ class Autolink
 
 	public function parse(&$data)
 	{
-		// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-		if ($this->url_enabled && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
+		if ($this->hasLinks($data))
 		{
-			// Switch out quotes really quick because they can cause problems.
-			$data = str_replace(array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), $data);
-
-			$result = preg_replace($this->search, $this->replace, $data);
-
-			// Only do this if the preg survives.
-			if (is_string($result))
-			{
-				$data = $result;
-			}
-
-			// Switch those quotes back
-			$data = str_replace(array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), $data);
+			$this->parseLinks($data);
 		}
 
-		// Next, emails...
-		if ($this->email_enabled && strpos($data, '@') !== false)
+		if ($this->hasEmails($data))
 		{
-			$data = preg_replace($this->email_search, $this->email_replace, $data);
+			$this->parseEmails($data);
 		}
 
 		call_integration_hook('integrate_autolink_area', array(&$data, $this->bbc));
+	}
+
+	public function hasLinks($data)
+	{
+		return $this->hasPossibleLink() && (strpos($data, '://') !== false || strpos($data, 'www.') !== false);
+	}
+
+	// Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
+	public function parseLinks(&$data)
+	{
+		// Switch out quotes really quick because they can cause problems.
+		$data = str_replace(array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), $data);
+
+		$result = preg_replace($this->search, $this->replace, $data);
+
+		// Only do this if the preg survives.
+		if (is_string($result))
+		{
+			$data = $result;
+		}
+
+		// Switch those quotes back
+		$data = str_replace(array('\'', "\xC2\xA0", '>">', '<"<', '<lt<'), array('&#039;', '&nbsp;', '&quot;', '"', '&lt;'), $data);
+	}
+
+	public function hasEmails($data)
+	{
+		return $this->hasPossibleEmail() && strpos($data, '@') !== false;
+	}
+
+	public function parseEmails(&$data)
+	{
+		// Next, emails...
+		$data = preg_replace($this->email_search, $this->email_replace, $data);
 	}
 
 	/**
@@ -78,8 +98,10 @@ class Autolink
 			'~(?<=[\s>(\'<]|^)(www(?:\.[\w\-_]+)+(?::\d+)?(?:/[\p{L}\p{N}\-_\~%\.@!,\?&;=#(){}+:\'\\\\]*)*[/\p{L}\p{N}\-_\~%@\?;=#}\\\\])~ui'
 		);
 		$replace_url = array(
+			//'[url_auto=$1]$1[/url_auto]',
+			//'[url_auto=$1]$1[/url_auto]',
 			'[url]$1[/url]',
-			'[url=http://$1]$1[/url]'
+			'[url=http://$1]$1[/url]',
 		);
 
 		$search_email = array(
@@ -87,6 +109,8 @@ class Autolink
 			'~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s\x{A0}\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~u',
 		);
 		$replace_email = array(
+			//'[email_auto]$1[/email_auto]',
+			//'[email_auto]$1[/email_auto]',
 			'[email]$1[/email]',
 			'[email]$1[/email]',
 		);
@@ -124,6 +148,16 @@ class Autolink
 
 	public function hasPossible()
 	{
-		return $this->possible_link || $this->possible_email;
+		return $this->hasPossibleLink() || $this->hasPossibleEmail();
+	}
+
+	public function hasPossibleLink()
+	{
+		return $this->possible_link;
+	}
+
+	public function hasPossibleEmail()
+	{
+		return $this->possible_email;
 	}
 }

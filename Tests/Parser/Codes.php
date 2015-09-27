@@ -283,6 +283,7 @@ class Codes
 	{
 		global $modSettings, $txt, $scripturl;
 
+		// This array can be arranged in any order.
 		return array(
 			array(
 				self::ATTR_TAG => 'abbr',
@@ -371,9 +372,9 @@ class Codes
 				self::ATTR_TAG => 'email',
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<a href="mailto:$1" class="bbc_email">$1</a>',
-				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = strtr($data, array('<br />' => ''));
-				},
+				/*self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
+					//$data = removeBr($data);
+				},*/
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
 				self::ATTR_LENGTH => 5,
@@ -391,12 +392,26 @@ class Codes
 				self::ATTR_LENGTH => 5,
 			),
 			array(
+				self::ATTR_TAG => 'zemail',
+				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
+				self::ATTR_CONTENT => '<a href="mailto:$1" class="bbc_email">$1</a>',
+				self::ATTR_BLOCK_LEVEL => false,
+				self::ATTR_AUTOLINK => false,
+				self::ATTR_LENGTH => 6,
+			),
+			array(
 				self::ATTR_TAG => 'footnote',
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_BEFORE => '<sup class="bbc_footnotes">%fn%',
 				self::ATTR_AFTER => '%fn%</sup>',
 				//self::ATTR_DISALLOW_PARENTS => array('footnote', 'code', 'anchor', 'url', 'iurl'),
-				self::ATTR_DISALLOW_PARENTS => array('footnote' => 'footnote', 'code' => 'code', 'anchor' => 'anchor', 'url' => 'url', 'iurl' => 'iurl'),
+				self::ATTR_DISALLOW_PARENTS => array(
+					'footnote' => 'footnote',
+					'code' => 'code',
+					'anchor' => 'anchor',
+					'url' => 'url',
+					'iurl' => 'iurl',
+				),
 				self::ATTR_DISALLOW_BEFORE => '',
 				self::ATTR_DISALLOW_AFTER => '',
 				self::ATTR_BLOCK_LEVEL => true,
@@ -452,7 +467,7 @@ class Codes
 				),
 				self::ATTR_CONTENT => '<img src="$1" alt="{alt}" style="{width}{height}" class="bbc_img resized" />',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = removeBr($data);
+					//$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -468,7 +483,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<img src="$1" alt="" class="bbc_img" />',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = removeBr($data);
+					//$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -484,7 +499,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<a href="$1" class="bbc_link">$1</a>',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = removeBr($data);
+					//$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -648,9 +663,16 @@ class Codes
 				self::ATTR_TAG => 'quote',
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_PARAM => array(
-					'author' => array(self::PARAM_ATTR_MATCH => '([^<>]{1,192}?)'),
-					'link' => array(self::PARAM_ATTR_MATCH => '(?:board=\d+;)?((?:topic|threadid)=[\dmsg#\./]{1,40}(?:;start=[\dmsg#\./]{1,40})?|msg=\d{1,40}|action=profile;u=\d+)'),
-					'date' => array(self::PARAM_ATTR_MATCH => '(\d+)', self::ATTR_VALIDATE => 'htmlTime'),
+					'author' => array(
+						self::PARAM_ATTR_MATCH => '([^<>]{1,192}?)'
+					),
+					'link' => array(
+						self::PARAM_ATTR_MATCH => '(?:board=\d+;)?((?:topic|threadid)=[\dmsg#\./]{1,40}(?:;start=[\dmsg#\./]{1,40})?|msg=\d{1,40}|action=profile;u=\d+)'
+					),
+					'date' => array(
+						self::PARAM_ATTR_MATCH => '(\d+)',
+						self::ATTR_VALIDATE => 'htmlTime'
+					),
 				),
 				self::ATTR_BEFORE => '<div class="quoteheader"><a href="' . $scripturl . '?{link}">' . $txt['quote_from'] . ': {author} ' . ($modSettings['todayMod'] == 3 ? ' - ' : $txt['search_on']) . ' {date}</a></div><blockquote>',
 				self::ATTR_AFTER => '</blockquote>',
@@ -692,10 +714,15 @@ class Codes
 				self::ATTR_TAG => 'size',
 				self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS,
 				// USES CLOSING BRACKET
-				//self::ATTR_TEST => '([1-9][\d]?p[xt]|small(?:er)?|large[r]?|x[x]?-(?:small|large)|medium|(0\.[1-9]|[1-9](\.[\d][\d]?)?)?em)\]',
-				self::ATTR_TEST => '([1-9][\d]?p[xt]|small(?:er)?|large[r]?|x[x]?-(?:small|large)|medium|(0\.[1-9]|[1-9](\.[\d][\d]?)?)?em)',
+				//self::ATTR_TEST => '[1-7]\]',
+				//self::ATTR_TEST => '[1-7]',
+				self::ATTR_TEST => '[1-7]{1}$',
 				self::ATTR_BEFORE => '<span style="font-size: $1;" class="bbc_size">',
 				self::ATTR_AFTER => '</span>',
+				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
+					$sizes = array(1 => 0.7, 2 => 1.0, 3 => 1.35, 4 => 1.45, 5 => 2.0, 6 => 2.65, 7 => 3.95);
+					$data = $sizes[(int) $data] . 'em';
+				},
 				self::ATTR_DISALLOW_PARENTS => array('size' => 'size'),
 				self::ATTR_DISALLOW_BEFORE => '<span>',
 				self::ATTR_DISALLOW_AFTER => '</span>',
@@ -707,15 +734,10 @@ class Codes
 				self::ATTR_TAG => 'size',
 				self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS,
 				// USES CLOSING BRACKET
-				//self::ATTR_TEST => '[1-7]\]',
-				//self::ATTR_TEST => '[1-7]',
-				self::ATTR_TEST => '[1-7]{1}$',
+				//self::ATTR_TEST => '([1-9][\d]?p[xt]|small(?:er)?|large[r]?|x[x]?-(?:small|large)|medium|(0\.[1-9]|[1-9](\.[\d][\d]?)?)?em)\]',
+				self::ATTR_TEST => '([1-9][\d]?p[xt]|small(?:er)?|large[r]?|x[x]?-(?:small|large)|medium|(0\.[1-9]|[1-9](\.[\d][\d]?)?)?em)',
 				self::ATTR_BEFORE => '<span style="font-size: $1;" class="bbc_size">',
 				self::ATTR_AFTER => '</span>',
-				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$sizes = array(1 => 0.7, 2 => 1.0, 3 => 1.35, 4 => 1.45, 5 => 2.0, 6 => 2.65, 7 => 3.95);
-					$data = $sizes[(int) $data] . 'em';
-				},
 				self::ATTR_DISALLOW_PARENTS => array('size' => 'size'),
 				self::ATTR_DISALLOW_BEFORE => '<span>',
 				self::ATTR_DISALLOW_AFTER => '</span>',
@@ -824,7 +846,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
 				self::ATTR_CONTENT => '<a href="$1" class="bbc_link" target="_blank">$1</a>',
 				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
-					$data = removeBr($data);
+					//$data = removeBr($data);
 					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
 					{
 						$data = 'http://' . $data;
@@ -846,11 +868,37 @@ class Codes
 					}
 				},
 				//self::ATTR_DISALLOW_CHILDREN => array('email', 'url', 'iurl'),
-				self::ATTR_DISALLOW_CHILDREN => array('email' => 'email', 'url' => 'url', 'iurl' => 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array(
+					'email' => 'email',
+					'url' => 'url',
+					'iurl' => 'iurl',
+				),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
 				self::ATTR_LENGTH => 3,
+			),
+			array(
+				self::ATTR_TAG => 'z_url',
+				self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS,
+				self::ATTR_BEFORE => '<a href="$1" class="bbc_link" target="_blank">',
+				self::ATTR_AFTER => '</a>',
+				self::ATTR_VALIDATE => function(&$tag, &$data, $disabled) {
+					if (strpos($data, 'http://') !== 0 && strpos($data, 'https://') !== 0)
+					{
+						$data = 'http://' . $data;
+					}
+				},
+				//self::ATTR_DISALLOW_CHILDREN => array('email', 'url', 'iurl'),
+				self::ATTR_DISALLOW_CHILDREN => array(
+					'email' => 'email',
+					'url' => 'url',
+					'iurl' => 'iurl',
+				),
+				self::ATTR_DISABLED_AFTER => ' ($1)',
+				self::ATTR_BLOCK_LEVEL => false,
+				self::ATTR_AUTOLINK => false,
+				self::ATTR_LENGTH => 5,
 			),
 		);
 	}
