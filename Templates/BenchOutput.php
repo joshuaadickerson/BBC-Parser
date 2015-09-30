@@ -1,6 +1,7 @@
 <?php
 
-if (defined('SAVE_TOP_RESULTS') && SAVE_TOP_RESULTS)
+// @todo move to TestBBC.php
+if ($input['save_top'])
 {
 	$testBBC->saveTopResults('top_time_diff.csv', 5, 'time_diff');
 }

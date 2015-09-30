@@ -65,7 +65,7 @@ class TestBBC
 			if ($dir->isDir() && $filename[0] !== '.' && file_exists($test_file))
 			{
 				require_once $test_file;
-				$classname = 'BBC\\Tests\\' . $filename . '\\Test';
+				$classname = 'BBC\\' . $test_dir_path. '\\' . $filename . '\\Test';
 				$test = new $classname;
 				$name = $test->getName();
 
