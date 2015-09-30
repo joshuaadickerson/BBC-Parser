@@ -192,6 +192,7 @@ class Codes
 	protected $itemcodes = array();
 	protected $additional_bbc = array();
 	protected $disabled = array();
+	protected $parsing_codes = array();
 
 	public function __construct(array $tags = array(), array $disabled = array())
 	{
@@ -916,7 +917,7 @@ class Codes
 			'O' => 'circle',
 		);
 
-		//call_integration_hook('integrate_item_codes', array(&$item_codes));
+		call_integration_hook('integrate_item_codes', array(&$item_codes));
 
 		return $item_codes;
 	}
@@ -956,11 +957,12 @@ class Codes
 	public function getForParsing()
 	{
 		$bbc = $this->bbc;
-		//call_integration_hook('bbc_codes_parsing', array(&$bbc, &$itemcodes));
+		$item_codes = $this->getItemCodes();
+		call_integration_hook('bbc_codes_parsing', array(&$bbc, &$item_codes));
 
 		if (!$this->isDisabled('li') && !$this->isDisabled('list'))
 		{
-			foreach ($this->getItemCodes() as $c => $dummy)
+			foreach ($item_codes as $c => $dummy)
 			{
 				// Skip anything "bad"
 				if (!is_string($c) || (is_string($c) && trim($c) === ''))
@@ -977,43 +979,25 @@ class Codes
 		foreach ($bbc as &$code)
 		{
 			$return[$code[self::ATTR_TAG][0]][] = $code;
-
-			// Add the markers around the string for BEFORE/AFTER
-			//$code[Codes::ATTR_BEFORE] = "\n" . $code[Codes::ATTR_BEFORE] . "\n";
-			//$code[Codes::ATTR_AFTER] = "\n" . $code[Codes::ATTR_AFTER] . "\n";
 		}
 
 		return $return;
 	}
 
-	public function newGetBBC()
+	public function setParsingCodes()
 	{
-		$bbc = array();
+		$this->parsing_bbc = $this->getForParsing();
+		return $this;
+	}
 
-		// Get the default codes
-		foreach ($this->bbc as $code)
-		{
-			$char = $code[0];
-			$tag = $code[self::ATTR_TAG];
+	public function hasChar($char)
+	{
+		return isset($this->parsing_codes[$char]);
+	}
 
-			if (!isset($return[$char]))
-			{
-				$bbc[$code[0]] = array();
-			}
-
-			if (!isset($return[$char][$tag]))
-			{
-				$bbc[$char][$tag] = array(
-					'length' => $code[self::ATTR_LENGTH],
-					'tag' => $tag,
-					'codes' => array(),
-				);
-			}
-
-			$bbc[$char][$tag]['codes'][] = $code;
-		}
-
-		return $bbc;
+	public function getCodesByChar($char)
+	{
+		return $this->parsing_codes[$char];
 	}
 
 	protected function getItemCodeTag($code)
@@ -1044,7 +1028,7 @@ class Codes
 		}
 
 		// @todo Interface/setting to add more?
-		// call_integration_hook();
+		call_integration_hook('integrate_bbc_set_printing', array($this));
 
 		return $this;
 	}

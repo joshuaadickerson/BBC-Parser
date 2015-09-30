@@ -75,7 +75,7 @@ class Parser
 	 */
 	public function resetParser()
 	{
-		$this->pos = null;
+		$this->pos = -1;
 		$this->pos1 = null;
 		$this->pos2 = null;
 		$this->last_pos = null;
@@ -130,7 +130,40 @@ class Parser
 			$this->loadHtmlParser();
 		}
 
-		$this->pos = -1;
+		// This handles pretty much all of the parsing. It is a separate method so it is easier to override and profile.
+		$this->parse_loop();
+
+		// Close any remaining tags.
+		while ($tag = $this->closeOpenedTag())
+		{
+			$this->message .= $this->noSmileys($tag[Codes::ATTR_AFTER]);
+		}
+
+		if (isset($this->message[0]) && $this->message[0] === ' ')
+		{
+			$this->message = substr_replace($this->message, '&nbsp;', 0, 1);
+			//$this->message = '&nbsp;' . substr($this->message, 1);
+		}
+
+		// Cleanup whitespace.
+		$this->message = str_replace(array('  ', '<br /> ', '&#13;'), array('&nbsp; ', '<br />&nbsp;', "\n"), $this->message);
+
+		// Finish footnotes if we have any.
+		if ($this->num_footnotes > 0)
+		{
+			$this->handleFootnotes();
+		}
+
+		// Allow addons access to what the parser created
+		$message = $this->message;
+		call_integration_hook('integrate_post_parsebbc', array(&$message));
+		$this->message = $message;
+
+		return $this->message;
+	}
+
+	protected function parse_loop()
+	{
 		while ($this->pos !== false)
 		{
 			$this->last_pos = isset($this->last_pos) ? max($this->pos, $this->last_pos) : $this->pos;
@@ -151,7 +184,7 @@ class Parser
 			// Are we there yet?  Are we there yet?
 			if ($this->pos >= strlen($this->message) - 1)
 			{
-				break;
+				return;
 			}
 
 			$next_char = strtolower($this->message[$this->pos + 1]);
@@ -244,34 +277,6 @@ class Parser
 				$this->trimWhiteSpace($this->message, $this->pos + 1);
 			}
 		}
-
-		// Close any remaining tags.
-		while ($tag = $this->closeOpenedTag())
-		{
-			$this->message .= $this->noSmileys($tag[Codes::ATTR_AFTER]);
-		}
-
-		// @todo substr_replace
-		if (isset($this->message[0]) && $this->message[0] === ' ')
-		{
-			$this->message = '&nbsp;' . substr($this->message, 1);
-		}
-
-		// Cleanup whitespace.
-		$this->message = str_replace(array('  ', '<br /> ', '&#13;'), array('&nbsp; ', '<br />&nbsp;', "\n"), $this->message);
-
-		// Finish footnotes if we have any.
-		if ($this->num_footnotes > 0)
-		{
-			$this->handleFootnotes();
-		}
-
-		// Allow addons access to what the parser created
-		$message = $this->message;
-		call_integration_hook('integrate_post_parsebbc', array(&$message));
-		$this->message = $message;
-
-		return $this->message;
 	}
 
 	protected function handleOpenTags()
