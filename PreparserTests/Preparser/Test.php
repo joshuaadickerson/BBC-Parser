@@ -18,15 +18,7 @@ class Test implements \BBC\Tests\BBCTest
 
     public function setup()
     {
-        global $bbc_codes, $itemcodes, $no_autolink_tags;
-        global $disabled, $default_disabled, $parse_tag_cache;
-
-        $bbc_codes = array();
-        $itemcodes = array();
-        $no_autolink_tags = array();
-        $disabled = array_flip($this->disabled);
-        $default_disabled = null;
-        $parse_tag_cache = null;
+        $this->parser = new \PreParser;
     }
 
     public function beforeMessage()
@@ -36,7 +28,8 @@ class Test implements \BBC\Tests\BBCTest
 
     public function parseMessage($message)
     {
-        return parse_bbc($message);
+        $this->parser->parse($message);
+        return $message;
     }
 
     public function codes()

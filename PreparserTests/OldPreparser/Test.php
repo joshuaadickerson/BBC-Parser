@@ -36,7 +36,8 @@ class Test implements \BBC\Tests\BBCTest
 
     public function parseMessage($message)
     {
-        return preparsecode($message);
+        preparsecode($message);
+        return $message;
     }
 
     public function codes()

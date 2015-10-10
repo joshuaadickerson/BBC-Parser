@@ -458,6 +458,12 @@ class TestBBC
 		return $messages;
 	}
 
+	public function setMessagePath($path)
+	{
+		$this->msg_path = $path;
+		return $this;
+	}
+
 	public function tests()
 	{
 		$this->iterations = 1;

@@ -24,7 +24,6 @@ class PreParser
 	public function parse(&$message, $previewing = false)
 	{
 		$this->message = $message;
-		unset($message);
 
 		// Remove \r's... they're evil!
 		$this->message = str_replace(array("\r"), array(''), $this->message);
@@ -97,7 +96,7 @@ class PreParser
 				// Fix up some use of tables without [tr]s, etc. (it has to be done more than once to catch it all.)
 				for ($j = 0; $j < 3; $j++)
 				{
-					$parts[$i] = preg_replace(array_keys($this->fix_search), $this->fix_replace, $parts[$i]);
+					$parts[$i] = preg_replace($this->fix_search, $this->fix_replace, $parts[$i]);
 				}
 
 				// Remove empty bbc from the sections outside the code tags
@@ -207,7 +206,7 @@ class PreParser
 		call_integration_hook('integrate_preparse_fixes', array(&$mistake_fixes));
 
 		$this->fix_search = array_keys($mistake_fixes);
-		$this->fix_replace = $mistake_fixes;
+		$this->fix_replace = array_values($mistake_fixes);
 	}
 
 	// Fix color tags of many forms so they parse properly

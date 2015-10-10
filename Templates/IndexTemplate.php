@@ -41,8 +41,11 @@
     if (empty($results))
     {
         ?><div>
-        No results to display. Click the "Controls" button to run tests.
-        <pre class="well"><?= htmlspecialchars('<html><body>something</body></html>'); ?></pre>
+        No results to display. Click the "Controls" button to run tests. Or, click on one of these common tests:
+        <ul>
+            <li><a href="?type=test">Test all messages with parse_bbc vs Parser</a></li>
+            <li><a href="?type=bench&iterations=50">Full parse_bbc vs Parser benchmark w/ 50 iterations</a></li>
+        </ul>
         </div><?php
     }
     // We have results

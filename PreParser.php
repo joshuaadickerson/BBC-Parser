@@ -13,6 +13,8 @@ require_once 'BBCHelpers.php';
 
 $testBBC = new TestBBC('PreparserTests');
 
+$testBBC->setMessagePath('PreparseMessages.php');
+
 $possible_tests = $testBBC->getPossibleTests();
 
 // We can't set these until we get the possible tests
