@@ -29,7 +29,14 @@ class Test implements \BBC\Tests\BBCTest
 
 	public function parseMessage($message)
 	{
-		return $this->parser->parse($message);
+		$this->parser->parseTokens($message);
+		var_dump($message);
+		return $message;
+	}
+
+	public function preparseMessage(&$message)
+	{
+		$message = $this->parser->tokenize($message);
 	}
 
 	public function codes()

@@ -98,18 +98,6 @@ class RegexParser
 		// Clean up any cut/paste issues we may have
 		$message = sanitizeMSCutPaste($message);
 
-		// Unfortunately, this has to be done here because smileys are parsed as blocks between BBC
-		// @todo remove from here and make the caller figure it out
-		if (!$this->parsingEnabled())
-		{
-			if ($this->do_smileys)
-			{
-				parsesmileys($message);
-			}
-
-			return $message;
-		}
-
 		// @todo change this to <br> (it will break tests)
 		$message = str_replace("\n", '<br />', $message);
 
@@ -127,7 +115,6 @@ class RegexParser
 	public function parseTokens(array $msg_parts)
 	{
 		$this->resetParser();
-		return;
 
 		$this->msg_parts = $msg_parts;
 		$this->num_parts = count($msg_parts);
@@ -257,7 +244,7 @@ class RegexParser
 		return $this->next_closing_bracket = -1;
 	}
 
-	protected function tokenize($message)
+	public function tokenize($message)
 	{
 		$msg_parts = preg_split($this->token_regex, $message, null, PREG_SPLIT_OFFSET_CAPTURE | PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
 

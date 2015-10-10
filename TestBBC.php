@@ -275,9 +275,22 @@ class TestBBC
 
 			foreach ($this->methods as $letter => $method)
 			{
+				// In case the method needs to do some kind of preparsing on the message
+				if (is_callable(array($method, 'preparseMessage')))
+				{
+					$old_message = $message;
+					$method->preparseMessage($message);
+				}
+
 				$this->results['tests'][$i][$letter] = $this->runBenchmark($method, $message);
 
 				$this->results['totals'][$letter] += $this->results['tests'][$i][$letter]['total_time'];
+
+				// In case the method needs to do some kind of preparsing on the message
+				if (is_callable(array($method, 'preparseMessage')))
+				{
+					$message = $old_message;
+				}
 			}
 
 			if ($this->save_result)
@@ -387,7 +400,7 @@ class TestBBC
 		{
 			// This isn't very fair. If we need to call this, we add overhead.
 			// Then again, the only time this should happen is for poorly written code, so I guess it deserves it heh
-			if (is_callable($object, 'beforeMessage'))
+			if (is_callable(array($object, 'beforeMessage')))
 			{
 				$object->beforeMessage();
 			}
@@ -408,7 +421,7 @@ class TestBBC
 				$object->parseMessage($message);
 			}
 
-			if (is_callable($object, 'afterMessage'))
+			if (is_callable(array($object, 'afterMessage')))
 			{
 				$object->afterMessage();
 			}
