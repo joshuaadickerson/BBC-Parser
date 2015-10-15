@@ -21,4 +21,14 @@ return array(
     // Empty tags
     '[list][/list]',
     '[i][/i]',
+
+    // Itemcodes and lists
+    "[*]list item\n[*]another list item\n[*]yet another list item",
+
+    // Autolinks
+    'http://www.google.com',
+    'www.google.com',
+    'my@email.com',
+    'ftp://some.ftp.com',
+    'https://secure.google.com',
 );

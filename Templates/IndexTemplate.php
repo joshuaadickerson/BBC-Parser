@@ -143,12 +143,6 @@
                         <input name="fatal" type="checkbox" <?= $input['fatal'] ?> class="form-control">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="fatal" class="col-sm-4 control-label">End tests if one fails</label>
-                    <div class="col-sm-8">
-                        <input name="fatal" type="checkbox" <?= $input['fatal'] ?> class="form-control">
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

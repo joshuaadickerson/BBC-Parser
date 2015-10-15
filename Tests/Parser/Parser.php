@@ -1203,9 +1203,33 @@ class Parser
 		if (!isset($possible['regex_cache']))
 		{
 			$possible['regex_cache'] = array();
-			foreach ($possible[Codes::ATTR_PARAM] as $p => $info)
-			{
+			foreach ($possible[Codes::ATTR_PARAM] as $p => $info) {
+				// @todo there are 3 options for PARAM_ATTR_QUOTED: required, optional, and none. This doesn't represent that.
 				$quote = empty($info[Codes::PARAM_ATTR_QUOTED]) ? '' : '&quot;';
+/*
+				// No quotes
+				if (empty($info[Codes::PARAM_ATTR_QUOTED]) || $info[Codes::PARAM_ATTR_QUOTED] === Codes::NONE)
+				{
+					$quote = '';
+					$end_quote = '';
+				}
+				// Quotes are required
+				elseif ($info[Codes::PARAM_ATTR_QUOTED] === Codes::REQUIRED)
+				{
+					$quote = '&quot;';
+					$end_quote = '&quot;';
+				}
+				// Quotes are optional
+				elseif ($info[Codes::PARAM_ATTR_QUOTED] === Codes::OPTIONAL)
+				{
+					// This gets a little tricky. If there was an opening quote, there must be a closing quote.
+					// If there was no opening quote, there mustn't be a closing quote.
+					// But, quotes are optional
+					$quote = '';
+					$end_quote = '';
+				}
+*/
+				//$possible['regex_cache'][] = '(\s+' . $p . '=' . $quote . (isset($info[Codes::PARAM_ATTR_MATCH]) ? $info[Codes::PARAM_ATTR_MATCH] : '(.+?)') . $end_quote. ')' . (empty($info[Codes::PARAM_ATTR_OPTIONAL]) ? '' : '?');
 				$possible['regex_cache'][] = '(\s+' . $p . '=' . $quote . (isset($info[Codes::PARAM_ATTR_MATCH]) ? $info[Codes::PARAM_ATTR_MATCH] : '(.+?)') . $quote. ')' . (empty($info[Codes::PARAM_ATTR_OPTIONAL]) ? '' : '?');
 			}
 			$possible['regex_size'] = count($possible['regex_cache']) - 1;
@@ -1226,7 +1250,6 @@ class Parser
 		// Step, one by one, through all possible permutations of the parameters until we have a match
 		do {
 			$match_preg = '~^';
-			//foreach ($possible['regex_keys'] as $key)
 			foreach ($keys as $key)
 			{
 				$match_preg .= $possible['regex_cache'][$key];
@@ -1236,7 +1259,6 @@ class Parser
 			// Check if this combination of parameters matches the user input
 			$match = preg_match($match_preg, $message_stub, $matches) !== 0;
 		} while (!$match && --$max_iterations && ($keys = pc_next_permutation($keys, $possible['regex_size'])));
-		//} while (!$match && --$max_iterations && ($possible['regex_keys'] = pc_next_permutation($possible['regex_keys'], $possible['regex_size'])));
 
 		return $match;
 	}

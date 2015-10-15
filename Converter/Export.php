@@ -1,5 +1,7 @@
 <?php
 
+namespace BBC;
+
 use BBC\Codes;
 
 // Takes your old BBC array and makes it work with the new format.

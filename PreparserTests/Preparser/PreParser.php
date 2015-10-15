@@ -209,12 +209,19 @@ class PreParser
 		$this->fix_replace = array_values($mistake_fixes);
 	}
 
-	// Fix color tags of many forms so they parse properly
+	/**
+	 * Fix color tags of many forms so they parse properly
+	 * @param $part
+	 */
 	protected function fixColors(&$part)
 	{
 		$part = preg_replace('~\[color=(?:#[\da-fA-F]{3}|#[\da-fA-F]{6}|[A-Za-z]{1,20}|rgb\(\d{1,3}, ?\d{1,3}, ?\d{1,3}\))\]\s*\[/color\]~', '', $part);
 	}
 
+	/**
+	 * Close any open lists
+	 * @param $part
+	 */
 	protected function fixLists(&$part)
 	{
 		$list_open = substr_count($part, '[list]') + substr_count($part, '[list ');
@@ -244,7 +251,9 @@ class PreParser
 		$this->message = preg_replace_callback('~\[nobbc\](.+?)\[/nobbc\]~is', array($this, 'nobbc_callback'), $this->message);
 	}
 
-	// @todo change to substr_compare()
+	/**
+	 * Remove any trailing quote tags
+	 */
 	protected function fixTrailingQuotes()
 	{
 		// Trim off trailing quotes - these often happen by accident.
@@ -260,7 +269,8 @@ class PreParser
 	}
 
 	/**
-	 * Get out of your mom's basement, nerd
+	 * Changes /me to [me]
+	 * @param string &$part
 	 */
 	protected function doMe(&$part)
 	{
@@ -341,8 +351,8 @@ class PreParser
 	/**
 	 * Ensure tags inside of nobbc do not get parsed by converting the markers to html entities
 	 *
-	 * @package Posts
 	 * @param string[] $matches
+	 * @return string
 	 */
 	protected function nobbc_callback(array $matches)
 	{
@@ -353,8 +363,8 @@ class PreParser
 	/**
 	 * Takes a tag and lowercases it
 	 *
-	 * @package Posts
 	 * @param string[] $matches
+	 * @return string
 	 */
 	protected function lowertags_callback(array $matches)
 	{
@@ -430,10 +440,12 @@ class PreParser
 			resizeBBCImages($this->message);
 		}
 	}
+
 	/**
 	 * Ensure image tags do not load anything by themselfs (security)
 	 *
 	 * @param string[] $matches
+	 * @return string
 	 */
 	protected function fixTags_img_callback($matches)
 	{
@@ -564,8 +576,6 @@ class PreParser
 	 * - Adds in missing closing tags, removes excess closing tags
 	 * - Although it prevents markup error, it can mess-up the intended (abiet wrong) layout
 	 * driving the post author in to a furious rage
-	 *
-	 * @param string $message
 	 */
 	protected function table()
 	{

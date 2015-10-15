@@ -138,7 +138,7 @@ class Codes
 	 */
 	const ATTR_DISABLED = 24;
 	/**
-	 * If the message contains a code with this the message should not be cached
+	 * If the message contains a code with this, the message should not be cached
 	 */
 	const ATTR_NO_CACHE = 25;
 
@@ -181,7 +181,11 @@ class Codes
 	/**  */
 	const TRIM_BOTH = 3;
 
+	// These are mainly for *ATTR_QUOTED since there are 3 options
 	const OPTIONAL = -1;
+	const NONE = 0;
+	const REQUIRED = 1;
+
 
 	/**
 	 * An array of self::ATTR_*
@@ -211,6 +215,10 @@ class Codes
 		$this->bbc = $this->getDefault();
 	}
 
+	/**
+	 * Add a code
+	 * @param array $code
+	 */
 	public function add(array $code)
 	{
 		$this->checkCode($code);
@@ -393,14 +401,6 @@ class Codes
 				self::ATTR_LENGTH => 5,
 			),
 			array(
-				self::ATTR_TAG => 'zemail',
-				self::ATTR_TYPE => self::TYPE_UNPARSED_CONTENT,
-				self::ATTR_CONTENT => '<a href="mailto:$1" class="bbc_email">$1</a>',
-				self::ATTR_BLOCK_LEVEL => false,
-				self::ATTR_AUTOLINK => false,
-				self::ATTR_LENGTH => 6,
-			),
-			array(
 				self::ATTR_TAG => 'footnote',
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_BEFORE => '<sup class="bbc_footnotes">%fn%',
@@ -570,7 +570,7 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_PARAM => array(
 					'type' => array(
-						self::PARAM_ATTR_MATCH => '(none|disc|circle|square|decimal|decimal-leading-zero|lower-roman|upper-roman|lower-alpha|upper-alpha|lower-greek|lower-latin|upper-latin|hebrew|armenian|georgian|cjk-ideographic|hiragana|katakana|hiragana-iroha|katakana-iroha)'
+						self::PARAM_ATTR_MATCH => '(none|disc|circle|square|decimal|decimal-leading-zero|lower-roman|upper-roman|lower-alpha|upper-alpha|lower-greek|lower-latin|upper-latin|hebrew|armenian|georgian|cjk-ideographic|hiragana|katakana|hiragana-iroha|katakana-iroha)',
 					),
 				),
 				self::ATTR_BEFORE => '<ul class="bbc_list" style="list-style-type: {type};">',
@@ -638,7 +638,7 @@ class Codes
 				self::ATTR_PARAM => array(
 					'author' => array(
 						self::PARAM_ATTR_MATCH => '(.{1,192}?)',
-						self::PARAM_ATTR_QUOTED => true
+						self::PARAM_ATTR_QUOTED => self::OPTIONAL,
 					),
 				),
 				self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': {author}</div><blockquote>',
@@ -665,14 +665,14 @@ class Codes
 				self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
 				self::ATTR_PARAM => array(
 					'author' => array(
-						self::PARAM_ATTR_MATCH => '([^<>]{1,192}?)'
+						self::PARAM_ATTR_MATCH => '([^<>]{1,192}?)',
 					),
 					'link' => array(
-						self::PARAM_ATTR_MATCH => '(?:board=\d+;)?((?:topic|threadid)=[\dmsg#\./]{1,40}(?:;start=[\dmsg#\./]{1,40})?|msg=\d{1,40}|action=profile;u=\d+)'
+						self::PARAM_ATTR_MATCH => '(?:board=\d+;)?((?:topic|threadid)=[\dmsg#\./]{1,40}(?:;start=[\dmsg#\./]{1,40})?|msg=\d{1,40}|action=profile;u=\d+)',
 					),
 					'date' => array(
 						self::PARAM_ATTR_MATCH => '(\d+)',
-						self::ATTR_VALIDATE => 'htmlTime'
+						self::ATTR_VALIDATE => 'htmlTime',
 					),
 				),
 				self::ATTR_BEFORE => '<div class="quoteheader"><a href="' . $scripturl . '?{link}">' . $txt['quote_from'] . ': {author} ' . ($modSettings['todayMod'] == 3 ? ' - ' : $txt['search_on']) . ' {date}</a></div><blockquote>',
@@ -880,7 +880,7 @@ class Codes
 				self::ATTR_LENGTH => 3,
 			),
 			array(
-				self::ATTR_TAG => 'z_url',
+				self::ATTR_TAG => '_url',
 				self::ATTR_TYPE => self::TYPE_UNPARSED_EQUALS,
 				self::ATTR_BEFORE => '<a href="$1" class="bbc_link" target="_blank">',
 				self::ATTR_AFTER => '</a>',
@@ -890,16 +890,16 @@ class Codes
 						$data = 'http://' . $data;
 					}
 				},
-				//self::ATTR_DISALLOW_CHILDREN => array('email', 'url', 'iurl'),
 				self::ATTR_DISALLOW_CHILDREN => array(
 					'email' => 'email',
 					'url' => 'url',
 					'iurl' => 'iurl',
+					'_url' => '_url',
 				),
 				self::ATTR_DISABLED_AFTER => ' ($1)',
 				self::ATTR_BLOCK_LEVEL => false,
 				self::ATTR_AUTOLINK => false,
-				self::ATTR_LENGTH => 5,
+				self::ATTR_LENGTH => 4,
 			),
 		);
 	}

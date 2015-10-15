@@ -30,7 +30,6 @@ class Test implements \BBC\Tests\BBCTest
 	public function parseMessage($message)
 	{
 		$this->parser->parseTokens($message);
-		var_dump($message);
 		return $message;
 	}
 
