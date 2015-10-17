@@ -79,65 +79,65 @@
         </div>
         <div class="form-group">
             <?= \BBC\displayErrors($errors, 'tag'); ?>
-            <label for="a" class="col-md-2 control-label">Tag</label>
+            <label for="tag" class="col-md-2 control-label">Tag</label>
             <div class="col-sm-8">
-                <input type="text" name="tag" class="form-control">
+                <input type="text" name="tag" class="form-control" id="tag">
             </div>
         </div>
         <div class="form-group">
-            <label for="a" class="col-md-2 control-label">Test</label>
+            <label for="test" class="col-md-2 control-label">Test</label>
             <div class="col-sm-8">
-                <input type="text" name="test" class="form-control">
+                <input type="text" name="test" class="form-control" id="test">
             </div>
         </div>
         <div class="form-group content-type">
             only for unparsed_content, closed, unparsed_commas_content, and unparsed_equals_content
             <label for="content" class="col-md-2 control-label">Content</label>
             <div class="col-sm-8">
-                <textarea name="content" class="form-control"></textarea>
+                <textarea name="content" class="form-control" id="content"></textarea>
             </div>
         </div>
         <div class="form-group non-content">
             <label for="before" class="col-md-2 control-label">Before</label>
             <div class="col-sm-8">
-                <textarea name="before" class="form-control"></textarea>
+                <textarea name="before" class="form-control" id="before"></textarea>
             </div>
         </div>
         <div class="form-group non-content">
             <label for="after" class="col-md-2 control-label">After</label>
             <div class="col-sm-8">
-                <textarea name="after" class="form-control"></textarea>
+                <textarea name="after" class="form-control" id="after"></textarea>
             </div>
         </div>
         <div class="form-group content-type">
             only for unparsed_content, closed, unparsed_commas_content, and unparsed_equals_content
             <label for="disabled_content" class="col-md-2 control-label">Disabled Content</label>
             <div class="col-sm-8">
-                <textarea name="disabled_content" class="form-control"></textarea>
+                <textarea name="disabled_content" class="form-control" id="disabled_content"></textarea>
             </div>
         </div>
         <div class="form-group non-content">
             <label for="disabled_before" class="col-md-2 control-label">Disabled Before</label>
             <div class="col-sm-8">
-                <input type="text" name="disabled_before" class="form-control">
+                <input type="text" name="disabled_before" class="form-control" id="disabled_before">
             </div>
         </div>
         <div class="form-group non-content">
             <label for="disabled_after" class="col-md-2 control-label">Disabled After</label>
             <div class="col-sm-8">
-                <input type="text" name="disabled_after" class="form-control">
+                <input type="text" name="disabled_after" class="form-control" id="disabled_after">
             </div>
         </div>
         <div class="form-group">
             <label for="block_level" class="col-md-2 control-label">Block Level</label>
             <div class="col-sm-8">
-                <input name="block_level" type="checkbox" class="form-control">
+                <input name="block_level" type="checkbox" class="form-control" id="block_level">
             </div>
         </div>
         <div class="form-group">
             <label for="trim" class="col-md-2 control-label">Trim</label>
             <div class="col-md-8">
-                <select name="type" class="form-control">
+                <select name="type" class="form-control" id="trim">
                     <option value=""></option>
                     <option value="1">Inside</option>
                     <option value="2">Outside</option>
@@ -148,13 +148,13 @@
         <div class="form-group">
             <label for="validate" class="col-md-2 control-label">Validate</label>
             <div class="col-sm-8">
-                <textarea name="validate" class="form-control"></textarea>
+                <textarea name="validate" class="form-control" id="validate"></textarea>
             </div>
         </div>
         <div class="form-group">
             <label for="quoted" class="col-md-2 control-label">Quotes</label>
             <div class="col-md-8">
-                <select name="quoted" class="form-control">
+                <select name="quoted" class="form-control" id="quoted">
                     <option value=""></option>
                     <option value="1">Required</option>
                     <option value="-1">Optional</option>
@@ -188,13 +188,13 @@
         <div class="form-group">
             <label for="disallow_before" class="col-md-2 control-label">Disallow Before</label>
             <div class="col-sm-8">
-                <input type="text" name="disallow_before" class="form-control">
+                <input type="text" name="disallow_before" class="form-control" id="disallow_before">
             </div>
         </div>
         <div class="form-group">
             <label for="disallow_after" class="col-md-2 control-label">Disallow After</label>
             <div class="col-sm-8">
-                <input type="text" name="disallow_after" class="form-control">
+                <input type="text" name="disallow_after" class="form-control" id="disabled_after">
             </div>
         </div>
         <div class="form-group">
