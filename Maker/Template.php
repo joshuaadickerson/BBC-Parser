@@ -54,7 +54,7 @@
     </div>
     <form method="get" class="form-horizontal">
         <div class="form-group">
-            <label for="type" class="col-md-2 control-label">Default Tags</label>
+            <label for="default_tags" class="col-md-2 control-label">Default Tags</label>
             <div class="col-md-8">
                 <select class="form-control" id="default_tags">
                     <option value="">New BBC</option>
@@ -63,7 +63,7 @@
         </div>
         <div class="form-group">
             <?= \BBC\displayErrors($errors, 'type') ?>
-            <label for="type" class="col-md-2 control-label">Type</label>
+            <label for="attr_type" class="col-md-2 control-label">Type</label>
             <div class="col-md-8">
                 <select name="attr_type" class="form-control" id="attr_type">
                     <option value="0">Codes::TYPE_PARSED_CONTENT</option>
@@ -74,17 +74,6 @@
                     <option value="5">Codes::TYPE_UNPARSED_COMMAS</option>
                     <option value="6">Codes::TYPE_UNPARSED_COMMAS_CONTENT</option>
                     <option value="7">Codes::TYPE_UNPARSED_EQUALS_CONTENT</option>
-
-                    <?php
-                    /*
-
-                    foreach ($export->getTypes() as $value => $name)
-                    {
-                        echo '
-                        <option value="', $value, '"', $selected['type'] === $value ? ' selected' : '', '>', $name, '</option>';
-                    }
-*/
-                    ?>
                 </select>
             </div>
         </div>
@@ -307,19 +296,49 @@
         // Parameters can only be used for parsed_content (0) and unparsed_content (3)
         var param_types = ['0', '3'];
 
-        $(add_button).click(function(e) {
-            e.preventDefault();
+        var addParameter = function(name, values) {
             // Don't allow more params than allowed
-            if(num_params < max_params) {
-                num_params++;
-                $(wrapper).append(param_div.clone().show());
+            if(num_params >= max_params)
+            {
+                return;
             }
 
+            var new_param = param_div.clone().show();
+            if (name && values)
+            {
+                new_param.find('.param_name').val(name);
+
+                $.each(values, function (k, v) {
+                    console.log(k, v)
+                    if (typeof v === 'boolean')
+                    {
+                        new_param.find('.' + k).prop('checked', v);
+                    }
+                    else
+                    {
+                        new_param.find('.' + k).val(v);
+                    }
+                });
+
+            }
+
+            $(wrapper).append(new_param);
+            num_params++;
+        };
+
+        var removeAllParameters = function() {
+            wrapper.children('.params').remove();
+        };
+
+        $(add_button).click(function(e) {
+            e.preventDefault();
+            addParameter();
             parse();
         });
 
-        $(wrapper).on("click",".remove_field", function(e) {
+        $(wrapper).on('click', '.remove_field', function(e) {
             e.preventDefault();
+
             $(this).parent('div').remove();
             num_params--;
 
@@ -608,6 +627,16 @@ array(\n\
                     ele.val('');
                 }
             });
+
+            removeAllParameters();
+
+            // Add parameters
+            if (typeof default_tags[tag]['params'] !== 'undefined')
+            {
+                $.each(default_tags[tag]['params'], function (k, v) {
+                    addParameter(k, v);
+                });
+            }
 
             changeType();
         });
