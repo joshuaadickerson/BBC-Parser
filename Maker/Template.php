@@ -58,77 +58,8 @@
             <div class="col-md-8">
                 <select class="form-control" id="default_tags">
                     <option value="">New BBC</option>
-                    <option value="abbr">abbr</option>
-                    <option value="anchor">anchor</option>
-                    <option value="b">b</option>
-                    <option value="br">br</option>
-                    <option value="center">center</option>
-                    <option value="code">code</option>
-                    <option value="code1">code1</option>
                 </select>
             </div>
-            <script>
-                var default_tags = {
-                    'abbr': {
-                        'tag': 'abbr',
-                        'attr_type': 1,
-                        'before': '\'<abbr title="$1">\'',
-                        'after': '\'</abbr>\'',
-                        'quoted': 'optional',
-                        'disabled_after': '\' ($1)\'',
-                        'block_level': false,
-                        'autolink': true,
-                    },
-                    'anchor': {
-                        'tag': 'anchor',
-                        'attr_type': 1,
-                        'test': '\'[#]?([A-Za-z][A-Za-z0-9_\-]*)\'',
-                        'before': '\'<span id="post_$1">\'',
-                        'after': '\'</span>\'',
-                        'block_level': false,
-                        'autolink': true,
-                    },
-                    'b': {
-                        'tag': 'b',
-                        'attr_type': 0,
-                        'before': '\'<strong class="bbc_strong">\'',
-                        'after': '\'</strong>\'',
-                        'block_level': false,
-                        'autolink': true,
-                    },
-                    'br': {
-                        'tag': 'br',
-                        'attr_type': 4,
-                        'content': '\'<br />\'',
-                        'block_level': false,
-                        'autolink': false,
-                    },
-                    'center': {
-                        'tag': 'center',
-                        'attr_type': 0,
-                        'before': '\'<div class="centertext">\'',
-                        'after': '\'</div>\'',
-                        'block_level': true,
-                        'autolink': true,
-                    },
-                    'code': {
-                        'tag': 'code',
-                        'attr_type': 3,
-                        'content': '\'<div class="codeheader">\' . $txt[\'code\'] . \': <a href="javascript:void(0);" onclick="return elkSelectText(this);" class="codeoperation">\' . $txt[\'code_select\'] . \'</a></div><pre class="bbc_code prettyprint">$1</pre>\'',
-                        'validate': '$this->isDisabled(\'code\') ? null : function(&$tag, &$data, $disabled) {\n\t$data = tabToHtmlTab($data);\n}',
-                        'block_level': true,
-                        'autolink': false,
-                    },
-                    'code1': {
-                        'tag': 'code',
-                        'attr_type': 7,
-                        'content': '\'<div class="codeheader">\' . $txt[\'code\'] . \': ($2) <a href="#" onclick="return elkSelectText(this);" class="codeoperation">\' . $txt[\'code_select\'] . \'</a></div><pre class="bbc_code prettyprint">$1</pre>\'',
-                        'validate': '$this->isDisabled(\'code\') ? null : function(&$tag, &$data, $disabled) {\n\t$data = tabToHtmlTab($data);\n}',
-                        'block_level': true,
-                        'autolink': false,
-                    },
-                };
-            </script>
         </div>
         <div class="form-group">
             <?= \BBC\displayErrors($errors, 'type') ?>
@@ -219,9 +150,9 @@
             <div class="col-md-8">
                 <select name="type" class="form-control">
                     <option value=""></option>
-                    <option value="">Inside</option>
-                    <option value="">Outside</option>
-                    <option value="">Both</option>
+                    <option value="1">Inside</option>
+                    <option value="2">Outside</option>
+                    <option value="3">Both</option>
                 </select>
             </div>
         </div>
@@ -236,33 +167,33 @@
             <div class="col-md-8">
                 <select name="quoted" class="form-control">
                     <option value=""></option>
-                    <option value="">Required</option>
-                    <option value="">Optional</option>
+                    <option value="1">Required</option>
+                    <option value="-1">Optional</option>
                 </select>
             </div>
         </div>
         <div class="form-group">
             <label for="require_parents" class="col-md-2 control-label">Require Parents</label>
             <div class="col-sm-8">
-                <select multiple name="require_parents" class="form-control" data-role="tagsinput" id="require_parents"></select>
+                <select multiple name="require_parents" class="form-control tagsinput" id="require_parents"></select>
             </div>
         </div>
         <div class="form-group">
             <label for="require_children" class="col-md-2 control-label">Require Children</label>
             <div class="col-sm-8">
-                <select multiple type="text" name="require_children" class="form-control" data-role="tagsinput" id="require_children"></select>
+                <select multiple type="text" name="require_children" class="form-control tagsinput" id="require_children"></select>
             </div>
         </div>
         <div class="form-group">
             <label for="disallow_parents" class="col-md-2 control-label">Disallow Parents</label>
             <div class="col-sm-8">
-                <select multiple type="text" name="disallow_parents" class="form-control" data-role="tagsinput" id="require_parents"></select>
+                <select multiple type="text" name="disallow_parents" class="form-control tagsinput" id="disallow_parents"></select>
             </div>
         </div>
         <div class="form-group">
             <label for="disallow_children" class="col-md-2 control-label">Disallow Children</label>
             <div class="col-sm-8">
-                <select multiple type="text" name="disallow_children" class="form-control" data-role="tagsinput" id="disallow_children"></select>
+                <select multiple type="text" name="disallow_children" class="form-control tagsinput" id="disallow_children"></select>
             </div>
         </div>
         <div class="form-group">
@@ -280,19 +211,19 @@
         <div class="form-group">
             <label for="parsed_tags_allowed" class="col-md-2 control-label">Parsed Tags Allowed</label>
             <div class="col-sm-8">
-                <select multiple type="text" name="parsed_tags_allowed" class="form-control" data-role="tagsinput" id="parsed_tags_allowed"></select>
+                <select multiple type="text" name="parsed_tags_allowed" class="form-control tagsinput" id="parsed_tags_allowed"></select>
             </div>
         </div>
         <div class="form-group">
             <label for="autolink" class="col-md-2 control-label">Autolink</label>
             <div class="col-sm-8">
-                <input name="autolink" type="checkbox" class="form-control">
+                <input name="autolink" type="checkbox" class="form-control" id="autolink">
             </div>
         </div>
         <div class="form-group">
             <label for="no_cache" class="col-md-2 control-label">Not Cacheable</label>
             <div class="col-sm-8">
-                <input name="no_cache" type="checkbox" class="form-control">
+                <input name="no_cache" type="checkbox" class="form-control" id="no_cache">
             </div>
         </div>
         <div class="form-group" id="attr-param">
@@ -313,19 +244,19 @@
                     <div class="form-group">
                         <label for="fatal" class="col-md-2 control-label">Name</label>
                         <div class="col-sm-8">
-                            <input type="text" name="param_name[]" class="form-control">
+                            <input type="text" name="param_name[]" class="form-control param_name">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="fatal" class="col-md-2 control-label">Match (regex)</label>
                         <div class="col-sm-8">
-                            <input type="text" name="param_match[]" class="form-control">
+                            <input type="text" name="param_match[]" class="form-control param_match">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="fatal" class="col-md-2 control-label">Quoted</label>
                         <div class="col-sm-8">
-                            <select name="param_quoted[]" class="form-control">
+                            <select name="param_quoted[]" class="form-control param_quoted">
                                 <option value=""></option>
                                 <option value="required">Required</option>
                                 <option value="optional">Optional</option>
@@ -335,19 +266,19 @@
                     <div class="form-group">
                         <label for="fatal" class="col-md-2 control-label">Validate</label>
                         <div class="col-sm-8">
-                            <textarea name="param_validate[]" class="form-control"></textarea>
+                            <textarea name="param_validate[]" class="form-control param_validate"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="fatal" class="col-md-2 control-label">Value</label>
                         <div class="col-sm-8">
-                            <input type="text" name="param_value[]" class="form-control">
+                            <input type="text" name="param_value[]" class="form-control param_value">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="fatal" class="col-md-2 control-label">Optional</label>
                         <div class="col-sm-8">
-                            <input type="checkbox" name="param_optional[]" class="form-control">
+                            <input type="checkbox" name="param_optional[]" class="form-control param_optional">
                         </div>
                     </div>
                 </div>
@@ -366,6 +297,7 @@
 <script>
     $(document).ready(function() {
         var max_params      = 10;
+        var num_params      = 0;
         var wrapper         = $(".input_fields_wrap"); // fields wrapper
         var add_button      = $(".add_field_button"); // add button ID
         var param_div       = $('.params');
@@ -375,7 +307,6 @@
         // Parameters can only be used for parsed_content (0) and unparsed_content (3)
         var param_types = ['0', '3'];
 
-        var num_params = 1;
         $(add_button).click(function(e) {
             e.preventDefault();
             // Don't allow more params than allowed
@@ -395,15 +326,17 @@
             parse();
         })
 
-        /*$('input').tagsInput({
-            tagClass: 'big',
-            // return, comma, space, tab, semi-colon keys
-            // (only return and comma are working)
-            confirmKeys: [13, 44, 32, 9, 59],
-            maxTags: 20,
-            maxChars: 25,
-            trimValue: true
-        });*/
+        // Add tagsInput()
+        $('.tagsinput').each(function (){
+            $(this).tagsinput({
+                //tagClass: 'big',
+                // return, comma, space, tab, semi-colon keys
+                confirmKeys: [13, 44, 32, 9, 59],
+                maxTags: 20,
+                maxChars: 25,
+                trimValue: true
+            });
+        });
 
         // When the type changes, do stuff
         var changeType = function () {
@@ -435,7 +368,6 @@
                 $('#attr-param').hide();
             }
         };
-        changeType();
         $('#attr_type').change(changeType);
 
         var isValidTag = function(tag) {
@@ -525,6 +457,11 @@
                 bbc['self::ATTR_QUOTED'] = results.quoted;
             }
 
+            if (typeof results.no_cache !== 'undefined' && results.no_cache)
+            {
+                bbc['self::ATTR_NO_CACHE'] = true;
+            }
+
             if (typeof $('#require_parents').val() !== 'undefined' && $('#require_parents').val() !== null)
             {
                 bbc['self::ATTR_REQUIRE_PARENTS'] = $('#require_parents').val();
@@ -535,38 +472,95 @@
                 bbc['self::ATTR_REQUIRE_CHILDREN'] = $('#require_children').val();
             }
 
+            if (typeof $('#disallow_parents').val() !== 'undefined' && $('#disallow_parents').val() !== null)
+            {
+                bbc['self::ATTR_DISALLOW_PARENTS'] = $('#disallow_parents').val();
+            }
+
+            if (typeof $('#disallow_children').val() !== 'undefined' && $('#disallow_children').val() !== null)
+            {
+                bbc['self::ATTR_DISALLOW_CHILDREN'] = $('#disallow_children').val();
+            }
+
+            if (typeof $('#parsed_tags_allowed').val() !== 'undefined' && $('#parsed_tags_allowed').val() !== null)
+            {
+                bbc['self::ATTR_PARSED_TAGS_ALLOWED'] = $('#parsed_tags_allowed').val();
+            }
+
+            if (num_params > 0)
+            {
+                var param_groups = wrapper.children('.params');
+
+                bbc['self::ATTR_PARAM'] = {};
+
+                // Get each parameter group
+                param_groups.each(function(i, v) {
+                    var param = {
+                        'self::ATTR_PARAM_NAME':        $(this).find('.param_name').val(),
+                        'self::ATTR_PARAM_MATCH':       $(this).find('.param_match').val(),
+                        'self::ATTR_PARAM_QUOTED':      $(this).find('.param_quoted').val(),
+                        'self::ATTR_PARAM_VALIDATE':    $(this).find('.param_validate').val(),
+                        'self::ATTR_PARAM_VALUE':       $(this).find('.param_value').val(),
+                        'self::ATTR_PARAM_OPTIONAL':    $(this).find('.param_optional').prop('checked'),
+                    };
+
+                    // Name and match are necessary
+                    if (param['self::ATTR_PARAM_NAME'] != '' && param['self::ATTR_PARAM_MATCH'] != '')
+                    {
+                        bbc['self::ATTR_PARAM'][param['self::ATTR_PARAM_NAME']] = {};
+
+                        // Filter empty elements
+                        $.each(param, function (key, val) {
+                            if (key == 'self::ATTR_PARAM_NAME' || val == '')
+                            {
+                                return;
+                            }
+
+                            bbc['self::ATTR_PARAM'][param['self::ATTR_PARAM_NAME']][key] = val;
+                        });
+
+                        console.log(bbc);
+                    }
+                });
+            }
+
             $('#raw-results').text(JSON.stringify(bbc));
             $('#js-results').text(parse_js(results));
             $('#php-results').text(parse_php(bbc));
         };
 
         var parse_php = function (results) {
-console.log(results);
             var php = '\
 array(\n\
     ';
+            results['self::ATTR_TAG'] = '\'' + results['self::ATTR_TAG'] + '\'';
 
-            $(results).each(function (i, ele) {
-               // console.log(i);
-                php += '\t';
-                if (typeof ele === 'object')
+            jQuery.each(results, function (i, ele) {
+                php += '\t' + i + ' => ';
+
+                if (i == 'self::ATTR_PARAM')
                 {
-                    $(ele).each(function(k, v) {
-                        php += '\'' + v + '\', ';
+                    php += 'array(';
+                    jQuery.each(ele, function(param_name, param_attrs) {
+                        php += '\n\t\t\'' + param_name + '\' => array(\n';
+                        $.each(param_attrs, function (param_attr, attr_val) {
+                            php += '\t\t\t' + param_attr + ' => ' + attr_val + ',\n';
+                        });
+                        php += '\t\t),';
                     });
+                    php += '\n\t)';
                 }
-                else if (typeof ele === 'string')
-                {
-                    php += ele;
-                }
+                // string, bool, int
                 else
                 {
-                    console.log(ele);
+                    php += ele;
                 }
 
                 php += ',\n';
             });
 
+            php += '\
+);'
             return php;
         };
 
@@ -574,39 +568,68 @@ array(\n\
             return JSON.stringify(results);
         }
 
-        $('form').change(parse);
-
         $('#default_tags').change(function (){
             var tag = $(this).val();
 
-            $('.form-control').each(function () {
+            // Clean up any tags before adding new ones
+            $('.tagsinput').tagsinput('removeAll');
+
+            $('.form-control').each(function (key, val) {
                 var ele = $(this);
                 var name = ele.attr('name');
 
                 // If it doesn't have a name, it wasn't meant for this
-                if (typeof name === 'undefined')
+                if (typeof name === 'undefined' || tag == '')
                 {
                     return;
                 }
 
                 if (typeof default_tags[tag][name] !== 'undefined')
                 {
-                    ele.val(default_tags[tag][name]);
+                    //console.log(typeof default_tags[tag][name]);
+                    // All of the arrays are just simple lists
+                    if (typeof default_tags[tag][name] == 'object')
+                    {
+                        $.each(default_tags[tag][name], function (k, v){
+                            $(ele).tagsinput('add', v);
+                        });
+                    }
+                    else if (typeof default_tags[tag][name] === 'boolean')
+                    {
+                        ele.prop('checked', default_tags[tag][name]);
+                    }
+                    else
+                    {
+                        ele.val(default_tags[tag][name]);
+                    }
                 }
                 else
                 {
                     ele.val('');
                 }
             });
+
             changeType();
-            //$('input[name="tag"]').val(tag);
+        });
+
+        // Any changes to the form results in the results changing
+        $('form').change(parse);
+
+        // Populate the default tags
+        var default_tags_box = $('#default_tags');
+        $.each(default_tags, function(k, v) {
+            default_tags_box.append(
+                $('<option/>').text(k).val(k)
+            );
         });
 
         parse();
 
         prettyPrint();
 
-
+        changeType();
     });
 </script>
+
+<script src="default-tags.js"></script>
 </html>
