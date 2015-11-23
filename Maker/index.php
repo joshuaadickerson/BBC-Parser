@@ -94,6 +94,7 @@ function validateValues(array &$values, &$errors)
     // autolink is bool
     // disabled is bool
     // no_cache is bool
+    // test is only for *equals
 }
 
 function filterTagList(array $tags)
