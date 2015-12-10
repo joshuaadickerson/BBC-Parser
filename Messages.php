@@ -1,6 +1,6 @@
 <?php
 /**
- * The test messags.
+ * The test messages.
  * Generally, they go from less to more complex.
  *
  * This should result in the same messages for every call. So don't put any randomization in this.
@@ -219,6 +219,9 @@ return array(
 	'[url]www.ñchan.org[/url]',
 	'www.ñchan.org',
 	'http://www.ñchan.org',
+
+	// https://github.com/SimpleMachines/SMF2.1/issues/3106
+	'[list][li]Test[/li][li]More[code]Some COde[/code][/li][/list]',
 
 	// Long messages (put last so I don't have to see them) These usually take too long to run
 	// A really long message but without bbc
