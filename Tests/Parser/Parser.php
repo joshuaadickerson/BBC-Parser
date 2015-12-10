@@ -84,6 +84,25 @@ class Parser
 	}
 
 	/**
+	 * Check if the message has BBC
+	 */
+	public function hasBBC()
+	{
+
+	}
+
+	/**
+	 * Check if the message could possibly contain BBC
+	 */
+	public function hasPossibleBBC()
+	{
+		// Does it have a [
+		// Does it have a ]
+		// Is the ] after the [
+		// Is the difference >= 1
+	}
+
+	/**
 	 * Parse the BBC in a string/message
 	 *
 	 * @param string $message
@@ -92,6 +111,10 @@ class Parser
 	 */
 	public function parse($message)
 	{
+		// The parser allows you to check some things about the message.
+		// If you move this later, you might be talking about the last message.
+		$this->resetParser();
+
 		call_integration_hook('integrate_pre_parsebbc', array(&$message, $this->bbc));
 
 		// Don't waste cycles
@@ -106,14 +129,12 @@ class Parser
 		// @todo remove from here and make the caller figure it out
 		if (!$this->parsingEnabled())
 		{
-			call_integration_hook('integrate_bbc_parsing_disabled', array($message, $this->bbc));
+			call_integration_hook('integrate_bbc_parsing_disabled', array(&$message, $this->bbc));
 			return $message;
 		}
 
 		$this->message = $message;
 		unset($message);
-
-		$this->resetParser();
 
 		// @todo change this to <br> (it will break tests)
 		$this->message = str_replace("\n", '<br />', $this->message);
