@@ -52,6 +52,8 @@ class Parser
 	protected $num_footnotes = 0;
 	protected $smiley_marker = "\r";
 
+	protected $html_enabled = false;
+
 	/**
 	 * @param \BBC\Codes $bbc
 	 */
@@ -81,6 +83,7 @@ class Parser
 		$this->lastAutoPos = 0;
 		$this->can_cache = true;
 		$this->num_footnotes = 0;
+		$this->has_bbc = false;
 	}
 
 	/**
@@ -88,7 +91,7 @@ class Parser
 	 */
 	public function hasBBC()
 	{
-
+		return $this->has_bbc;
 	}
 
 	/**
@@ -100,6 +103,16 @@ class Parser
 		// Does it have a ]
 		// Is the ] after the [
 		// Is the difference >= 1
+	}
+
+	/**
+	 * Set whether HTML can be parsed
+	 *
+	 * @param bool $toggle
+	 */
+	public function canParseHTML($toggle)
+	{
+		$this->html_enabled = (bool) $toggle;
 	}
 
 	/**
@@ -142,7 +155,7 @@ class Parser
 		// Check if the message might have a link or email to save a bunch of parsing in autolink()
 		$this->autolinker->setPossibleAutolink($this->message);
 
-		$this->possible_html = !empty($GLOBALS['modSettings']['enablePostHTML']) && strpos($this->message, '&lt;') !== false;
+		$this->possible_html = $this->html_enabled && strpos($this->message, '&lt;') !== false;
 
 		// Don't load the HTML Parser unless we have to
 		if ($this->possible_html && $this->html_parser === null)
@@ -433,15 +446,8 @@ class Parser
 	}
 
 	/**
-	 * Check if parsing is enabled
-	 *
-	 * @return bool
+	 * Load the HTML parser
 	 */
-	public function parsingEnabled()
-	{
-		return !empty($GLOBALS['modSettings']['enableBBC']);
-	}
-
 	public function loadHtmlParser()
 	{
 		$parser = new HtmlParser;
@@ -518,16 +524,16 @@ class Parser
 			}
 
 			// The character after the possible tag or nothing
-			$next_c = isset($this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]]) ? $this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]] : '';
+			$next_char = isset($this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]]) ? $this->message[$this->pos + 1 + $possible[Codes::ATTR_LENGTH]] : '';
 
 			// This only happens if the tag is the last character of the string
-			if ($next_c === '')
+			if ($next_char === '')
 			{
 				break;
 			}
 
 			// The next character must be one of these or it's not a tag
-			if ($next_c !== ' ' && $next_c !== ']' && $next_c !== '=' && $next_c !== '/')
+			if ($next_char !== ' ' && $next_char !== ']' && $next_char !== '=' && $next_char !== '/')
 			{
 				$last_check = $possible[Codes::ATTR_TAG];
 				continue;
@@ -542,7 +548,7 @@ class Parser
 
 			// @todo maybe sort the BBC by length descending. If the message stub is a tag and the length changes, no need to continue. Just break by this point.
 
-			$tag = $this->checkCodeAttributes($next_c, $possible, $tag);
+			$tag = $this->checkCodeAttributes($next_char, $possible, $tag);
 			if($tag === null)
 			{
 				continue;
@@ -576,9 +582,9 @@ class Parser
 	}
 
 	/**
-	 * @param array $tag
+	 * @param array &$code
 	 */
-	protected function alternateQuoteStyle(array &$tag)
+	protected function alternateQuoteStyle(array &$code)
 	{
 		// Start with standard
 		$quote_alt = false;
@@ -600,20 +606,20 @@ class Parser
 		//  - Example: class="bbc_quote" and class="bbc_quote alt_quote".
 		// This would mean simpler CSS for themes (like default) which do not use the alternate styling,
 		// but would still allow it for themes that want it.
-		$tag[Codes::ATTR_BEFORE] = str_replace('<blockquote>', '<blockquote class="bbc_' . ($quote_alt ? 'alternate' : 'standard') . '_quote">', $tag[Codes::ATTR_BEFORE]);
+		$code[Codes::ATTR_BEFORE] = str_replace('<blockquote>', '<blockquote class="bbc_' . ($quote_alt ? 'alternate' : 'standard') . '_quote">', $code[Codes::ATTR_BEFORE]);
 	}
 
 	/**
-	 * @param $next_c
+	 * @param string $next_char
 	 * @param array $possible
 	 * @return array|void
 	 */
-	protected function checkCodeAttributes($next_c, array $possible)
+	protected function checkCodeAttributes($next_char, array $possible)
 	{
 		// Do we want parameters?
 		if (!empty($possible[Codes::ATTR_PARAM]))
 		{
-			if ($next_c !== ' ')
+			if ($next_char !== ' ')
 			{
 				return;
 			}
@@ -621,7 +627,7 @@ class Parser
 		// parsed_content demands an immediate ] without parameters!
 		elseif ($possible[Codes::ATTR_TYPE] === Codes::TYPE_PARSED_CONTENT)
 		{
-			if ($next_c !== ']')
+			if ($next_char !== ']')
 			{
 				return;
 			}
@@ -629,12 +635,12 @@ class Parser
 		else
 		{
 			// Do we need an equal sign?
-			if ($next_c !== '=' && in_array($possible[Codes::ATTR_TYPE], array(Codes::TYPE_UNPARSED_EQUALS, Codes::TYPE_UNPARSED_COMMAS, Codes::TYPE_UNPARSED_COMMAS_CONTENT, Codes::TYPE_UNPARSED_EQUALS_CONTENT, Codes::TYPE_PARSED_EQUALS)))
+			if ($next_char !== '=' && in_array($possible[Codes::ATTR_TYPE], array(Codes::TYPE_UNPARSED_EQUALS, Codes::TYPE_UNPARSED_COMMAS, Codes::TYPE_UNPARSED_COMMAS_CONTENT, Codes::TYPE_UNPARSED_EQUALS_CONTENT, Codes::TYPE_PARSED_EQUALS)))
 			{
 				return;
 			}
 
-			if ($next_c !== ']')
+			if ($next_char !== ']')
 			{
 				// An immediate ]?
 				if ($possible[Codes::ATTR_TYPE] === Codes::TYPE_UNPARSED_CONTENT)
@@ -694,15 +700,17 @@ class Parser
 		// This is long, but it makes things much easier and cleaner.
 		if (!empty($possible[Codes::ATTR_PARAM]))
 		{
-			$match = $this->matchParameters($possible, $matches);
+			$matches = $this->matchParameters($possible);
 
 			// Didn't match our parameter list, try the next possible.
-			if (!$match)
+			if ($matches === array())
 			{
 				return;
 			}
 
-			return $this->setupTagParameters($possible, $matches);
+			$this->param_start_pos += strlen($matches[0]) - 1;
+
+			return $this->setupTagParameters($this->getParameters($possible, $matches));
 		}
 
 		return $possible;
@@ -726,16 +734,9 @@ class Parser
 		// First let's set up the tree: it needs to be in a list, or after an li.
 		if ($this->inside_tag === null || ($this->inside_tag[Codes::ATTR_TAG] !== 'list' && $this->inside_tag[Codes::ATTR_TAG] !== 'li'))
 		{
-			$list_code = array(
-				Codes::ATTR_TAG => 'list',
-				Codes::ATTR_TYPE => Codes::TYPE_PARSED_CONTENT,
-				Codes::ATTR_AFTER => '</ul>',
-				Codes::ATTR_BLOCK_LEVEL => true,
-				Codes::ATTR_REQUIRE_CHILDREN => array('li' => 'li'),
-				Codes::ATTR_DISALLOW_CHILDREN => isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) ? $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN] : null,
-				Codes::ATTR_LENGTH => 4,
-				Codes::ATTR_AUTOLINK => true,
-			);
+			$list_code = $this->bbc->itemCodeList();
+			$list_code[Codes::ATTR_DISALLOW_CHILDREN] = isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) ? $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN] : null;
+
 			$this->addOpenTag($list_code);
 			$code = '<ul' . ($tag === '' ? '' : ' style="list-style-type: ' . $tag . '"') . ' class="bbc_list">';
 		}
@@ -751,16 +752,8 @@ class Parser
 		}
 
 		// Now we open a new tag.
-		$li_code = array(
-			Codes::ATTR_TAG => 'li',
-			Codes::ATTR_TYPE => Codes::TYPE_PARSED_CONTENT,
-			Codes::ATTR_AFTER => '</li>',
-			Codes::ATTR_TRIM => Codes::TRIM_OUTSIDE,
-			Codes::ATTR_BLOCK_LEVEL => true,
-			Codes::ATTR_DISALLOW_CHILDREN => isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) ? $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN] : null,
-			Codes::ATTR_AUTOLINK => true,
-			Codes::ATTR_LENGTH => 2,
-		);
+		$li_code = $this->bbc->itemCodeListItem();
+		$li_code[Codes::ATTR_DISALLOW_CHILDREN] = isset($this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN]) ? $this->inside_tag[Codes::ATTR_DISALLOW_CHILDREN] : null;
 		$this->addOpenTag($li_code);
 
 		// First, open the tag...
@@ -1197,7 +1190,7 @@ class Parser
 
 	/**
 	 * Parse a tag that is disabled
-	 * @param array $tag
+	 * @param array &$tag
 	 */
 	protected function handleDisabled(array &$tag)
 	{
@@ -1221,10 +1214,9 @@ class Parser
 	// @todo change to returning matches. If array() continue
 	/**
 	 * @param array &$possible
-	 * @param array &$matches
-	 * @return bool
+	 * @return array matches
 	 */
-	protected function matchParameters(array &$possible, &$matches)
+	protected function matchParameters(array &$possible)
 	{
 		if (!isset($possible['regex_cache']))
 		{
@@ -1287,7 +1279,7 @@ class Parser
 			$match = preg_match($match_preg, $message_stub, $matches) !== 0;
 		} while (!$match && --$max_iterations && ($keys = pc_next_permutation($keys, $possible['regex_size'])));
 
-		return $match;
+		return $match ? $matches : array();
 	}
 
 	/**
@@ -1417,26 +1409,45 @@ class Parser
 	}
 
 	/**
-	 * @param array $possible
+	 * @param array $code
 	 * @param array $matches
 	 *
 	 * @return array
 	 */
-	protected function setupTagParameters(array $possible, array $matches)
+	protected function setupTagParameters(array $params)
+	{
+		// Put the parameters into the string.
+		if (isset($code[Codes::ATTR_BEFORE]))
+		{
+			$code[Codes::ATTR_BEFORE] = strtr($code[Codes::ATTR_BEFORE], $params);
+		}
+		if (isset($code[Codes::ATTR_AFTER]))
+		{
+			$code[Codes::ATTR_AFTER] = strtr($code[Codes::ATTR_AFTER], $params);
+		}
+		if (isset($code[Codes::ATTR_CONTENT]))
+		{
+			$code[Codes::ATTR_CONTENT] = strtr($code[Codes::ATTR_CONTENT], $params);
+		}
+
+		return $code;
+	}
+
+	protected function getParameters(array $code, array $matches)
 	{
 		$params = array();
 		for ($i = 1, $n = count($matches); $i < $n; $i += 2)
 		{
 			$key = strtok(ltrim($matches[$i]), '=');
 
-			if (isset($possible[Codes::ATTR_PARAM][$key][Codes::PARAM_ATTR_VALUE]))
+			if (isset($code[Codes::ATTR_PARAM][$key][Codes::PARAM_ATTR_VALUE]))
 			{
-				$params['{' . $key . '}'] = strtr($possible[Codes::ATTR_PARAM][$key][Codes::PARAM_ATTR_VALUE], array('$1' => $matches[$i + 1]));
+				$params['{' . $key . '}'] = strtr($code[Codes::ATTR_PARAM][$key][Codes::PARAM_ATTR_VALUE], array('$1' => $matches[$i + 1]));
 			}
 			// @todo it's not validating it. it is filtering it
-			elseif (isset($possible[Codes::ATTR_PARAM][$key][Codes::ATTR_VALIDATE]))
+			elseif (isset($code[Codes::ATTR_PARAM][$key][Codes::ATTR_VALIDATE]))
 			{
-				$params['{' . $key . '}'] = $possible[Codes::ATTR_PARAM][$key][Codes::ATTR_VALIDATE]($matches[$i + 1]);
+				$params['{' . $key . '}'] = $code[Codes::ATTR_PARAM][$key][Codes::ATTR_VALIDATE]($matches[$i + 1]);
 			}
 			else
 			{
@@ -1447,7 +1458,7 @@ class Parser
 			$params['{' . $key . '}'] = str_replace(array('$', '{'), array('&#036;', '&#123;'), $params['{' . $key . '}']);
 		}
 
-		foreach ($possible[Codes::ATTR_PARAM] as $p => $info)
+		foreach ($code[Codes::ATTR_PARAM] as $p => $info)
 		{
 			if (!isset($params['{' . $p . '}']))
 			{
@@ -1455,26 +1466,7 @@ class Parser
 			}
 		}
 
-		// We found our tag
-		$tag = $possible;
-
-		// Put the parameters into the string.
-		if (isset($tag[Codes::ATTR_BEFORE]))
-		{
-			$tag[Codes::ATTR_BEFORE] = strtr($tag[Codes::ATTR_BEFORE], $params);
-		}
-		if (isset($tag[Codes::ATTR_AFTER]))
-		{
-			$tag[Codes::ATTR_AFTER] = strtr($tag[Codes::ATTR_AFTER], $params);
-		}
-		if (isset($tag[Codes::ATTR_CONTENT]))
-		{
-			$tag[Codes::ATTR_CONTENT] = strtr($tag[Codes::ATTR_CONTENT], $params);
-		}
-
-		$this->param_start_pos += strlen($matches[0]) - 1;
-
-		return $tag;
+		return $params;
 	}
 
 	/**

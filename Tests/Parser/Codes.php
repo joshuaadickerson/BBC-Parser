@@ -434,4 +434,30 @@ class Codes
 			$data = 'http://' . $data;
 		}
 	}
+
+	public function itemCodeList()
+	{
+		return array(
+			Codes::ATTR_TAG => 'list',
+			Codes::ATTR_TYPE => Codes::TYPE_PARSED_CONTENT,
+			Codes::ATTR_AFTER => '</ul>',
+			Codes::ATTR_BLOCK_LEVEL => true,
+			Codes::ATTR_REQUIRE_CHILDREN => array('li' => 1),
+			Codes::ATTR_LENGTH => 4,
+			Codes::ATTR_AUTOLINK => true,
+		);
+	}
+
+	public function itemCodeListItem()
+	{
+		return array(
+			Codes::ATTR_TAG => 'li',
+			Codes::ATTR_TYPE => Codes::TYPE_PARSED_CONTENT,
+			Codes::ATTR_AFTER => '</li>',
+			Codes::ATTR_TRIM => Codes::TRIM_OUTSIDE,
+			Codes::ATTR_BLOCK_LEVEL => true,
+			Codes::ATTR_AUTOLINK => true,
+			Codes::ATTR_LENGTH => 2,
+		);
+	}
 }
