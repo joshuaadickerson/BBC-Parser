@@ -24,6 +24,6 @@ class Message95 implements MessageInterface
 
     public static function output()
     {
-        return '[url=http://&quot;http://www.google.com&quot;]quoted url[/url]';
+        return '<a href=\"http://&quot;http://www.google.com&quot;\" class=\"bbc_link\" target=\"_blank\">quoted url</a>';
     }
 }

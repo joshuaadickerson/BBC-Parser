@@ -24,6 +24,6 @@ class Message9 implements MessageInterface
 
     public static function output()
     {
-        return '[i]Italics[/i]';
+        return '<em>Italics</em>';
     }
 }

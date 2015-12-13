@@ -24,6 +24,6 @@ class Message126 implements MessageInterface
 
     public static function output()
     {
-        return '[url=http://www.ñchan.org]www.ñchan.org[/url]';
+        return '<a href=\"http://www.ñchan.org\" class=\"bbc_link\" target=\"_blank\">www.ñchan.org</a>';
     }
 }

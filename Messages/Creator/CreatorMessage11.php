@@ -24,6 +24,6 @@ class Message11 implements MessageInterface
 
     public static function output()
     {
-        return '[s]Strike through[/s]';
+        return '<del>Strike through</del>';
     }
 }

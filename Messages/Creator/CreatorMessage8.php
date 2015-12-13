@@ -24,6 +24,6 @@ class Message8 implements MessageInterface
 
     public static function output()
     {
-        return '[b]Bold[/b]';
+        return '<strong class=\"bbc_strong\">Bold</strong>';
     }
 }

@@ -24,6 +24,6 @@ class Message105 implements MessageInterface
 
     public static function output()
     {
-        return '[left]Left Curabitur tincidunt, lacus eget iaculis tincidunt, elit libero iaculis arcu, eleifend condimentum sem est quis dolor. Curabitur sed tellus. Donec id dolor.[/left]';
+        return '<div style=\"text-align: left;\">Left Curabitur tincidunt, lacus eget iaculis tincidunt, elit libero iaculis arcu, eleifend condimentum sem est quis dolor. Curabitur sed tellus. Donec id dolor.</div>';
     }
 }

@@ -24,6 +24,6 @@ class Message39 implements MessageInterface
 
     public static function output()
     {
-        return '[size=1]BIG E[/size]';
+        return '<span style=\"font-size: 0.7em;\" class=\"bbc_size\">BIG E</span>';
     }
 }

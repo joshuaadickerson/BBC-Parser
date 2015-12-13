@@ -24,6 +24,6 @@ class Message4 implements MessageInterface
 
     public static function output()
     {
-        return ' ';
+        return '&nbsp;';
     }
 }

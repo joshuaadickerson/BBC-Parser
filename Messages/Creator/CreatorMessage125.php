@@ -24,6 +24,6 @@ class Message125 implements MessageInterface
 
     public static function output()
     {
-        return '[size=2]inside size[size=3] - and now even deeper [/size] pull back a little.[/size]';
+        return '<span style=\"font-size: 1em;\" class=\"bbc_size\">inside size<span> - and now even deeper </span> pull back a little.</span>';
     }
 }

@@ -24,6 +24,6 @@ class Message44 implements MessageInterface
 
     public static function output()
     {
-        return '[list type=decimal][li]simple[/li][li]list[/li][/list]';
+        return '<ul class=\"bbc_list\" style=\"list-style-type: decimal;\"><li>simple</li><li>list</li></ul>';
     }
 }

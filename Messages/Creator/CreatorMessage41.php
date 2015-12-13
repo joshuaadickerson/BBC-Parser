@@ -24,6 +24,6 @@ class Message41 implements MessageInterface
 
     public static function output()
     {
-        return '[list][li]short list[/li][li]to do[/li][li]growing[/li][/list]';
+        return '<ul class=\"bbc_list\"><li>short list</li><li>to do</li><li>growing</li></ul>';
     }
 }

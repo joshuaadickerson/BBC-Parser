@@ -24,6 +24,6 @@ class Message73 implements MessageInterface
 
     public static function output()
     {
-        return '[url=http://www.google.com/]test www.elkarte.net test[/url]';
+        return '<a href=\"http://www.google.com/\" class=\"bbc_link\" target=\"_blank\">test www.elkarte.net test</a>';
     }
 }

@@ -24,6 +24,6 @@ class Message118 implements MessageInterface
 
     public static function output()
     {
-        return '[u][i]Why do you do this to yourself?[/u][/i]';
+        return '<span class=\"bbc_u\"><em>Why do you do this to yourself?</em></span>[/i]';
     }
 }

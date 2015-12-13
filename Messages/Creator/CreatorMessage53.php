@@ -24,6 +24,6 @@ class Message53 implements MessageInterface
 
     public static function output()
     {
-        return '[quote author=Gates]Measuring programming progress by lines of code is like measuring aircraft building progress by weight.[/quote]';
+        return '<div class=\"quoteheader\">: Gates</div><blockquote class=\"bbc_standard_quote\">Measuring programming progress by lines of code is like measuring aircraft building progress by weight.</blockquote>';
     }
 }

@@ -24,6 +24,6 @@ class Message89 implements MessageInterface
 
     public static function output()
     {
-        return '[color=DarkSlateBlue]this is colored![/color]';
+        return '<span style=\"color: DarkSlateBlue;\" class=\"bbc_color\">this is colored!</span>';
     }
 }

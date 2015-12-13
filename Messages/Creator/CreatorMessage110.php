@@ -24,6 +24,6 @@ class Message110 implements MessageInterface
 
     public static function output()
     {
-        return '[code]I [b]am[/b] a robot [quote]bee boo bee boop[/quote][/code]';
+        return '<div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">I [b]am[/b] a robot [quote]bee boo bee boop[/quote]</pre>';
     }
 }

@@ -24,6 +24,6 @@ class Message103 implements MessageInterface
 
     public static function output()
     {
-        return '[tt]Teletype Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec elit. Fusce eget enim. Nullam tellus felis, sodales nec, sodales ac, commodo eu, ante.[/tt]';
+        return '<span class=\"bbc_tt\">Teletype Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec elit. Fusce eget enim. Nullam tellus felis, sodales nec, sodales ac, commodo eu, ante.</span>';
     }
 }

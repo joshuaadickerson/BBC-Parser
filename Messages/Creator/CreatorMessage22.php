@@ -24,6 +24,6 @@ class Message22 implements MessageInterface
 
     public static function output()
     {
-        return 'This one is sneaky: [/] [ /] [&nbsp; /] [&nbsp;  /]';
+        return 'This one is sneaky: [/] [ /] [&nbsp; /] [&nbsp;&nbsp; /]';
     }
 }

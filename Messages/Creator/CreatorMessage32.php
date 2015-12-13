@@ -32,6 +32,6 @@ break';
 
     public static function output()
     {
-        return 'Everyone<br />[code]<br />gets a line<br />[/code]<br />break';
+        return 'Everyone<br /><div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">gets a line<br /></pre>break';
     }
 }

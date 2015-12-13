@@ -34,6 +34,6 @@ class Message114 implements MessageInterface
 
     public static function output()
     {
-        return '[code]email@domain.com<br />	:]&nbsp;  :/ >[ :p&nbsp; >_><br /><br />	:happy: :aw: :cool: :kiss: :meh: :mmf: :heart:<br /><br />	[/code]';
+        return '<div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">email@domain.com<br /><span class=\"tab\">	</span>:]&nbsp;&nbsp; :/ >[ :p&nbsp; >_><br /><br /><span class=\"tab\">	</span>:happy: :aw: :cool: :kiss: :meh: :mmf: :heart:<br /><br /><span class=\"tab\">	</span></pre>';
     }
 }

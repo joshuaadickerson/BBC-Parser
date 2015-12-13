@@ -24,6 +24,6 @@ class Message51 implements MessageInterface
 
     public static function output()
     {
-        return '[quote]If at first you do not succeed; call it version 1.0[/quote]';
+        return '<div class=\"quoteheader\"></div><blockquote class=\"bbc_standard_quote\">If at first you do not succeed; call it version 1.0</blockquote>';
     }
 }

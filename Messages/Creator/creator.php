@@ -26,6 +26,8 @@ $smiley_parser = new \BBC\SmileyParser;
 // Preparser
 require_once '../../PreparserTests/OldPreparser/OldPreParser.php';
 
+$GLOBALS['modSettings']['enableBBC'] = true;
+
 foreach ($messages as $i => $input)
 {
     $class_name = 'Message' . $i;

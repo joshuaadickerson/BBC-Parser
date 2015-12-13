@@ -24,6 +24,6 @@ class Message30 implements MessageInterface
 
     public static function output()
     {
-        return '[url=http://www.google.com]Google[/url]. Basic unparsed equals';
+        return '<a href=\"http://www.google.com\" class=\"bbc_link\" target=\"_blank\">Google</a>. Basic unparsed equals';
     }
 }

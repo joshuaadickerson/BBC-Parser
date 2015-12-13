@@ -24,6 +24,6 @@ class Message54 implements MessageInterface
 
     public static function output()
     {
-        return '[quote]Some[quote]basic[/quote]nesting[/quote]';
+        return '<div class=\"quoteheader\"></div><blockquote class=\"bbc_standard_quote\">Some<div class=\"quoteheader\"></div><blockquote class=\"bbc_alternate_quote\">basic</blockquote>nesting</blockquote>';
     }
 }

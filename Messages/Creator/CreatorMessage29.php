@@ -24,6 +24,6 @@ class Message29 implements MessageInterface
 
     public static function output()
     {
-        return '[b]This statement is bold[/b]';
+        return '<strong class=\"bbc_strong\">This statement is bold</strong>';
     }
 }

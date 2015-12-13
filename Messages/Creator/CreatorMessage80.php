@@ -24,6 +24,6 @@ class Message80 implements MessageInterface
 
     public static function output()
     {
-        return '[url=http://www.yahoo.com]another URL[/url] in it![/url]';
+        return '<a href=\"http://www.yahoo.com\" class=\"bbc_link\" target=\"_blank\">another URL</a> in it![/url]';
     }
 }

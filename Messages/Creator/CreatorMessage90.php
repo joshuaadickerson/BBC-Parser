@@ -24,6 +24,6 @@ class Message90 implements MessageInterface
 
     public static function output()
     {
-        return '[size=4]Font Family[/size]';
+        return '<span style=\"font-size: 1.45em;\" class=\"bbc_size\">Font Family</span>';
     }
 }

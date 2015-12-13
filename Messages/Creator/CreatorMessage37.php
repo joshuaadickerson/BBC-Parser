@@ -24,6 +24,6 @@ class Message37 implements MessageInterface
 
     public static function output()
     {
-        return '[br][hr][br /][hr /]';
+        return '<br /><hr /><br /><hr />';
     }
 }

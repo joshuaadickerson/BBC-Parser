@@ -24,6 +24,6 @@ class Message74 implements MessageInterface
 
     public static function output()
     {
-        return '[url=http://www.elkarte.org/community/index.php [^]]ask us for assistance[/url]';
+        return '<a href=\"http://www.elkarte.org/community/index.php [^\" class=\"bbc_link\" target=\"_blank\">]ask us for assistance</a>';
     }
 }

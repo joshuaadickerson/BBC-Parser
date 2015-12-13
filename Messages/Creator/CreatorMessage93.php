@@ -24,6 +24,6 @@ class Message93 implements MessageInterface
 
     public static function output()
     {
-        return '[font=Monospace]Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.[/font]';
+        return '<span style=\"font-family: Monospace;\" class=\"bbc_font\">Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.</span>';
     }
 }

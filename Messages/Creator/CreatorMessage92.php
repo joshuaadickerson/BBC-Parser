@@ -24,6 +24,6 @@ class Message92 implements MessageInterface
 
     public static function output()
     {
-        return '[font=Tahoma]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]';
+        return '<span style=\"font-family: Tahoma;\" class=\"bbc_font\">Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.</span>';
     }
 }

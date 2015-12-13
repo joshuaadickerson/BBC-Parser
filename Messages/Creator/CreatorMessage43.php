@@ -24,6 +24,6 @@ class Message43 implements MessageInterface
 
     public static function output()
     {
-        return '[list][li]I[/li][li]feel[list][li]like[/li][/list][li]Santa[/li][/list]';
+        return '<ul class=\"bbc_list\"><li>I</li><li>feel<ul class=\"bbc_list\"><li>like</li></ul>[li]Santa</li></ul>';
     }
 }

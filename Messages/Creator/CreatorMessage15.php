@@ -24,6 +24,6 @@ class Message15 implements MessageInterface
 
     public static function output()
     {
-        return '[sup]Super[/sup]-[sub]sub[/sub]-script';
+        return '<sup>Super</sup>-<sub>sub</sub>-script';
     }
 }

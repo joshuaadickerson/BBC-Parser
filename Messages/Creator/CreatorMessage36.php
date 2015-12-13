@@ -24,6 +24,6 @@ class Message36 implements MessageInterface
 
     public static function output()
     {
-        return '[nobbc]&#91;b&#93;please do not parse this&#91;/b&#93;[/nobbc]';
+        return '&#91;b&#93;please do not parse this&#91;/b&#93;';
     }
 }

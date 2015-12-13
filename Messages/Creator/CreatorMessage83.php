@@ -24,6 +24,6 @@ class Message83 implements MessageInterface
 
     public static function output()
     {
-        return '[color=red]red[/color][color=green]green[/color][color=blue]blue[/color]';
+        return '<span style=\"color: red;\" class=\"bbc_color\">red</span><span style=\"color: green;\" class=\"bbc_color\">green</span><span style=\"color: blue;\" class=\"bbc_color\">blue</span>';
     }
 }

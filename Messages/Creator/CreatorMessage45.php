@@ -24,6 +24,6 @@ class Message45 implements MessageInterface
 
     public static function output()
     {
-        return '[table][tr][td]remember[/td][td]frontpage?[/td][/tr][/table]';
+        return '<div class=\"bbc_table_container\"><table class=\"bbc_table\"><tr><td>remember</td><td>frontpage?</td></tr></table></div>';
     }
 }

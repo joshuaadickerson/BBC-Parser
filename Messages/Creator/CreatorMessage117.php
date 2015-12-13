@@ -24,6 +24,6 @@ class Message117 implements MessageInterface
 
     public static function output()
     {
-        return '[i]lets go for italics';
+        return '<em>lets go for italics</em>';
     }
 }

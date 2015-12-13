@@ -24,6 +24,6 @@ class Message77 implements MessageInterface
 
     public static function output()
     {
-        return '[email=jack@theripper.com]www.bing.com[/email]';
+        return '<a href=\"mailto:jack@theripper.com\" class=\"bbc_email\">www.bing.com</a>';
     }
 }

@@ -24,6 +24,6 @@ class Message94 implements MessageInterface
 
     public static function output()
     {
-        return '[font=Times]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]';
+        return '<span style=\"font-family: Times;\" class=\"bbc_font\">Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.</span>';
     }
 }

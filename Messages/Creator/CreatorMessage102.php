@@ -24,6 +24,6 @@ class Message102 implements MessageInterface
 
     public static function output()
     {
-        return '[center]Center Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam laoreet pulvinar sem. Aenean at odio.[/center]';
+        return '<div class=\"centertext\">Center Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam laoreet pulvinar sem. Aenean at odio.</div>';
     }
 }

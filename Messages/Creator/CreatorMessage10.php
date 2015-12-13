@@ -24,6 +24,6 @@ class Message10 implements MessageInterface
 
     public static function output()
     {
-        return '[u]Underline[/u]';
+        return '<span class=\"bbc_u\">Underline</span>';
     }
 }

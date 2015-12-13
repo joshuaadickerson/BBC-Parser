@@ -24,6 +24,6 @@ class Message109 implements MessageInterface
 
     public static function output()
     {
-        return 'You\\n[code=me]\\nget 1\\n[/code]and [code]\\nyou get one[/code]';
+        return 'You\\n<div class=\"codeheader\">: (me) <a href=\"#\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">\\nget 1\\n</pre>and <div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">\\nyou get one</pre>';
     }
 }

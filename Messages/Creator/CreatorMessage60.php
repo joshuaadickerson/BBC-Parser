@@ -26,6 +26,6 @@ class Message60 implements MessageInterface
 
     public static function output()
     {
-        return '[*]one dot<br />[*]two dots';
+        return '<ul style=\"list-style-type: disc\" class=\"bbc_list\"><li>one dot</li><li>two dots</li></ul>';
     }
 }

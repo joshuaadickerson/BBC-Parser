@@ -24,6 +24,6 @@ class Message119 implements MessageInterface
 
     public static function output()
     {
-        return '[u][quote]should not get underlined[/quote][/u]';
+        return '<span class=\"bbc_u\"></span><div class=\"quoteheader\"></div><blockquote class=\"bbc_standard_quote\">should not get underlined</blockquote>[/u]';
     }
 }

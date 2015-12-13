@@ -26,6 +26,6 @@ and understanding economics can help you make better www.decisio.ns and lead a h
 
     public static function output()
     {
-        return '[quote]Economics is [b]everywhere[/b] <img src=\"//smiley.gif\" alt=\"&#58;&#41;\" title=\"\" class=\"smiley\" /><br />and understanding economics can help you make better www.decisio.ns and lead a happier life.[/quote]';
+        return '<div class=\"quoteheader\"></div><blockquote class=\"bbc_standard_quote\">Economics is <strong class=\"bbc_strong\">everywhere</strong> <img src=\"//smiley.gif\" alt=\"&#58;&#41;\" title=\"\" class=\"smiley\" /><br />and understanding economics can help you make better www.decisio.ns and lead a happier life.</blockquote>';
     }
 }

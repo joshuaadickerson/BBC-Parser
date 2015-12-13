@@ -24,6 +24,6 @@ class Message86 implements MessageInterface
 
     public static function output()
     {
-        return '[color=#f66]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/color]';
+        return '<span style=\"color: #f66;\" class=\"bbc_color\">Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.</span>';
     }
 }

@@ -24,6 +24,6 @@ class Message98 implements MessageInterface
 
     public static function output()
     {
-        return '[quote=&quot;[u]underline[/u]]&quot;]this is weird[/quote]';
+        return '<div class=\"quoteheader\">: [u]underline[/u]]</div><blockquote class=\"bbc_standard_quote\">this is weird</blockquote>';
     }
 }

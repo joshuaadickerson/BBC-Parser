@@ -24,6 +24,6 @@ class Message91 implements MessageInterface
 
     public static function output()
     {
-        return '[font=Arial]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/font]';
+        return '<span style=\"font-family: Arial;\" class=\"bbc_font\">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</span>';
     }
 }
