@@ -254,6 +254,25 @@ class DefaultCodes extends Codes
                 self::ATTR_AUTOLINK => true,
                 self::ATTR_LENGTH => 8,
             ),
+            // This won't get run, it's just for testing.
+            array(
+                self::ATTR_TAG => 'footnote',
+                self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
+                self::ATTR_BEFORE => '<sup class="bbc_footnotes">%fn%',
+                self::ATTR_AFTER => '%fn%</sup>',
+                self::ATTR_DISALLOW_PARENTS => array(
+                    'footnote' => 1,
+                    'code'     => 1,
+                    'anchor'   => 1,
+                    'url'      => 1,
+                    'iurl'     => 1,
+                ),
+                self::ATTR_DISALLOW_BEFORE => '',
+                self::ATTR_DISALLOW_AFTER => '',
+                self::ATTR_BLOCK_LEVEL => true,
+                self::ATTR_AUTOLINK => true,
+                self::ATTR_LENGTH => 8,
+            ),
         );
     }
 

@@ -136,6 +136,7 @@ class SmileyParser
 		$this->setSearchReplace($smileysfrom, $smileysto, $smileysdescs);
 	}
 
+	// @todo move to Smileys.php and combine with Editors.subs.php ($context['smileys']['postform'][])
 	protected function getDefault()
 	{
 		global $txt;

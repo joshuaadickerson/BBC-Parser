@@ -141,6 +141,8 @@ class Codes
 	 * If the message contains a code with this, the message should not be cached
 	 */
 	const ATTR_NO_CACHE = 25;
+	/** Count the tags */
+	const ATTR_TRACK_CONTENT = 26;
 
 	/** [tag]parsed content[/tag] */
 	const TYPE_PARSED_CONTENT = 0;
@@ -260,7 +262,18 @@ class Codes
 
 		call_integration_hook('integrate_item_codes', array(&$item_codes));
 
+		$this->itemcodes = $item_codes;
 		return $item_codes;
+	}
+
+	public function getItemCode($char)
+	{
+		if ($this->itemcodes === array())
+		{
+			$this->getItemCodes();
+		}
+
+		return isset($this->itemcodes[$char]) ? $this->itemcodes[$char] : null;
 	}
 
 	public function getCodes()
@@ -295,8 +308,13 @@ class Codes
 
 	// @todo besides the itemcodes (just add a arg $with_itemcodes), this way should be standard and saved like that.
 	// Even, just remove the itemcodes when needed
-	public function getForParsing()
+	public function getForParsing($force = false)
 	{
+		if (!empty($this->parsing_codes) && $force)
+		{
+			return $this->parsing_codes;
+		}
+
 		$bbc = $this->bbc;
 		$item_codes = $this->getItemCodes();
 		call_integration_hook('bbc_codes_parsing', array(&$bbc, &$item_codes));
@@ -322,6 +340,7 @@ class Codes
 			$return[$code[self::ATTR_TAG][0]][] = $code;
 		}
 
+		$this->parsing_codes = $return;
 		return $return;
 	}
 
@@ -331,16 +350,33 @@ class Codes
 		return $this;
 	}
 
+	/**
+	 * Check if there are codes that start with this character
+	 *
+	 * @param string $char
+	 * @return bool
+	 */
 	public function hasChar($char)
 	{
 		return isset($this->parsing_codes[$char]);
 	}
 
+	/**
+	 * Get the codes that start with $char
+	 * Does not check if the char exists. Will throw an error if it doesn't exist.
+	 *
+	 * @param string $char
+	 * @return array
+	 */
 	public function getCodesByChar($char)
 	{
 		return $this->parsing_codes[$char];
 	}
 
+	/**
+	 * @param string $code
+	 * @return array
+	 */
 	protected function getItemCodeTag($code)
 	{
 		return array(
@@ -351,6 +387,11 @@ class Codes
 		);
 	}
 
+	/**
+	 * Sets what codes should be parsed when printing
+	 *
+	 * @return $this
+	 */
 	public function setForPrinting()
 	{
 		// Colors can't well be displayed... supposed to be black and white.
@@ -374,11 +415,18 @@ class Codes
 		return $this;
 	}
 
+	/**
+	 * @param string $tag
+	 * @return bool
+	 */
 	public function isDisabled($tag)
 	{
 		return isset($this->disabled[$tag]);
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getDisabled()
 	{
 		return $this->disabled;

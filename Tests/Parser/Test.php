@@ -34,6 +34,7 @@ class Test implements \BBC\Tests\BBCTest
 		$html = new HtmlParser;
 
 		$this->parser = new \BBC\Parser($bbc, $autolink, $html);
+		$this->parser->canParseHTML(true);
 
 		$this->smiley_parser = new \BBC\SmileyParser;
 	}
