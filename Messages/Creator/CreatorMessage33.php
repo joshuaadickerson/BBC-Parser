@@ -32,6 +32,6 @@ you get one[/code]';
 
     public static function output()
     {
-        return 'You<br />and <div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">you get one</pre>';
+        return 'You<br /><div class=\"codeheader\">: (me) <a href=\"#\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">get 1<br /></pre>and <div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">you get one</pre>';
     }
 }
