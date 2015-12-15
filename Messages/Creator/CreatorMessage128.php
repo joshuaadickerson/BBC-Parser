@@ -24,6 +24,6 @@ class Message128 implements MessageInterface
 
     public static function output()
     {
-        return 'http://www.ñchan.org';
+        return '<a href=\"http://www.ñchan.org\" class=\"bbc_link\" target=\"_blank\">http://www.ñchan.org</a>';
     }
 }

@@ -24,6 +24,6 @@ class Message64 implements MessageInterface
 
     public static function output()
     {
-        return 'http://google.de';
+        return '<a href=\"http://google.de\" class=\"bbc_link\" target=\"_blank\">http://google.de</a>';
     }
 }

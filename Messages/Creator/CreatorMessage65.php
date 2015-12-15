@@ -24,6 +24,6 @@ class Message65 implements MessageInterface
 
     public static function output()
     {
-        return 'www.google.com';
+        return '<a href=\"http://www.google.com\" class=\"bbc_link\" target=\"_blank\">www.google.com</a>';
     }
 }

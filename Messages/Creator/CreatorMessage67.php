@@ -24,6 +24,6 @@ class Message67 implements MessageInterface
 
     public static function output()
     {
-        return 'http://www.cool.guy/linked?no&8)';
+        return '<a href=\"http://www.cool.guy/linked?no&8\" class=\"bbc_link\" target=\"_blank\">http://www.cool.guy/linked?no&8</a>)';
     }
 }

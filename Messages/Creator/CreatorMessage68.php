@@ -24,6 +24,6 @@ class Message68 implements MessageInterface
 
     public static function output()
     {
-        return 'http://www.facebook.com/profile.php?id=1439984468#!/group.php?gid=103300379708494&ref=ts';
+        return '<a href=\"http://www.facebook.com/profile.php?id=1439984468#!/group.php?gid=103300379708494&ref=ts\" class=\"bbc_link\" target=\"_blank\">http://www.facebook.com/profile.php?id=1439984468#!/group.php?gid=103300379708494&ref=ts</a>';
     }
 }

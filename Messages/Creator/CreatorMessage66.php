@@ -24,6 +24,6 @@ class Message66 implements MessageInterface
 
     public static function output()
     {
-        return 'me@email.com';
+        return '<a href=\"mailto:me@email.com\" class=\"bbc_email\">me@email.com</a>';
     }
 }

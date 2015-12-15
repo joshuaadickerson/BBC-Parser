@@ -27,6 +27,7 @@ $smiley_parser = new \BBC\SmileyParser;
 require_once '../../PreparserTests/OldPreparser/OldPreParser.php';
 
 $GLOBALS['modSettings']['enableBBC'] = true;
+$GLOBALS['modSettings']['autoLinkUrls'] = true;
 
 foreach ($messages as $i => $input)
 {

@@ -24,6 +24,6 @@ class Message81 implements MessageInterface
 
     public static function output()
     {
-        return 'Testing autolink then a url: www.google.com <a href=\"http://this no worky\" class=\"bbc_link\" target=\"_blank\"> <strong class=\"bbc_strong\">a tag to close it </strong> </a> just to make sure';
+        return 'Testing autolink then a url: <a href=\"http://www.google.com\" class=\"bbc_link\" target=\"_blank\">www.google.com</a> <a href=\"http://this no worky\" class=\"bbc_link\" target=\"_blank\"> <strong class=\"bbc_strong\">a tag to close it </strong> </a> just to make sure';
     }
 }
