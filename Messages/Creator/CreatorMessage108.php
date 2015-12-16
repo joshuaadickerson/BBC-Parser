@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-Everyone\\n[code]\\ngets a line\\n[/code]\\nbreak
+[pre]Pre .. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec elit. Fusce eget enim. Nullam tellus felis, sodales nec, sodales ac, commodo eu, ante.[/pre]
 */
 
 
@@ -14,16 +14,16 @@ class Message108 implements MessageInterface
 
     public static function input()
     {
-        return 'Everyone\\n[code]\\ngets a line\\n[/code]\\nbreak';
+        return '[pre]Pre .. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec elit. Fusce eget enim. Nullam tellus felis, sodales nec, sodales ac, commodo eu, ante.[/pre]';
     }
 
     public static function stored()
     {
-        return 'Everyone\\n[code]\\ngets a line\\n[/code]\\nbreak';
+        return '[pre]Pre .. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec elit. Fusce eget enim. Nullam tellus felis, sodales nec, sodales ac, commodo eu, ante.[/pre]';
     }
 
     public static function output()
     {
-        return 'Everyone\\n<div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">\\ngets a line\\n</pre>\\nbreak';
+        return '<pre class=\"bbc_pre\">Pre .. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec elit. Fusce eget enim. Nullam tellus felis, sodales nec, sodales ac, commodo eu, ante.</pre>';
     }
 }

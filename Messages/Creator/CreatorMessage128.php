@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-http://www.ñchan.org
+[url]www.ñchan.org[/url]
 */
 
 
@@ -14,16 +14,16 @@ class Message128 implements MessageInterface
 
     public static function input()
     {
-        return 'http://www.ñchan.org';
+        return '[url]www.ñchan.org[/url]';
     }
 
     public static function stored()
     {
-        return 'http://www.ñchan.org';
+        return '[url=http://www.ñchan.org]www.ñchan.org[/url]';
     }
 
     public static function output()
     {
-        return '<a href=\"http://www.ñchan.org\" class=\"bbc_link\" target=\"_blank\">http://www.ñchan.org</a>';
+        return '<a href=\"http://www.ñchan.org\" class=\"bbc_link\" target=\"_blank\">www.ñchan.org</a>';
     }
 }

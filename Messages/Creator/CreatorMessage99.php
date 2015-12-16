@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[quote=&quot;[url]http://www.google.com[/url]]&quot;]a link in the quote? uhhh okay[/quote]
+[img alt=&quot;My image&quot; height=&quot;100&quot; width=&quot;100&quot;]http://www.google.com/img.png[/img]
 */
 
 
@@ -14,16 +14,16 @@ class Message99 implements MessageInterface
 
     public static function input()
     {
-        return '[quote=&quot;[url]http://www.google.com[/url]]&quot;]a link in the quote? uhhh okay[/quote]';
+        return '[img alt=&quot;My image&quot; height=&quot;100&quot; width=&quot;100&quot;]http://www.google.com/img.png[/img]';
     }
 
     public static function stored()
     {
-        return '[quote=&quot;[url=http://www.google.com]http://www.google.com[/url]]&quot;]a link in the quote? uhhh okay[/quote]';
+        return '[img alt=&quot;My image&quot; height=&quot;100&quot; width=&quot;100&quot;]http://www.google.com/img.png[/img]';
     }
 
     public static function output()
     {
-        return '<div class=\"quoteheader\">: <a href=\"http://www.google.com\" class=\"bbc_link\" target=\"_blank\">http://www.google.com</a>]</div><blockquote class=\"bbc_standard_quote\">a link in the quote? uhhh okay</blockquote>';
+        return '<img src=\"http://www.google.com/img.png\" alt=\"&quot;My image&quot; height=&quot;100&quot; width=&quot;100&quot;\" style=\"\" class=\"bbc_img resized\" />';
     }
 }

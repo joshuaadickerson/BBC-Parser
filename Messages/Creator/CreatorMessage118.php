@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[u][i]Why do you do this to yourself?[/u][/i]
+&lt;b&gt;Bold&lt;/b&gt;&lt;i&gt;italics&lt;/i&gt;
 */
 
 
@@ -14,16 +14,16 @@ class Message118 implements MessageInterface
 
     public static function input()
     {
-        return '[u][i]Why do you do this to yourself?[/u][/i]';
+        return '&lt;b&gt;Bold&lt;/b&gt;&lt;i&gt;italics&lt;/i&gt;';
     }
 
     public static function stored()
     {
-        return '[u][i]Why do you do this to yourself?[/u][/i]';
+        return '&lt;b&gt;Bold&lt;/b&gt;&lt;i&gt;italics&lt;/i&gt;';
     }
 
     public static function output()
     {
-        return '<span class=\"bbc_u\"><em>Why do you do this to yourself?</em></span>[/i]';
+        return '&lt;b&gt;Bold&lt;/b&gt;&lt;i&gt;italics&lt;/i&gt;';
     }
 }

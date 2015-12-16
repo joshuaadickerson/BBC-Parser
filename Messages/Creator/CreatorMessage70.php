@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[url=https://www.google.com]http://www.google.com/404[/url]
+www.autolink.org/?a[]=1&a[]=2;a[]=3;b[a]=6&b[b]=99
 */
 
 
@@ -14,16 +14,16 @@ class Message70 implements MessageInterface
 
     public static function input()
     {
-        return '[url=https://www.google.com]http://www.google.com/404[/url]';
+        return 'www.autolink.org/?a[]=1&a[]=2;a[]=3;b[a]=6&b[b]=99';
     }
 
     public static function stored()
     {
-        return '[url=https://www.google.com]http://www.google.com/404[/url]';
+        return 'www.autolink.org/?a&#91;]=1&a&#91;]=2;a&#91;]=3;b[a]=6&b[b]=99';
     }
 
     public static function output()
     {
-        return '<a href=\"https://www.google.com\" class=\"bbc_link\" target=\"_blank\">http://www.google.com/404</a>';
+        return '<a href=\"http://www.autolink.org/?a&#91;\" class=\"bbc_link\" target=\"_blank\">www.autolink.org/?a&#91;</a>]=1&a&#91;]=2;a&#91;]=3;b[a]=6&b<strong class=\"bbc_strong\">=99</strong>';
     }
 }

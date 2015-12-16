@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[img alt=MyImage height=100 width=100]http://www.google.com/img.png[/img]
+[font=Times]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]
 */
 
 
@@ -14,16 +14,16 @@ class Message96 implements MessageInterface
 
     public static function input()
     {
-        return '[img alt=MyImage height=100 width=100]http://www.google.com/img.png[/img]';
+        return '[font=Times]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]';
     }
 
     public static function stored()
     {
-        return '[img alt=MyImage height=100 width=100]http://www.google.com/img.png[/img]';
+        return '[font=Times]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]';
     }
 
     public static function output()
     {
-        return '<img src=\"http://www.google.com/img.png\" alt=\"MyImage height=100\" style=\"width:100%;max-width:100px;\" class=\"bbc_img resized\" />';
+        return '<span style=\"font-family: Times;\" class=\"bbc_font\">Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.</span>';
     }
 }

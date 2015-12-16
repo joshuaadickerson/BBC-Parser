@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[code]bee boop bee booo[/code]
+[left]Left Curabitur tincidunt, lacus eget iaculis tincidunt, elit libero iaculis arcu, eleifend condimentum sem est quis dolor. Curabitur sed tellus. Donec id dolor.[/left]
 */
 
 
@@ -14,16 +14,16 @@ class Message107 implements MessageInterface
 
     public static function input()
     {
-        return '[code]bee boop bee booo[/code]';
+        return '[left]Left Curabitur tincidunt, lacus eget iaculis tincidunt, elit libero iaculis arcu, eleifend condimentum sem est quis dolor. Curabitur sed tellus. Donec id dolor.[/left]';
     }
 
     public static function stored()
     {
-        return '[code]bee boop bee booo[/code]';
+        return '[left]Left Curabitur tincidunt, lacus eget iaculis tincidunt, elit libero iaculis arcu, eleifend condimentum sem est quis dolor. Curabitur sed tellus. Donec id dolor.[/left]';
     }
 
     public static function output()
     {
-        return '<div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">bee boop bee booo</pre>';
+        return '<div style=\"text-align: left;\">Left Curabitur tincidunt, lacus eget iaculis tincidunt, elit libero iaculis arcu, eleifend condimentum sem est quis dolor. Curabitur sed tellus. Donec id dolor.</div>';
     }
 }

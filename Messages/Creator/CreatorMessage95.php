@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[url=&quot;http://www.google.com&quot;]quoted url[/url]
+[font=Monospace]Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.[/font]
 */
 
 
@@ -14,16 +14,16 @@ class Message95 implements MessageInterface
 
     public static function input()
     {
-        return '[url=&quot;http://www.google.com&quot;]quoted url[/url]';
+        return '[font=Monospace]Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.[/font]';
     }
 
     public static function stored()
     {
-        return '[url=http://&quot;http://www.google.com&quot;]quoted url[/url]';
+        return '[font=Monospace]Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.[/font]';
     }
 
     public static function output()
     {
-        return '<a href=\"http://&quot;http://www.google.com&quot;\" class=\"bbc_link\" target=\"_blank\">quoted url</a>';
+        return '<span style=\"font-family: Monospace;\" class=\"bbc_font\">Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.</span>';
     }
 }

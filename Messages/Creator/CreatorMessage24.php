@@ -24,6 +24,6 @@ class Message24 implements MessageInterface
 
     public static function output()
     {
-        return '<img src=\"//smiley.gif\" alt=\"&#58;&#41;\" title=\"\" class=\"smiley\" />';
+        return '<img src=\"http://www.google.com/smileys//smiley.gif\" alt=\"&#58;&#41;\" title=\"smile\" class=\"smiley\" />';
     }
 }

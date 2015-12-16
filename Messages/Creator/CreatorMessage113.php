@@ -1,10 +1,13 @@
 <?php
 
 /* The original message
-[code][b]Bold[/b]
-	Italics
-	Underline
-	Strike through[/code]
+[code]	this 	has 	tabs
+
+
+	tab
+ tab
+[/code]
+even	some	outside		THE code
 */
 
 
@@ -17,19 +20,22 @@ class Message113 implements MessageInterface
 
     public static function input()
     {
-        return '[code][b]Bold[/b]
-	Italics
-	Underline
-	Strike through[/code]';
+        return '[code]	this 	has 	tabs
+
+
+	tab
+ tab
+[/code]
+even	some	outside		THE code';
     }
 
     public static function stored()
     {
-        return '[code][b]Bold[/b]<br />	Italics<br />	Underline<br />	Strike through[/code]';
+        return '[code]	this 	has 	tabs<br /><br /><br />	tab<br /> tab<br />[/code]<br />even	some	outside		THE code';
     }
 
     public static function output()
     {
-        return '<div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">[b]Bold[/b]<br /><span class=\"tab\">	</span>Italics<br /><span class=\"tab\">	</span>Underline<br /><span class=\"tab\">	</span>Strike through</pre>';
+        return '<div class=\"codeheader\">code: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\">select</a></div><pre class=\"bbc_code prettyprint\"><span class=\"tab\">	</span>this <span class=\"tab\">	</span>has <span class=\"tab\">	</span>tabs<br /><br /><br /><span class=\"tab\">	</span>tab<br />&nbsp;tab<br /></pre>even&nbsp;&nbsp;&nbsp;some&nbsp;&nbsp;&nbsp;outside&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;THE code';
     }
 }

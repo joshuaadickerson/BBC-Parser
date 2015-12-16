@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[font=Tahoma]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]
+[size=4]Font Family[/size]
 */
 
 
@@ -14,16 +14,16 @@ class Message92 implements MessageInterface
 
     public static function input()
     {
-        return '[font=Tahoma]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]';
+        return '[size=4]Font Family[/size]';
     }
 
     public static function stored()
     {
-        return '[font=Tahoma]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/font]';
+        return '[size=4]Font Family[/size]';
     }
 
     public static function output()
     {
-        return '<span style=\"font-family: Tahoma;\" class=\"bbc_font\">Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.</span>';
+        return '<span style=\"font-size: 1.45em;\" class=\"bbc_size\">Font Family</span>';
     }
 }

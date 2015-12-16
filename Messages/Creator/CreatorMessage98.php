@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[quote=&quot;[u]underline[/u]]&quot;]this is weird[/quote]
+[img alt=MyImage height=100 width=100]http://www.google.com/img.png[/img]
 */
 
 
@@ -14,16 +14,16 @@ class Message98 implements MessageInterface
 
     public static function input()
     {
-        return '[quote=&quot;[u]underline[/u]]&quot;]this is weird[/quote]';
+        return '[img alt=MyImage height=100 width=100]http://www.google.com/img.png[/img]';
     }
 
     public static function stored()
     {
-        return '[quote=&quot;[u]underline[/u]]&quot;]this is weird[/quote]';
+        return '[img alt=MyImage height=100 width=100]http://www.google.com/img.png[/img]';
     }
 
     public static function output()
     {
-        return '<div class=\"quoteheader\">: [u]underline[/u]]</div><blockquote class=\"bbc_standard_quote\">this is weird</blockquote>';
+        return '<img src=\"http://www.google.com/img.png\" alt=\"MyImage height=100\" style=\"width:100%;max-width:100px;\" class=\"bbc_img resized\" />';
     }
 }

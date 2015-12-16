@@ -31,4 +31,7 @@ return array(
     'my@email.com',
     'ftp://some.ftp.com',
     'https://secure.google.com',
+
+    // https://github.com/SimpleMachines/SMF2.1/issues/3106
+    '[list][li]Test[/li][li]More[code]Some COde[/code][/li][/list]',
 );

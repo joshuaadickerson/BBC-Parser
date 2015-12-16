@@ -1,7 +1,8 @@
 <?php
 
 /* The original message
-[color=red]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/color]
+[quote]Economics is [b]everywhere[/b] :)
+and understanding economics can help you make better www.decisio.ns and lead a happier life.[/quote]
 */
 
 
@@ -14,16 +15,17 @@ class Message84 implements MessageInterface
 
     public static function input()
     {
-        return '[color=red]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/color]';
+        return '[quote]Economics is [b]everywhere[/b] :)
+and understanding economics can help you make better www.decisio.ns and lead a happier life.[/quote]';
     }
 
     public static function stored()
     {
-        return '[color=red]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/color]';
+        return '[quote]Economics is [b]everywhere[/b] :)<br />and understanding economics can help you make better www.decisio.ns and lead a happier life.[/quote]';
     }
 
     public static function output()
     {
-        return '<span style=\"color: red;\" class=\"bbc_color\">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</span>';
+        return '<div class=\"quoteheader\">quote</div><blockquote class=\"bbc_standard_quote\">Economics is <strong class=\"bbc_strong\">everywhere</strong> <img src=\"http://www.google.com/smileys//smiley.gif\" alt=\"&#58;&#41;\" title=\"smile\" class=\"smiley\" /><br />and understanding economics can help you make better <a href=\"http://www.decisio.ns\" class=\"bbc_link\" target=\"_blank\">www.decisio.ns</a> and lead a happier life.</blockquote>';
     }
 }

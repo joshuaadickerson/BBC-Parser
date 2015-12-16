@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[font=Arial]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/font]
+[color=DarkSlateBlue]this is colored![/color]
 */
 
 
@@ -14,16 +14,16 @@ class Message91 implements MessageInterface
 
     public static function input()
     {
-        return '[font=Arial]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/font]';
+        return '[color=DarkSlateBlue]this is colored![/color]';
     }
 
     public static function stored()
     {
-        return '[font=Arial]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/font]';
+        return '[color=DarkSlateBlue]this is colored![/color]';
     }
 
     public static function output()
     {
-        return '<span style=\"font-family: Arial;\" class=\"bbc_font\">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</span>';
+        return '<span style=\"color: DarkSlateBlue;\" class=\"bbc_color\">this is colored!</span>';
     }
 }

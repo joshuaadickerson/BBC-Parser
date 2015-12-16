@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[i]lets go for italics
+[glow=red,2,50]glow[/glow]
 */
 
 
@@ -14,16 +14,16 @@ class Message117 implements MessageInterface
 
     public static function input()
     {
-        return '[i]lets go for italics';
+        return '[glow=red,2,50]glow[/glow]';
     }
 
     public static function stored()
     {
-        return '[i]lets go for italics';
+        return '[glow=red,2,50]glow[/glow]';
     }
 
     public static function output()
     {
-        return '<em>lets go for italics</em>';
+        return '[glow=red,2,50]glow[/glow]';
     }
 }

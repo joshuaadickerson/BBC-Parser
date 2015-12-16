@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-You\\n[code=me]\\nget 1\\n[/code]and [code]\\nyou get one[/code]
+[code]bee boop bee booo[/code]
 */
 
 
@@ -14,16 +14,16 @@ class Message109 implements MessageInterface
 
     public static function input()
     {
-        return 'You\\n[code=me]\\nget 1\\n[/code]and [code]\\nyou get one[/code]';
+        return '[code]bee boop bee booo[/code]';
     }
 
     public static function stored()
     {
-        return 'You\\n[code=me]\\nget 1\\n[/code]and [code]\\nyou get one[/code]';
+        return '[code]bee boop bee booo[/code]';
     }
 
     public static function output()
     {
-        return 'You\\n<div class=\"codeheader\">: (me) <a href=\"#\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">\\nget 1\\n</pre>and <div class=\"codeheader\">: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\"></a></div><pre class=\"bbc_code prettyprint\">\\nyou get one</pre>';
+        return '<div class=\"codeheader\">code: <a href=\"javascript:void(0);\" onclick=\"return elkSelectText(this);\" class=\"codeoperation\">select</a></div><pre class=\"bbc_code prettyprint\">bee boop bee booo</pre>';
     }
 }

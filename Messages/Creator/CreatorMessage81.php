@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-Testing autolink then a url: www.google.com [url=this no worky] [b]a tag to close it [/b] [/url] just to make sure
+[url=http://www.google.com/]this url has [email=someone@someplace.org]an email[/email][/url]
 */
 
 
@@ -14,16 +14,16 @@ class Message81 implements MessageInterface
 
     public static function input()
     {
-        return 'Testing autolink then a url: www.google.com [url=this no worky] [b]a tag to close it [/b] [/url] just to make sure';
+        return '[url=http://www.google.com/]this url has [email=someone@someplace.org]an email[/email][/url]';
     }
 
     public static function stored()
     {
-        return 'Testing autolink then a url: www.google.com [url=http://this no worky] [b]a tag to close it [/b] [/url] just to make sure';
+        return '[url=http://www.google.com/]this url has [email=someone@someplace.org]an email[/email][/url]';
     }
 
     public static function output()
     {
-        return 'Testing autolink then a url: <a href=\"http://www.google.com\" class=\"bbc_link\" target=\"_blank\">www.google.com</a> <a href=\"http://this no worky\" class=\"bbc_link\" target=\"_blank\"> <strong class=\"bbc_strong\">a tag to close it </strong> </a> just to make sure';
+        return '<a href=\"http://www.google.com/\" class=\"bbc_link\" target=\"_blank\">this url has [email=someone@someplace.org]an email[/email]</a>';
     }
 }

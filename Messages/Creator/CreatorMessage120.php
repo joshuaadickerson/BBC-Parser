@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[img src=www.here.com/index.php?action=dlattach] this is actually a security issue
+[u][i]Why do you do this to yourself?[/u][/i]
 */
 
 
@@ -14,16 +14,16 @@ class Message120 implements MessageInterface
 
     public static function input()
     {
-        return '[img src=www.here.com/index.php?action=dlattach] this is actually a security issue';
+        return '[u][i]Why do you do this to yourself?[/u][/i]';
     }
 
     public static function stored()
     {
-        return '[img src=www.here.com/index.php?action=dlattach] this is actually a security issue';
+        return '[u][i]Why do you do this to yourself?[/u][/i]';
     }
 
     public static function output()
     {
-        return '[img src=www.here.com/index.php?action=dlattach] this is actually a security issue';
+        return '<span class=\"bbc_u\"><em>Why do you do this to yourself?</em></span>[/i]';
     }
 }

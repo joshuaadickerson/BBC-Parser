@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[font=Monospace]Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.[/font]
+[font=Arial]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/font]
 */
 
 
@@ -14,16 +14,16 @@ class Message93 implements MessageInterface
 
     public static function input()
     {
-        return '[font=Monospace]Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.[/font]';
+        return '[font=Arial]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/font]';
     }
 
     public static function stored()
     {
-        return '[font=Monospace]Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.[/font]';
+        return '[font=Arial]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/font]';
     }
 
     public static function output()
     {
-        return '<span style=\"font-family: Monospace;\" class=\"bbc_font\">Quisque viverra feugiat purus, in luctus faucibus felis eget viverra.</span>';
+        return '<span style=\"font-family: Arial;\" class=\"bbc_font\">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</span>';
     }
 }

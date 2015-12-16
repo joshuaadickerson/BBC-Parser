@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-www.ñchan.org
+[size=2]inside size[size=3] - and now even deeper [/size] pull back a little.[/size]
 */
 
 
@@ -14,16 +14,16 @@ class Message127 implements MessageInterface
 
     public static function input()
     {
-        return 'www.ñchan.org';
+        return '[size=2]inside size[size=3] - and now even deeper [/size] pull back a little.[/size]';
     }
 
     public static function stored()
     {
-        return 'www.ñchan.org';
+        return '[size=2]inside size[size=3] - and now even deeper [/size] pull back a little.[/size]';
     }
 
     public static function output()
     {
-        return '<a href=\"http://www.ñchan.org\" class=\"bbc_link\" target=\"_blank\">www.ñchan.org</a>';
+        return '<span style=\"font-size: 1em;\" class=\"bbc_size\">inside size<span> - and now even deeper </span> pull back a little.</span>';
     }
 }

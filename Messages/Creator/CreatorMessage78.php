@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[url=http://www.google.com]iam@batman.net[/url]
+[iurl=http://www.google.com]www.bing.com[/iurl]
 */
 
 
@@ -14,16 +14,16 @@ class Message78 implements MessageInterface
 
     public static function input()
     {
-        return '[url=http://www.google.com]iam@batman.net[/url]';
+        return '[iurl=http://www.google.com]www.bing.com[/iurl]';
     }
 
     public static function stored()
     {
-        return '[url=http://www.google.com]iam@batman.net[/url]';
+        return '[iurl=http://www.google.com]www.bing.com[/iurl]';
     }
 
     public static function output()
     {
-        return '<a href=\"http://www.google.com\" class=\"bbc_link\" target=\"_blank\">iam@batman.net</a>';
+        return '<a href=\"http://www.google.com\" class=\"bbc_link\">www.bing.com</a>';
     }
 }

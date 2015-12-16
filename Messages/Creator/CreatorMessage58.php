@@ -24,6 +24,6 @@ class Message58 implements MessageInterface
 
     public static function output()
     {
-        return '<div class=\"quoteheader\">: Joe Doe joe@email.com</div><blockquote class=\"bbc_standard_quote\">Here is what Joe said.</blockquote>';
+        return '<div class=\"quoteheader\">quote from: Joe Doe joe@email.com</div><blockquote class=\"bbc_standard_quote\">Here is what Joe said.</blockquote>';
     }
 }

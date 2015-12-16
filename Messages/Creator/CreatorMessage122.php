@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[list][li]quick[li]no[li]time[li]for[li]closing[li]tags[/list]
+[img src=www.here.com/index.php?action=dlattach] this is actually a security issue
 */
 
 
@@ -14,16 +14,16 @@ class Message122 implements MessageInterface
 
     public static function input()
     {
-        return '[list][li]quick[li]no[li]time[li]for[li]closing[li]tags[/list]';
+        return '[img src=www.here.com/index.php?action=dlattach] this is actually a security issue';
     }
 
     public static function stored()
     {
-        return '[list][li]quick[/li][li]no[list][li]time[/li][li]for[list][li]closing[/li][/list][li]tags[/li][/list]';
+        return '[img src=www.here.com/index.php?action=dlattach] this is actually a security issue';
     }
 
     public static function output()
     {
-        return '<ul class=\"bbc_list\"><li>quick</li><li>no<ul class=\"bbc_list\"><li>time</li><li>for<ul class=\"bbc_list\"><li>closing</li></ul>[li]tags</li></ul></li></ul>';
+        return '[img src=www.here.com/index.php?action=dlattach] this is actually a security issue';
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[size=4]Font Family[/size]
+[color=#cccccc]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/color]
 */
 
 
@@ -14,16 +14,16 @@ class Message90 implements MessageInterface
 
     public static function input()
     {
-        return '[size=4]Font Family[/size]';
+        return '[color=#cccccc]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/color]';
     }
 
     public static function stored()
     {
-        return '[size=4]Font Family[/size]';
+        return '[color=#cccccc]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/color]';
     }
 
     public static function output()
     {
-        return '<span style=\"font-size: 1.45em;\" class=\"bbc_size\">Font Family</span>';
+        return '<span style=\"color: #cccccc;\" class=\"bbc_color\">Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.</span>';
     }
 }

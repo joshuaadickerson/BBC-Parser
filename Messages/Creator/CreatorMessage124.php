@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-Nothing should [table
+[list][li]quick[li]no[li]time[li]for[li]closing[li]tags[/list]
 */
 
 
@@ -14,16 +14,16 @@ class Message124 implements MessageInterface
 
     public static function input()
     {
-        return 'Nothing should [table';
+        return '[list][li]quick[li]no[li]time[li]for[li]closing[li]tags[/list]';
     }
 
     public static function stored()
     {
-        return 'Nothing should [table';
+        return '[list][li]quick[/li][li]no[list][li]time[/li][li]for[list][li]closing[/li][/list][li]tags[/li][/list]';
     }
 
     public static function output()
     {
-        return 'Nothing should [table';
+        return '<ul class=\"bbc_list\"><li>quick</li><li>no<ul class=\"bbc_list\"><li>time</li><li>for<ul class=\"bbc_list\"><li>closing</li></ul>[li]tags</li></ul></li></ul>';
     }
 }

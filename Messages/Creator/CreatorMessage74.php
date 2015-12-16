@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[url=http://www.elkarte.org/community/index.php [^]]ask us for assistance[/url]
+[url=http://www.google.com/]test www.elkarte.net test[/url]
 */
 
 
@@ -14,16 +14,16 @@ class Message74 implements MessageInterface
 
     public static function input()
     {
-        return '[url=http://www.elkarte.org/community/index.php [^]]ask us for assistance[/url]';
+        return '[url=http://www.google.com/]test www.elkarte.net test[/url]';
     }
 
     public static function stored()
     {
-        return '[url=http://www.elkarte.org/community/index.php [^]]ask us for assistance[/url]';
+        return '[url=http://www.google.com/]test www.elkarte.net test[/url]';
     }
 
     public static function output()
     {
-        return '<a href=\"http://www.elkarte.org/community/index.php [^\" class=\"bbc_link\" target=\"_blank\">]ask us for assistance</a>';
+        return '<a href=\"http://www.google.com/\" class=\"bbc_link\" target=\"_blank\">test www.elkarte.net test</a>';
     }
 }

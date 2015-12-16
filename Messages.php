@@ -103,6 +103,7 @@ return array(
 	'http://www.cool.guy/linked?no&8)',
 	'http://www.facebook.com/profile.php?id=1439984468#!/group.php?gid=103300379708494&ref=ts',
 	'www.ñchan.org',
+	'www.autolink.org/?a[]=1&a[]=2;a[]=3;b[a]=6&b[b]=99',
 
 	// These shouldn't be autolinked.
 	'[url=https://www.google.com]http://www.google.com/404[/url]',
@@ -110,6 +111,7 @@ return array(
 	'[url=https://www.google.com]you@mailed.it[/url]',
 	'[url=http://www.google.com/]test www.elkarte.net test[/url]',
 	'[url=http://www.elkarte.org/community/index.php [^]]ask us for assistance[/url]',
+	'[url=&quot;www.autolink.org/?a[]=1&a[]=2;a[]=3;b[a]=6&b[b]=99&quot;]www.autolink.org/?a[]=1&a[]=2;a[]=3;b[a]=6&b[b]=99[/url]',
 
 	// URIs in no autolink areas
 	'[url=http://www.google.com]www.bing.com[/url]',
@@ -222,6 +224,11 @@ return array(
 
 	// https://github.com/SimpleMachines/SMF2.1/issues/3106
 	'[list][li]Test[/li][li]More[code]Some COde[/code][/li][/list]',
+
+	// Unclosed tags
+	'[code]this is unclosed',
+	'[b]unclosed bold',
+	'[table][tr][td]unclosed table[/td][/tr]',
 
 	// Long messages (put last so I don't have to see them) These usually take too long to run
 	// A really long message but without bbc

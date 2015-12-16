@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[color=blue]Volutpat tellus vulputate dui venenatis quis euismod turpis pellentesque.[/color]
+[color=red]red[/color][color=green]green[/color][color=blue]blue[/color]
 */
 
 
@@ -14,16 +14,16 @@ class Message85 implements MessageInterface
 
     public static function input()
     {
-        return '[color=blue]Volutpat tellus vulputate dui venenatis quis euismod turpis pellentesque.[/color]';
+        return '[color=red]red[/color][color=green]green[/color][color=blue]blue[/color]';
     }
 
     public static function stored()
     {
-        return '[color=blue]Volutpat tellus vulputate dui venenatis quis euismod turpis pellentesque.[/color]';
+        return '[color=red]red[/color][color=green]green[/color][color=blue]blue[/color]';
     }
 
     public static function output()
     {
-        return '<span style=\"color: blue;\" class=\"bbc_color\">Volutpat tellus vulputate dui venenatis quis euismod turpis pellentesque.</span>';
+        return '<span style=\"color: red;\" class=\"bbc_color\">red</span><span style=\"color: green;\" class=\"bbc_color\">green</span><span style=\"color: blue;\" class=\"bbc_color\">blue</span>';
     }
 }

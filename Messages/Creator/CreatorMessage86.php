@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[color=#f66]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/color]
+[color=red]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/color]
 */
 
 
@@ -14,16 +14,16 @@ class Message86 implements MessageInterface
 
     public static function input()
     {
-        return '[color=#f66]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/color]';
+        return '[color=red]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/color]';
     }
 
     public static function stored()
     {
-        return '[color=#f66]Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.[/color]';
+        return '[color=red]Lorem ipsum dolor sit amet, consectetur adipiscing elit.[/color]';
     }
 
     public static function output()
     {
-        return '<span style=\"color: #f66;\" class=\"bbc_color\">Suspendisse sit amet ipsum eu odio sagittis ultrices at non sapien.</span>';
+        return '<span style=\"color: red;\" class=\"bbc_color\">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</span>';
     }
 }

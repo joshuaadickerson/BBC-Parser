@@ -1,7 +1,7 @@
 <?php
 
 /* The original message
-[quote this=should not=work but=maybe it=will]only a test will tell[/quote]
+[u][quote]should not get underlined[/quote][/u]
 */
 
 
@@ -14,16 +14,16 @@ class Message121 implements MessageInterface
 
     public static function input()
     {
-        return '[quote this=should not=work but=maybe it=will]only a test will tell[/quote]';
+        return '[u][quote]should not get underlined[/quote][/u]';
     }
 
     public static function stored()
     {
-        return '[quote this=should not=work but=maybe it=will]only a test will tell[/quote]';
+        return '[u][quote]should not get underlined[/quote][/u]';
     }
 
     public static function output()
     {
-        return '[quote this=should not=work but=maybe it=will]only a test will tell[/quote]';
+        return '<span class=\"bbc_u\"></span><div class=\"quoteheader\">quote</div><blockquote class=\"bbc_standard_quote\">should not get underlined</blockquote>[/u]';
     }
 }
