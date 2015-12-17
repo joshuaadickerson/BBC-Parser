@@ -20,7 +20,7 @@ class TestBBC
 	protected $tests = array();
 	protected $disabled;
 
-		public function __construct($test_dir_path = 'Tests')
+	public function __construct($test_dir_path = 'Tests')
 	{
 		error_reporting(E_ALL);
 		ini_set('display_errors', 1);
@@ -28,7 +28,7 @@ class TestBBC
 		$this->tests = $this->loadPossibleTests($test_dir_path);
 	}
 
-		public function setInput($input)
+	public function setInput($input)
 	{
 		$this->globalSettings();
 		$this->input = $input;

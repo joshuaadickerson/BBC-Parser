@@ -80,10 +80,10 @@ class Parser
 		$this->last_pos = null;
 		$this->open_tags = array();
 		$this->inside_tag = null;
-		$this->lastAutoPos = 0;
 		$this->can_cache = true;
 		$this->num_footnotes = 0;
 		$this->has_bbc = false;
+		$this->tracked_content = array();
 	}
 
 	/**
@@ -220,26 +220,31 @@ class Parser
 
 	protected function parse_loop()
 	{
-		while ($this->pos !== false)
+		//while ($this->pos !== false)
+		// @todo I changed this because I can't find a test that makes this infinite. If I do, I'll change it back
+		while(true)
 		{
-			$this->last_pos = isset($this->last_pos) ? max($this->pos, $this->last_pos) : $this->pos;
+			//$this->last_pos = isset($this->last_pos) ? max($this->pos, $this->last_pos) : $this->pos;
+			$this->last_pos = max($this->pos, $this->last_pos);
 			$this->pos = strpos($this->message, '[', $this->pos + 1);
 
 			// Failsafe.
 			if ($this->pos === false || $this->last_pos > $this->pos)
 			{
+				// Pretty much means: do betweenTags() and return;
 				$this->pos = strlen($this->message) + 1;
 			}
 
-			// Can't have a one letter smiley, URL, or email! (sorry.)
-			if ($this->last_pos < $this->pos - 1)
-			{
-				$this->betweenTags();
-			}
+			// This should be much later. Like when we actually find a closing tag or when we find a new opening tag
+			// The thing about this call that takes a while is running the regular expressions. If we increase the text per call that will decrease the cost
+			$this->betweenTags();
 
 			// Are we there yet?  Are we there yet?
+			// if betweenTags() makes changes, it will move the pos back. When it adds a [url] from the autolinker, for instance
+			// it needs to go back to the start of that and parse that again
 			if ($this->pos >= strlen($this->message) - 1)
 			{
+				// We are at the last character (or greater than it when things get chopped)
 				return;
 			}
 
@@ -265,6 +270,7 @@ class Parser
 
 			$this->inside_tag = !$this->hasOpenTags() ? null : $this->getLastOpenedTag();
 
+			// Is it an itemcode?
 			if ($this->bbc->getItemCode($next_char) !== null && isset($this->message[$this->pos + 2]) && $this->message[$this->pos + 2] === ']' && !$this->bbc->isDisabled('list') && !$this->bbc->isDisabled('li'))
 			{
 				// Itemcodes cannot be 0 and must be preceeded by a semi-colon, space, tab, new line, or greater than sign
@@ -404,6 +410,7 @@ class Parser
 		// Did we just eat through everything and not find it?
 		if (!$this->hasOpenTags() && (empty($code) || $code[Codes::ATTR_TAG] !== $look_for))
 		{
+			// The opened code can't be found
 			$this->open_tags = $to_close;
 			return;
 		}
@@ -436,6 +443,11 @@ class Parser
 		// This is where we actually close out the tags
 		foreach ($to_close as $code)
 		{
+			if (!empty($code[Codes::TRACKED_CONTENT]))
+			{
+				$this->endTrackedContent($code, $this->pos);
+			}
+
 			$this->addStringAtCurrentPos($code[Codes::ATTR_AFTER], $closing_bracket_pos + 1 - $this->pos);
 			$closing_bracket_pos = $this->pos - 1;
 
@@ -496,24 +508,32 @@ class Parser
 	 */
 	protected function autoLink(&$data)
 	{
-		if ($data === '' || $data === $this->smiley_marker  || !$this->autolinker->hasPossible())
+		if ($data === ''
+			|| $data === $this->smiley_marker
+			|| !$this->autolinker->hasPossible()
+			// Are we inside tags that should be auto linked?
+			|| !$this->insideAutolinkArea())
 		{
 			return;
 		}
 
-		// Are we inside tags that should be auto linked?
+		$this->autolinker->parse($data);
+	}
+
+	protected function insideAutolinkArea()
+	{
 		if ($this->hasOpenTags())
 		{
 			foreach ($this->getOpenedTags() as $open_tag)
 			{
 				if (!$open_tag[Codes::ATTR_AUTOLINK])
 				{
-					return;
+					return false;
 				}
 			}
 		}
 
-		$this->autolinker->parse($data);
+		return true;
 	}
 
 	/**
@@ -602,22 +622,42 @@ class Parser
 			$this->num_footnotes++;
 		}
 
-		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
-		{
-			$this->addTrackedContent($tag[Codes::ATTR_TAG]);
-		}
-
 		return $tag;
 	}
 
-	protected function addTrackedContent($tag, $content)
+	/**
+	 * @param array $code
+	 * @param int $pos
+	 */
+	protected function startTrackedContent(array &$code, $pos)
 	{
+		$tag = $code[Codes::ATTR_TAG];
 		if (!isset($this->tracked_content[$tag]))
 		{
 			$this->tracked_content[$tag] = array();
 		}
 
-		$this->tracked_content[$tag][] = $content;
+		$code[Codes::TRACKED_CONTENT] = array('start' => $pos);
+
+		$this->tracked_content[$tag][] = &$code;
+	}
+
+	/**
+	 * @param array $code
+	 * @param int $pos
+	 * @param bool $capture_content
+	 */
+	protected function endTrackedContent(array &$code, $pos, $capture_content = true)
+	{
+		$code[Codes::TRACKED_CONTENT]['end'] = $pos;
+
+		if ($capture_content)
+		{
+			$start = $code[Codes::TRACKED_CONTENT]['start'];
+			$end   = $code[Codes::TRACKED_CONTENT]['end'];
+
+			$code[Codes::TRACKED_CONTENT]['content'] = substr($this->message, $start, $end - $start);
+		}
 	}
 
 	public function getTrackedContent($tag = null)
@@ -859,11 +899,16 @@ class Parser
 		$this->addStringAtCurrentPos($tag[Codes::ATTR_BEFORE], $this->param_start_pos - $this->pos);
 		$this->pos--;
 
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->startTrackedContent($tag, $this->pos);
+		}
+
 		return false;
 	}
 
 	/**
-	 * Handle codes that are of the unparsed context type
+	 * Handle codes that are of the unparsed content type
 	 * @param array $tag
 	 *
 	 * @return bool
@@ -892,11 +937,21 @@ class Parser
 			$this->filterData($tag, $data);
 		}
 
-		$code = strtr($tag[Codes::ATTR_CONTENT], array('$1' => $data));
-		$this->addStringAtCurrentPos($code, $next_closing_tag + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
-		$this->pos--;
-		$this->last_pos = $this->pos + 1;
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->startTrackedContent($tag, $this->pos);
+		}
 
+		$this->replaceParamVars($tag[Codes::ATTR_CONTENT], array($data));
+		$this->addStringAtCurrentPos($tag[Codes::ATTR_CONTENT], $next_closing_tag + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
+		$this->pos--;
+
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->endTrackedContent($tag, $this->pos);
+		}
+
+		$this->last_pos = $this->pos + 1;
 		return false;
 	}
 
@@ -944,7 +999,7 @@ class Parser
 			substr($this->message, $this->param_start_pos, $next_closing_bracket - $this->param_start_pos)
 		);
 
-		if (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) && substr_compare($data[0], '<br />', 0, 6) === 0)
+		if ($tag[Codes::ATTR_BLOCK_LEVEL] && substr_compare($data[0], '<br />', 0, 6) === 0)
 		{
 			$data[0] = substr($data[0], 6);
 		}
@@ -955,9 +1010,19 @@ class Parser
 			$this->filterData($tag, $data);
 		}
 
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->startTrackedContent($tag, $this->pos);
+		}
+
 		$this->replaceParamVars($tag[Codes::ATTR_CONTENT], $data, true);
 		$this->addStringAtCurrentPos($tag[Codes::ATTR_CONTENT], $next_closing_tag + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
 		$this->pos--;
+
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->endTrackedContent($tag, $this->pos);
+		}
 
 		return false;
 	}
@@ -1006,9 +1071,19 @@ class Parser
 			$this->filterData($tag, $data);
 		}
 
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->startTrackedContent($tag, $this->param_start_pos);
+		}
+
 		$this->replaceParamVars($tag[Codes::ATTR_CONTENT], $data);
 		$this->addStringAtCurrentPos($tag[Codes::ATTR_CONTENT], $next_closing_tag + 3 + $tag[Codes::ATTR_LENGTH] - $this->pos);
 		$this->pos--;
+
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->endTrackedContent($tag, $this->pos);
+		}
 
 		return false;
 	}
@@ -1034,15 +1109,20 @@ class Parser
 			$this->filterData($tag, $data);
 		}
 
+		// Replace them out, $1, $2, $3, $4, etc.
 		// Fix after, for disabled code mainly.
 		$this->replaceParamVars($tag[Codes::ATTR_AFTER], $data);
+		$this->replaceParamVars($tag[Codes::ATTR_BEFORE], $data);
 
 		$this->addOpenTag($tag);
 
-		// Replace them out, $1, $2, $3, $4, etc.
-		$this->replaceParamVars($tag[Codes::ATTR_BEFORE], $data);
 		$this->addStringAtCurrentPos($tag[Codes::ATTR_BEFORE], $next_closing_bracket + 1 - $this->pos);
 		$this->pos--;
+
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->startTrackedContent($tag, $this->pos);
+		}
 
 		return false;
 	}
@@ -1107,13 +1187,18 @@ class Parser
 			$this->recursiveParser($data, $tag);
 		}
 
+		$this->replaceParamVars($tag[Codes::ATTR_BEFORE], array($data), true);
 		$this->replaceParamVars($tag[Codes::ATTR_AFTER], array($data), true);
 
 		$this->addOpenTag($tag);
 
-		$this->replaceParamVars($tag[Codes::ATTR_BEFORE], array($data), true);
 		$this->addStringAtCurrentPos($tag[Codes::ATTR_BEFORE], $next_closing_bracket + ($quoted === false ? 1 : 7) - $this->pos);
 		$this->pos--;
+
+		if (!empty($tag[Codes::ATTR_TRACK_CONTENT]))
+		{
+			$this->startTrackedContent($tag, $this->pos);
+		}
 
 		return false;
 	}
@@ -1161,12 +1246,22 @@ class Parser
 	}
 
 	// @todo I don't know what else to call this. It's the area that isn't a tag. Maybe handleContent() would be better?
+	// really the only purpose of this is for autolink, html, and changing tabs to &nbsp; in code tags
 	protected function betweenTags()
 	{
+		// Can't have a one letter smiley, URL, or email! (sorry.)
+		if ($this->last_pos >= $this->pos - 1)
+		{
+			return;
+		}
+
 		// Make sure the $this->last_pos is not negative.
 		$this->last_pos = max($this->last_pos, 0);
 
 		// Pick a block of data to do some raw fixing on.
+		// Starts from the last tag. If it had a ATTR_BEFORE it will start from the end of that
+		// If the [ wasn't actually a tag, it will include the [ and everything after
+		// It ends at the next [
 		$data = substr($this->message, $this->last_pos, $this->pos - $this->last_pos);
 
 		// This happens when the pos is > last_pos and there is a trailing \n from one of the tags having "AFTER"
@@ -1175,6 +1270,8 @@ class Parser
 		{
 			return;
 		}
+
+		//$o_data = $data;
 
 		// Take care of some HTML!
 		if ($this->possible_html && strpos($data, '&lt;') !== false)
@@ -1192,6 +1289,7 @@ class Parser
 
 		// If it wasn't changed, no copying or other boring stuff has to happen!
 		if (substr_compare($this->message, $data, $this->last_pos, $this->pos - $this->last_pos))
+		//if ($o_data !== $data)
 		{
 			$this->message = substr_replace($this->message, $data, $this->last_pos, $this->pos - $this->last_pos);
 
@@ -1247,14 +1345,14 @@ class Parser
 	{
 		if (!isset($tag[Codes::ATTR_DISABLED_BEFORE]) && !isset($tag[Codes::ATTR_DISABLED_AFTER]) && !isset($tag[Codes::ATTR_DISABLED_CONTENT]))
 		{
-			$tag[Codes::ATTR_BEFORE] = !empty($tag[Codes::ATTR_BLOCK_LEVEL]) ? '<div>' : '';
-			$tag[Codes::ATTR_AFTER] = !empty($tag[Codes::ATTR_BLOCK_LEVEL]) ? '</div>' : '';
-			$tag[Codes::ATTR_CONTENT] = $tag[Codes::ATTR_TYPE] === Codes::TYPE_CLOSED ? '' : (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) ? '<div>$1</div>' : '$1');
+			$tag[Codes::ATTR_BEFORE] = $tag[Codes::ATTR_BLOCK_LEVEL] ? '<div>' : '';
+			$tag[Codes::ATTR_AFTER] = $tag[Codes::ATTR_BLOCK_LEVEL] ? '</div>' : '';
+			$tag[Codes::ATTR_CONTENT] = $tag[Codes::ATTR_TYPE] === Codes::TYPE_CLOSED ? '' : ($tag[Codes::ATTR_BLOCK_LEVEL] ? '<div>$1</div>' : '$1');
 		}
 		elseif (isset($tag[Codes::ATTR_DISABLED_BEFORE]) || isset($tag[Codes::ATTR_DISABLED_AFTER]))
 		{
-			$tag[Codes::ATTR_BEFORE] = isset($tag[Codes::ATTR_DISABLED_BEFORE]) ? $tag[Codes::ATTR_DISABLED_BEFORE] : (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) ? '<div>' : '');
-			$tag[Codes::ATTR_AFTER] = isset($tag[Codes::ATTR_DISABLED_AFTER]) ? $tag[Codes::ATTR_DISABLED_AFTER] : (!empty($tag[Codes::ATTR_BLOCK_LEVEL]) ? '</div>' : '');
+			$tag[Codes::ATTR_BEFORE] = isset($tag[Codes::ATTR_DISABLED_BEFORE]) ? $tag[Codes::ATTR_DISABLED_BEFORE] : ($tag[Codes::ATTR_BLOCK_LEVEL] ? '<div>' : '');
+			$tag[Codes::ATTR_AFTER] = isset($tag[Codes::ATTR_DISABLED_AFTER]) ? $tag[Codes::ATTR_DISABLED_AFTER] : ($tag[Codes::ATTR_BLOCK_LEVEL] ? '</div>' : '');
 		}
 		else
 		{
@@ -1385,9 +1483,9 @@ class Parser
 	 * Open a tag
 	 * @param array $tag
 	 */
-	protected function addOpenTag(array $tag)
+	protected function addOpenTag(array &$tag)
 	{
-		$this->open_tags[] = $tag;
+		$this->open_tags[] = &$tag;
 	}
 
 	/**
@@ -1548,7 +1646,7 @@ class Parser
 	protected function closeNonBlockLevel()
 	{
 		$n = count($this->open_tags) - 1;
-		while (empty($this->open_tags[$n][Codes::ATTR_BLOCK_LEVEL]) && $n >= 0)
+		while ($n >= 0 && !$this->open_tags[$n][Codes::ATTR_BLOCK_LEVEL])
 		{
 			$n--;
 		}
@@ -1561,7 +1659,7 @@ class Parser
 			$this->param_start_pos += $this->pos - $old_pos;
 
 			// Trim or eat trailing stuff... see comment at the end of the big loop.
-			if (!empty($this->open_tags[$i][Codes::ATTR_BLOCK_LEVEL]) && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
+			if ($this->open_tags[$i][Codes::ATTR_BLOCK_LEVEL] && substr_compare($this->message, '<br />', $this->pos, 6) === 0)
 			{
 				$this->message = substr_replace($this->message, '', $this->pos, 6);
 			}

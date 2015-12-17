@@ -36,7 +36,7 @@ class Test implements \BBC\Tests\BBCTest
 		$this->parser = new \BBC\Parser($bbc, $autolink, $html);
 		$this->parser->canParseHTML(true);
 
-		$this->smiley_parser = new \BBC\SmileyParser;
+		$this->smiley_parser = new \BBC\SmileyParser($GLOBALS['modSettings']['smileys_url'] . '/' . $GLOBALS['user_info']['smiley_set'] . '/');
 	}
 
 	public function parseMessage($message)

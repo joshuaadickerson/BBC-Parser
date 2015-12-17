@@ -45,6 +45,7 @@
         <ul>
             <li><a href="?type=test">Test all messages with parse_bbc vs Parser</a></li>
             <li><a href="?type=bench&iterations=50">Full parse_bbc vs Parser benchmark w/ 50 iterations</a></li>
+            <li><a href="?type=individual&a=Parser">Individual test of Parser</a></li>
         </ul>
         </div><?php
     }

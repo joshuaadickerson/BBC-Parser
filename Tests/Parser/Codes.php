@@ -143,6 +143,7 @@ class Codes
 	const ATTR_NO_CACHE = 25;
 	/** Count the tags */
 	const ATTR_TRACK_CONTENT = 26;
+	const TRACKED_CONTENT = 27;
 
 	/** [tag]parsed content[/tag] */
 	const TYPE_PARSED_CONTENT = 0;

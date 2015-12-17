@@ -176,6 +176,7 @@ class PreParser
 			// Any remaining [/tr]s should have a [/td].
 			'~\[/tr\]~s' => '[/td][/tr]',
 
+			// @todo https://github.com/SimpleMachines/SMF2.1/issues/3106
 			// Look for properly opened [li]s which aren't closed.
 			'~\[li\]([^\[\]]+?)\[li\]~s' => '[li]$1[_/li_][_li_]',
 			'~\[li\]([^\[\]]+?)\[/list\]~s' => '[_li_]$1[_/li_][/list]',

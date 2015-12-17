@@ -252,6 +252,7 @@ class DefaultCodes extends Codes
                 self::ATTR_DISALLOW_AFTER => '',
                 self::ATTR_BLOCK_LEVEL => true,
                 self::ATTR_AUTOLINK => true,
+                self::ATTR_TRACK_CONTENT => true,
                 self::ATTR_LENGTH => 8,
             ),
             // This won't get run, it's just for testing.
@@ -271,6 +272,7 @@ class DefaultCodes extends Codes
                 self::ATTR_DISALLOW_AFTER => '',
                 self::ATTR_BLOCK_LEVEL => true,
                 self::ATTR_AUTOLINK => true,
+                self::ATTR_TRACK_CONTENT => true,
                 self::ATTR_LENGTH => 8,
             ),
         );
