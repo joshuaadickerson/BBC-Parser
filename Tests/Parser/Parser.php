@@ -32,7 +32,6 @@ class Parser
 
 	protected $message;
 	protected $bbc;
-	protected $tags;
 	// @todo are all of these pos properties necessary? Seems like most of them are purely local and the rest can probably be shared
 	protected $pos;
 	protected $param_start_pos;
@@ -156,7 +155,7 @@ class Parser
 		// If you move this later, you might be talking about the last message.
 		$this->resetParser();
 
-		call_integration_hook('integrate_pre_parsebbc', array(&$message, $this->bbc));
+		$this->triggerEvent('pre_parsebbc', array(&$message, $this->bbc));
 
 		// Don't waste cycles
 		if ($message === '')
@@ -212,7 +211,7 @@ class Parser
 
 		// Allow addons access to what the parser created
 		$message = $this->message;
-		call_integration_hook('integrate_post_parsebbc', array(&$message));
+		$this->triggerEvent('post_parsebbc', array(&$message));
 		$this->message = $message;
 
 		return $this->message;
@@ -285,11 +284,12 @@ class Parser
 			}
 			else
 			{
-				$tag = $this->findCode($this->bbc->getCodesByChar($next_char));
+				$code = $this->findCode($this->bbc->getCodesByChar($next_char));
 			}
 
-			// Implicitly close lists and tables if something other than what's required is in them. This is needed for itemcode.
-			if ($tag === null && $this->inside_tag !== null && !empty($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]))
+			// Implicitly close lists and tables if something other than what's required is in them.
+			// This is needed for itemcode.
+			if ($code === null && $this->inside_tag !== null && !empty($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]))
 			{
 				$this->closeOpenedTag();
 				$this->addStringAtCurrentPos($this->inside_tag[Codes::ATTR_AFTER], 0);
@@ -297,39 +297,39 @@ class Parser
 			}
 
 			// No tag?  Keep looking, then.  Silly people using brackets without actual tags.
-			if ($tag === null)
+			if ($code === null)
 			{
 				continue;
 			}
 
-			$this->setDisallowedChildren($tag);
+			$this->setDisallowedChildren($code);
 
 			// Is this tag disabled?
-			if ($this->bbc->isDisabled($tag[Codes::ATTR_TAG]))
+			if ($this->bbc->isDisabled($code[Codes::ATTR_TAG]))
 			{
-				$this->handleDisabled($tag);
+				$this->handleDisabled($code);
 			}
 
 			// The only special case is 'html', which doesn't need to close things.
-			if ($tag[Codes::ATTR_BLOCK_LEVEL] && $tag[Codes::ATTR_TAG] !== 'html' && !$this->inside_tag[Codes::ATTR_BLOCK_LEVEL])
+			if ($code[Codes::ATTR_BLOCK_LEVEL] && $code[Codes::ATTR_TAG] !== 'html' && !$this->inside_tag[Codes::ATTR_BLOCK_LEVEL])
 			{
 				$this->closeNonBlockLevel();
 			}
 
 			// This is the part where we actually handle the tags. I know, crazy how long it took.
-			if($this->handleTag($tag))
+			if($this->handleCode($code))
 			{
 				continue;
 			}
 
 			// If this is block level, eat any breaks after it.
-			if ($tag[Codes::ATTR_BLOCK_LEVEL] && isset($this->message[$this->pos + 1]) && substr_compare($this->message, '<br />', $this->pos + 1, 6) === 0)
+			if ($code[Codes::ATTR_BLOCK_LEVEL] && isset($this->message[$this->pos + 1]) && substr_compare($this->message, '<br />', $this->pos + 1, 6) === 0)
 			{
 				$this->message = substr_replace($this->message, '', $this->pos + 1, 6);
 			}
 
 			// Are we trimming outside this tag?
-			if (!empty($tag[Codes::ATTR_TRIM]) && $tag[Codes::ATTR_TRIM] !== Codes::TRIM_OUTSIDE)
+			if (!empty($code[Codes::ATTR_TRIM]) && $code[Codes::ATTR_TRIM] !== Codes::TRIM_OUTSIDE)
 			{
 				$this->trimWhiteSpace($this->message, $this->pos + 1);
 			}
@@ -487,7 +487,7 @@ class Parser
 	public function loadHtmlParser()
 	{
 		$parser = new HtmlParser;
-		call_integration_hook('integrate_bbc_load_html_parser', array(&$parser));
+		$this->triggerEvent('bbc_load_html_parser', array(&$parser));
 		$this->html_parser = $parser;
 	}
 
@@ -550,7 +550,7 @@ class Parser
 	/**
 	 * Find if the current character is the start of a tag and get it
 	 *
-	 * @param array $possible_codes
+	 * @param array[] $possible_codes
 	 *
 	 * @return null|array the tag that was found or null if no tag found
 	 */
@@ -598,12 +598,6 @@ class Parser
 				continue;
 			}
 
-			// Quotes can have alternate styling, we do this php-side due to all the permutations of quotes.
-			if ($tag[Codes::ATTR_TAG] === 'quote')
-			{
-				$this->alternateQuoteStyle($tag);
-			}
-
 			break;
 		}
 
@@ -626,7 +620,7 @@ class Parser
 	}
 
 	/**
-	 * @param array $code
+	 * @param array &$code
 	 * @param int $pos
 	 */
 	protected function startTrackedContent(array &$code, $pos)
@@ -643,9 +637,9 @@ class Parser
 	}
 
 	/**
-	 * @param array $code
+	 * @param array &$code
 	 * @param int $pos
-	 * @param bool $capture_content
+	 * @param bool|true $capture_content
 	 */
 	protected function endTrackedContent(array &$code, $pos, $capture_content = true)
 	{
@@ -675,34 +669,6 @@ class Parser
 	public function getTrackedContentCount($tag)
 	{
 		return isset($this->tracked_content[$tag]) ? $this->tracked_content[$tag] : 0;
-	}
-
-	/**
-	 * @param array &$code
-	 */
-	protected function alternateQuoteStyle(array &$code)
-	{
-		// Start with standard
-		$quote_alt = false;
-		foreach ($this->open_tags as $open_quote)
-		{
-			// Every parent quote this quote has flips the styling
-			if ($open_quote[Codes::ATTR_TAG] === 'quote')
-			{
-				$quote_alt = !$quote_alt;
-			}
-		}
-		// Add a class to the quote to style alternating blockquotes
-		// @todo - Frankly it makes little sense to allow alternate blockquote
-		// styling without also catering for alternate quoteheader styling.
-		// I do remember coding that some time back, but it seems to have gotten
-		// lost somewhere in the Elk processes.
-		// Come to think of it, it may be better to append a second class rather
-		// than alter the standard one.
-		//  - Example: class="bbc_quote" and class="bbc_quote alt_quote".
-		// This would mean simpler CSS for themes (like default) which do not use the alternate styling,
-		// but would still allow it for themes that want it.
-		$code[Codes::ATTR_BEFORE] = str_replace('<blockquote>', '<blockquote class="bbc_' . ($quote_alt ? 'alternate' : 'standard') . '_quote">', $code[Codes::ATTR_BEFORE]);
 	}
 
 	/**
@@ -762,6 +728,7 @@ class Parser
 
 		if ($this->inside_tag !== null)
 		{
+			// @todo this is effectively a whitelist. Is that what we want here?
 			if (isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN]) && !isset($this->inside_tag[Codes::ATTR_REQUIRE_CHILDREN][$possible[Codes::ATTR_TAG]]))
 			{
 				return;
@@ -1205,41 +1172,41 @@ class Parser
 
 	/**
 	 * Handles a tag by its type. Offloads the actual handling to handle*() method
-	 * @param array $tag
+	 * @param array $code
 	 *
 	 * @return bool true if there was something wrong and the parser should advance
 	 */
-	protected function handleTag(array $tag)
+	protected function handleCode(array $code)
 	{
-		switch ($tag[Codes::ATTR_TYPE])
+		switch ($code[Codes::ATTR_TYPE])
 		{
 			case Codes::TYPE_PARSED_CONTENT:
-				return $this->handleTypeParsedContent($tag);
+				return $this->handleTypeParsedContent($code);
 
 			// Don't parse the content, just skip it.
 			case Codes::TYPE_UNPARSED_CONTENT:
-				return $this->handleTypeUnparsedContent($tag);
+				return $this->handleTypeUnparsedContent($code);
 
 			// Don't parse the content, just skip it.
 			case Codes::TYPE_UNPARSED_EQUALS_CONTENT:
-				return $this->handleUnparsedEqualsContent($tag);
+				return $this->handleUnparsedEqualsContent($code);
 
 			// A closed tag, with no content or value.
 			case Codes::TYPE_CLOSED:
-				return $this->handleTypeClosed($tag);
+				return $this->handleTypeClosed($code);
 
 			// This one is sorta ugly... :/
 			case Codes::TYPE_UNPARSED_COMMAS_CONTENT:
-				return $this->handleUnparsedCommasContent($tag);
+				return $this->handleUnparsedCommasContent($code);
 
 			// This has parsed content, and a csv value which is unparsed.
 			case Codes::TYPE_UNPARSED_COMMAS:
-				return $this->handleUnparsedCommas($tag);
+				return $this->handleUnparsedCommas($code);
 
 			// A tag set to a value, parsed or not.
 			case Codes::TYPE_PARSED_EQUALS:
 			case Codes::TYPE_UNPARSED_EQUALS:
-				return $this->handleEquals($tag);
+				return $this->handleEquals($code);
 		}
 
 		return false;
@@ -1451,7 +1418,7 @@ class Parser
 		// @todo figure out why it causes a recursive loop!
 		$autolinker = null;
 		$html = null;
-		call_integration_hook('integrate_recursive_bbc', array(&$autolinker, &$html));
+		$this->triggerEvent('recursive_bbc', array(&$autolinker, &$html));
 
 		$parser = new \BBC\Parser($bbc, $autolinker, $html);
 		$parser->canParseAutolink($this->autolink_enabled);
@@ -1626,7 +1593,7 @@ class Parser
 	 *
 	 * @return bool
 	 */
-	protected function isOpen($tag)
+	protected function isTagOpen($tag)
 	{
 		foreach ($this->open_tags as $open)
 		{
@@ -1708,5 +1675,10 @@ class Parser
 		$tmp = $no_smileys ? $this->noSmileys($string) : $string;
 		$this->message = substr_replace($this->message, $tmp, $this->pos, $len);
 		$this->pos += strlen($tmp);
+	}
+
+	protected function triggerEvent($name, array $params)
+	{
+		call_integration_hook('integrate_' . $name, $params);
 	}
 }

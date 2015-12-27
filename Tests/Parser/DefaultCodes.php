@@ -255,26 +255,6 @@ class DefaultCodes extends Codes
                 self::ATTR_TRACK_CONTENT => true,
                 self::ATTR_LENGTH => 8,
             ),
-            // This won't get run, it's just for testing.
-            array(
-                self::ATTR_TAG => 'footnote',
-                self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
-                self::ATTR_BEFORE => '<sup class="bbc_footnotes">%fn%',
-                self::ATTR_AFTER => '%fn%</sup>',
-                self::ATTR_DISALLOW_PARENTS => array(
-                    'footnote' => 1,
-                    'code'     => 1,
-                    'anchor'   => 1,
-                    'url'      => 1,
-                    'iurl'     => 1,
-                ),
-                self::ATTR_DISALLOW_BEFORE => '',
-                self::ATTR_DISALLOW_AFTER => '',
-                self::ATTR_BLOCK_LEVEL => true,
-                self::ATTR_AUTOLINK => true,
-                self::ATTR_TRACK_CONTENT => true,
-                self::ATTR_LENGTH => 8,
-            ),
         );
     }
 
@@ -552,7 +532,7 @@ class DefaultCodes extends Codes
             array(
                 self::ATTR_TAG => 'quote',
                 self::ATTR_TYPE => self::TYPE_PARSED_CONTENT,
-                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote'] . '</div><blockquote>',
+                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote'] . '</div><blockquote class="bbc_quote">',
                 self::ATTR_AFTER => '</blockquote>',
                 self::ATTR_BLOCK_LEVEL => true,
                 self::ATTR_AUTOLINK => true,
@@ -567,7 +547,7 @@ class DefaultCodes extends Codes
                         self::PARAM_ATTR_QUOTED => self::OPTIONAL,
                     ),
                 ),
-                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': {author}</div><blockquote>',
+                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': {author}</div><blockquote class="bbc_quote">',
                 self::ATTR_AFTER => '</blockquote>',
                 self::ATTR_BLOCK_LEVEL => true,
                 self::ATTR_AUTOLINK => true,
@@ -576,7 +556,7 @@ class DefaultCodes extends Codes
             array(
                 self::ATTR_TAG => 'quote',
                 self::ATTR_TYPE => self::TYPE_PARSED_EQUALS,
-                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': $1</div><blockquote>',
+                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': $1</div><blockquote class="bbc_quote">',
                 self::ATTR_AFTER => '</blockquote>',
                 self::ATTR_QUOTED => self::OPTIONAL,
                 self::ATTR_PARSED_TAGS_ALLOWED => array(
@@ -602,7 +582,7 @@ class DefaultCodes extends Codes
                         self::ATTR_VALIDATE => 'htmlTime',
                     ),
                 ),
-                self::ATTR_BEFORE => '<div class="quoteheader"><a href="' . $scripturl . '?{link}">' . $txt['quote_from'] . ': {author} ' . ($modSettings['todayMod'] == 3 ? ' - ' : $txt['search_on']) . ' {date}</a></div><blockquote>',
+                self::ATTR_BEFORE => '<div class="quoteheader"><a href="' . $scripturl . '?{link}">' . $txt['quote_from'] . ': {author} ' . ($modSettings['todayMod'] == 3 ? ' - ' : $txt['search_on']) . ' {date}</a></div><blockquote class="bbc_quote">',
                 self::ATTR_AFTER => '</blockquote>',
                 self::ATTR_BLOCK_LEVEL => true,
                 self::ATTR_AUTOLINK => true,
@@ -616,7 +596,7 @@ class DefaultCodes extends Codes
                         self::PARAM_ATTR_MATCH => '(.{1,192}?)'
                     ),
                 ),
-                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': {author}</div><blockquote>',
+                self::ATTR_BEFORE => '<div class="quoteheader">' . $txt['quote_from'] . ': {author}</div><blockquote class="bbc_quote">',
                 self::ATTR_AFTER => '</blockquote>',
                 self::ATTR_BLOCK_LEVEL => true,
                 self::ATTR_AUTOLINK => true,
